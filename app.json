@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Cloud-Notes",
-    "slug": "Cloud-Notes",
+    "slug": "cloud-notes",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/favicon.png",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -19,12 +19,25 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/favicon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.pankajisrani.cloudnotes"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "02744537-0b50-4bae-ad1a-fa776a4a5125"
+      }
+    },
+    "owner": "slayersoull12",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/02744537-0b50-4bae-ad1a-fa776a4a5125"
     }
   }
 }
