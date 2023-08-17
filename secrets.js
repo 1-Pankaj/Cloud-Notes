@@ -1,0 +1,3 @@
+const OCR_API_KEY = "K88712079788957"
+
+export {OCR_API_KEY}

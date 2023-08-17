@@ -3,7 +3,6 @@ import { Alert, TouchableOpacity, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import Styles from "./Styles";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CheckIfFirstTime, CreateTable, DropDatabase, InsertData, SelectData } from "./Database";
 import AnimatedLottieView from "lottie-react-native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -50,7 +49,8 @@ const SplashScreenPage = (props) => {
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={[Styles.container, { justifyContent: 'space-around' }]}>
                 <AnimatedLottieView
-                    autoPlay
+                    autoPlay hardwareAccelerationAndroid
+                    renderMode="HARDWARE"
                     style={{ width: '100%', }}
                     source={require("../assets/animation.json")} />
                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 25 }}>

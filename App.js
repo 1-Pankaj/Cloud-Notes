@@ -3,6 +3,7 @@ import { View, Text, Appearance } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './src/HomeScreen';
+import 'react-native-url-polyfill/auto'
 import {
   Provider as PaperProvider, MD3LightTheme as LightTheme,
   MD3DarkTheme as DarkTheme,
@@ -61,11 +62,9 @@ function App() {
     <StatusBar style='auto' backgroundColor='transparent' animated={true} hidden/>
       <NavigationContainer theme={themeState}>
         <Stack.Navigator
-          initialRouteName='Home'
+          initialRouteName='Loading'
          screenOptions={{
-          headerShown:false,
-          
-        }} >
+          headerShown:false}} >
           <Stack.Screen name='Loading' component={Loading}/>
           <Stack.Screen name='SplashScreen' component={SplashScreenPage} options={{
             gestureEnabled: true,

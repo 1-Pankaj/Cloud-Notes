@@ -1,5 +1,13 @@
 {
   "expo": {
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to process text from them."
+        }
+      ]
+    ],
     "name": "Cloud-Notes",
     "slug": "cloud-notes",
     "version": "1.0.0",

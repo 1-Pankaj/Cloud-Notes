@@ -66,7 +66,8 @@ const Loading = (prop) => {
             <View style={[Styles.container, { justifyContent:'space-around' }]} >
                 <AnimatedLottieView
                     source={require("../assets/plane.json")}
-                    autoPlay
+                    autoPlay hardwareAccelerationAndroid
+                    renderMode="HARDWARE"
                     style={{ width: '100%', height: '75%',alignItems:'center' }} />
                 <Text style={{ margin: 20, fontSize: 25, fontFamily: 'mulish', fontWeight: '700' }}>
                     CloudNotes

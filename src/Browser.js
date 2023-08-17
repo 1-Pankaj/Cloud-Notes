@@ -125,7 +125,7 @@ const Browser = (props) => {
 
         {
             open ?
-                Animated.spring(animatedViewHeight, {
+                Animated.timing(animatedViewHeight, {
                     toValue: 0,
                     useNativeDriver: false,
                 }).start(() => {
@@ -134,6 +134,7 @@ const Browser = (props) => {
                 :
                 Animated.spring(animatedViewHeight, {
                     toValue: 400,
+                    speed:100,
                     useNativeDriver: false
                 }).start(() => { setOpen(true) })
 
@@ -219,6 +220,7 @@ const Browser = (props) => {
                             opacity: 0.7, paddingHorizontal: 10, color: colorScheme === "dark" ? "white" : "black", alignSelf: 'center', fontSize: 13,
                             fontFamily: 'mulish', marginBottom: 10,
                         }}
+                        selectTextOnFocus
                         cursorColor="#FFBC01"
                         multiline={false}
                         onChangeText={setUrl}
@@ -239,7 +241,7 @@ const Browser = (props) => {
                 <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
 
                 <WebView
-                    style={{ flex: 1, width: screenWidth }}
+                    style={{ flex: 1, width: screenWidth,alignItems:'center', justifyContent:'center' }}
                     source={{ uri: uriWeb }}
                     javaScriptEnabled
                     useWebView2
