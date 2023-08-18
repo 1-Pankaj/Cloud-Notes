@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, StyleSheet, TextInput, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, StyleSheet, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
 import { Appbar, Button, Dialog, Divider, Drawer, FAB, IconButton, Menu, Portal, Text, Tooltip } from "react-native-paper";
@@ -23,7 +23,8 @@ const db = SQLite.openDatabase("CloudNotes.db")
 
 const HomeScreen = (props) => {
     const [visible, setVisible] = useState(false);
-    const [dialogText, setDialogText] = useState("")
+    const [dialogText, setDialogText] = useState('')
+    const [deleteRow, setDeleteRow] = useState(false)
     const [searchText, setSearchText] = useState("")
     const animatedHiddenSearch = new Animated.Value(0)
     const [openSearch, setOpenSearch] = useState(false)
@@ -50,6 +51,7 @@ const HomeScreen = (props) => {
         setDialogText(prop)
     }
 
+    const hideDialog = () => setVisible(false);
     const onRowDidOpen = rowKey => {
         console.log('This row opened', rowKey);
     };
@@ -70,7 +72,7 @@ const HomeScreen = (props) => {
         console.log('onLeftAction', rowKey);
     };
 
-    const hideDialog = () => setVisible(false);
+
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
 
     const [textData, setText] = useState("")
@@ -86,6 +88,14 @@ const HomeScreen = (props) => {
                     error => {
                         console.log("Error");
                     })
+        })
+
+        db.transaction((tx)=>{
+            tx.executeSql("CREATE TABLE IF NOT EXISTS archived (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)",[],
+                (sql,rs)=>{
+                },error=>{
+                    console.log("Error");
+                })
         })
     }
     const SelectData = () => {
@@ -231,7 +241,9 @@ const HomeScreen = (props) => {
                                 <MaterialComIcon name="arrow-forward-ios" size={22} color="#FFBC01" />
                             </View>
                         </View>
+
                     </View>
+
                 </TouchableHighlight>
             </Animated.View>
         )
@@ -253,7 +265,7 @@ const HomeScreen = (props) => {
             searchRef.current.focus()
             Animated.spring(animatedHiddenSearch, {
                 toValue: 50,
-                duration: 200,
+                duration: 50,
                 useNativeDriver: false,
             }).start(() => {
                 setOpenSearch(true)
@@ -263,18 +275,76 @@ const HomeScreen = (props) => {
 
 
     const DeleteFromTable = (id) => {
-        db.transaction(tx => {
-            tx.executeSql(`DELETE FROM notes WHERE id = ${id}`, [],
-                (sq, rs) => {
-                    console.log("deleted");
-                    SelectData()
-                },
-                error => {
-                    console.log(error);
-                })
+        db.transaction(tx=>{
+            tx.executeSql("SELECT deletebtn FROM splash", [],
+            (sql,rs)=>{
+                if(rs.rows._array[0].deletebtn == 'false'){
+                    setFabVisible(false)
+                    props.navigation.navigate('DeleteSplash')
+                }
+                else{
+                    db.transaction(tx => {
+                        tx.executeSql(`DELETE FROM notes WHERE id = ${id}`, [],
+                            (sq, rs) => {
+                                console.log("deleted");
+                                SelectData()
+                            },
+                            error => {
+                                console.log(error);
+                            })
+                    })
+                }
+            },error=>{
+                console.log("Error");
+            })
         })
     }
 
+    const DeleteFirstTimeCheck = (id)=>{
+        
+    }
+
+
+    const ArchiveFirstTimeCheck = (id) =>{
+        db.transaction((tx)=>{
+            tx.executeSql("SELECT archivebtn FROM splash",[],
+            (sql,rs)=>{
+                if(rs.rows._array[0].archivebtn == 'false'){
+                    setFabVisible(false)
+                    props.navigation.navigate('ArchiveSplash')
+                }
+                else{
+                    db.transaction((tx)=>{
+                        tx.executeSql("SELECT * FROM notes where id = (?)",[id],
+                        (sql,rs)=>{
+                            const title = rs.rows._array[0].title
+                            const note = rs.rows._array[0].note
+                            const date = rs.rows._array[0].date
+                            const time = rs.rows._array[0].time
+                            const pageColor = rs.rows._array[0].pageColor
+                            const fontColor = rs.rows._array[0].fontColor
+                            const fontStyle = rs.rows._array[0].fontStyle
+                            const fontSize = rs.rows._array[0].fontSize
+                            sql.executeSql("INSERT INTO archived (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)",[title,note,date,time,pageColor,fontColor,fontStyle,fontSize],
+                            (sql,rs)=>{
+                                sql.executeSql("DELETE FROM notes where id = (?)",[id],
+                                (sql,rs)=>{
+                                    showDialog("Archived!")
+                                    SelectData()},
+                                error=>{console.log("Error");})
+                            },error=>{
+                                console.log("Error");
+                            })
+                        }, error=>{
+                            console.log("Error");
+                        })
+                    })
+                }
+            },error=>{
+                console.log("Error");
+            })
+        })
+    }
 
 
     const HiddenItemWithActions = props => {
@@ -296,12 +366,12 @@ const HomeScreen = (props) => {
 
         return (
             <Animated.View style={[styles.rowBack, { height: rowHeightAnimatedValue }]}>
-                <TouchableOpacity style={styles.trash}>
+                <TouchableOpacity style={styles.trash} onPress={()=>{ArchiveFirstTimeCheck(props.data.item.id)}}>
                     <Ionicons name="archive" color="white" size={20} />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]}
-                    onPress={() => { showDialog("Archived") }}>
+                    onPress={() => { ArchiveFirstTimeCheck(props.data.item.id) }}>
                     <View style={styles.trash}>
 
 
@@ -313,8 +383,7 @@ const HomeScreen = (props) => {
                 }]}>
                     <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnRight]}
                         onPress={() => {
-                            showDialog("Are you sure you want to delete?")
-
+                            DeleteFromTable(props.data.item.id)
                         }}>
                         <Animated.View style={[styles.trash, {
                             transform: [
@@ -330,6 +399,19 @@ const HomeScreen = (props) => {
                             <Ionicons name="trash" color="white" size={20} />
                         </Animated.View>
                     </TouchableOpacity>
+                    <Portal>
+                        <Dialog visible={visible} onDismiss={hideDialog}>
+                            <Dialog.Content>
+                                <Text variant="bodyMedium">{dialogText}</Text>
+                            </Dialog.Content>
+                            <Dialog.Actions>
+                                <Button onPress={() => {
+                                    hideDialog()
+                                }}>Done</Button>
+
+                            </Dialog.Actions>
+                        </Dialog>
+                    </Portal>
                 </Animated.View>
 
             </Animated.View>
@@ -418,25 +500,13 @@ const HomeScreen = (props) => {
                 <VisibleItem data={data} rowHeightAnimatedValue={rowHeightAnimatedValue} removeRow={() => { DeleteFromTable(data.item.id) }}
 
                 />
-                <Portal>
-                    <Dialog visible={visible} onDismiss={hideDialog}>
-                        <Dialog.Content>
-                            <Text variant="bodyMedium">{dialogText}</Text>
-                        </Dialog.Content>
-                        <Dialog.Actions>
-                            <Button onPress={() => { hideDialog() }}>Cancel</Button>
-                            <Button onPress={() => {
-                                DeleteFromTable(data.item.id)
-                                hideDialog()
-                            }}>Delete</Button>
 
-                        </Dialog.Actions>
-                    </Dialog>
-                </Portal>
             </>
 
         )
     }
+
+    
 
     const renderHiddenItem = (data, rowMap) => {
         const rowActionAnimatedValue = new Animated.Value(75)
@@ -455,7 +525,21 @@ const HomeScreen = (props) => {
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
     })
+    const CheckFirstTime = () =>{
+        db.transaction((tx)=>{
+            tx.executeSql("SELECT homepage FROM splash",[],
+            (sql,rs)=>{
+                if(rs.rows._array[0].homepage == 'false'){
+                    setFabVisible(false)
+                    props.navigation.navigate('HomeSplash')
+                }
+            },error=>{
+                console.log("Error");
+            })
+        })
+    }
 
+    
 
 
     useEffect(() => {
@@ -463,7 +547,7 @@ const HomeScreen = (props) => {
             CreateTable()
             SelectData()
             setFabVisible(true)
-
+            CheckFirstTime()
         }
 
     }, [props, isFocused, grid])
@@ -501,7 +585,9 @@ const HomeScreen = (props) => {
                     flexDirection: 'row', width: screenWidth, alignItems: 'center', padding: 15,
                     justifyContent: 'space-between'
                 }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => { props.navigation.navigate("Directory") }}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => { 
+                        setFabVisible(false)
+                        props.navigation.navigate("Directory") }}>
                         <MaterialComIcon name="arrow-back-ios" size={22} color="#FFBC01" />
                         <Text style={{
                             color: '#FFBC01', fontFamily: 'mulish',
@@ -557,6 +643,12 @@ const HomeScreen = (props) => {
                     />
 
                 </Animated.View>
+                {
+                    data && dataGrid1 && dataGrid2?
+                    <Text style={{alignSelf:'flex-start', marginStart:20,marginTop:15, fontSize:25, fontWeight:'bold'}}>All Notes</Text>
+                    :
+                    null
+                }
 
                 {
                     data && dataGrid1 && dataGrid2 ?
@@ -569,6 +661,7 @@ const HomeScreen = (props) => {
                                         renderItem={(item) => (
                                             <TouchableOpacity style={{ width: 150, alignSelf: 'flex-start', height: 150, marginTop: 20, borderRadius: 15, borderWidth: 2, borderColor: 'gray', marginStart: 20 }}
                                                 activeOpacity={0.6} onPress={() => {
+                                                    setFabVisible(false)
                                                     props.navigation.navigate("CreateNote", {
                                                         id: item.item.id
                                                     })
@@ -590,7 +683,7 @@ const HomeScreen = (props) => {
                                                             {item.item.note.slice(0, 15) + "\n" + item.item.note.slice(15, 20)}</Text>
                                                     </View>
                                                     <View style={{ marginEnd: 10, marginStart: -10, marginTop: 20, marginBottom: 10, alignSelf: 'flex-end', flexDirection: 'row' }}>
-                                                        <View style={{alignItems:'center', marginStart:-10}}>
+                                                        <View style={{ alignItems: 'center', marginStart: -10 }}>
                                                             <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.item.date.length === 9 ? item.item.date.slice(0, 4) : item.item.date.slice(0, 5)}</Text>
                                                             <Text style={{ fontFamily: 'mulish', fontSize: 10, marginStart: -15 }}>{item.item.time.length === 10 ? item.item.time.slice(0, 4) + item.item.time.slice(7, 10) : item.item.time.slice(0, 5) + item.item.time.slice(8, 11)}</Text>
                                                         </View>
@@ -606,6 +699,7 @@ const HomeScreen = (props) => {
                                         renderItem={(item) => (
                                             <TouchableOpacity style={{ width: 150, alignSelf: 'flex-end', height: 150, marginTop: 20, borderRadius: 15, borderWidth: 2, borderColor: 'gray', marginEnd: 20 }}
                                                 activeOpacity={0.6} onPress={() => {
+                                                    setFabVisible(false)
                                                     props.navigation.navigate("CreateNote", {
                                                         id: item.item.id
                                                     })
@@ -627,7 +721,7 @@ const HomeScreen = (props) => {
                                                             {item.item.note.slice(0, 15) + "\n" + item.item.note.slice(15, 20)}</Text>
                                                     </View>
                                                     <View style={{ marginEnd: 10, marginStart: -10, marginTop: 20, marginBottom: 10, alignSelf: 'flex-end', flexDirection: 'row' }}>
-                                                        <View style={{alignItems:'center', marginStart:-10}}>
+                                                        <View style={{ alignItems: 'center', marginStart: -10 }}>
                                                             <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.item.date.length === 9 ? item.item.date.slice(0, 4) : item.item.date.slice(0, 5)}</Text>
                                                             <Text style={{ fontFamily: 'mulish', fontSize: 10, marginStart: -15 }}>{item.item.time.length === 10 ? item.item.time.slice(0, 4) + item.item.time.slice(7, 10) : item.item.time.slice(0, 5) + item.item.time.slice(8, 11)}</Text>
                                                         </View>
@@ -675,6 +769,7 @@ const HomeScreen = (props) => {
                 <View style={{ justifyContent: 'space-between', flexDirection: 'row', alignItems: 'center', width: screenWidth }}>
                     <Tooltip title="Browse Internet">
                         <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => {
+                            setFabVisible(false)
                             props.navigation.navigate("Browser")
                         }}>
                             <Ionicons name="globe-outline" size={25} color="#FFBC01" />

@@ -36,3 +36,6 @@ yarn-error.*
 
 #firebaseconfig
 firebase.js
+
+#secrets
+secrets.js

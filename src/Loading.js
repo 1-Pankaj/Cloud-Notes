@@ -17,7 +17,7 @@ const Loading = (prop) => {
 
     const CheckIfFirstTime = () => {
         db.transaction(tx => {
-            tx.executeSql("CREATE TABLE IF NOT EXISTS splash(firstTime Boolean)", [],
+            tx.executeSql("CREATE TABLE IF NOT EXISTS splash(firstTime Boolean NOT NULL, homepage VARCHAR(10) NOT NULL, archivebtn VARCHAR(10) NOT NULL, deletebtn VARCHAR(10) NOT NULL)", [],
                 (sql, rs) => {
                     sql.executeSql("SELECT firstTime from splash", [],
                         (sql, rs) => {

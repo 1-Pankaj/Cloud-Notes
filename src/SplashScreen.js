@@ -16,9 +16,8 @@ const SplashScreenPage = (props) => {
 
     const WriteToSplash = () => {
         db.transaction((tx) => {
-            tx.executeSql("INSERT INTO splash(firstTime) values ('true')", [],
+            tx.executeSql("INSERT INTO splash(firstTime, homepage, archivebtn, deletebtn) values (true,'false','false','false')", [],
                 (sql, rs) => {
-                    console.log("Success");
                     props.navigation.replace("Home")
                 },
                 error => {
@@ -57,7 +56,7 @@ const SplashScreenPage = (props) => {
                     Let's continue to CloudNotes!
                 </Text>
                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, textAlign: 'center', paddingHorizontal: 10 }}>
-                    Browser internet while saving your precious notes and read your notes as you go, anywhere with CloudNotes!
+                    Save your notes, reminders, TO-DO's, etc. and access them anytime anywhere as you go, with CloudNotes!
                 </Text>
                 <Button labelStyle={{ width: '80%', padding: 10 }}
                     mode="contained"

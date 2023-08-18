@@ -31,8 +31,22 @@ const Browser = (props) => {
 
     const animatedViewHeight = new Animated.Value(0)
     const [open, setOpen] = useState(false)
+    const [bookmarked, setBookmarked] = useState(false)
 
     const GetUrlFromDatabase = () =>{
+        db.transaction((tx)=>{
+            tx.executeSql("SELECT title from bookmark where title = (?)",[uriWeb],
+            (sql,rs)=>{
+                if(rs.rows.length == 0){
+
+                }
+                else if(rs.rows._array[0].title == uriWeb){
+                    setBookmarked(true)
+                }
+            },error=>{
+                console.log("Error");
+            })
+        })
         db.transaction((tx)=>{
             tx.executeSql("SELECT * FROM history ORDER BY id DESC",[],
             (sql, rs)=>{
@@ -54,6 +68,13 @@ const Browser = (props) => {
     }
 
     const CreateTable = () =>{
+        db.transaction((tx)=>{
+            tx.executeSql("CREATE TABLE IF NOT EXISTS bookmark(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL)", [],
+            (sql,rs)=>{
+            },error=>{
+                console.log("Error");
+            })
+        })
         db.transaction((tx)=>{
             tx.executeSql("CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, url VARCHAR(500) NOT NULL)", [],
             (sql, rs)=>{
@@ -119,7 +140,7 @@ const Browser = (props) => {
     useEffect(()=>{
         CreateTable()
         GetUrlFromDatabase()
-    },[isFocused])
+    },[isFocused, uriWeb])
 
     const showHiddenView = () => {
 
@@ -141,6 +162,31 @@ const Browser = (props) => {
         }
 
 
+    }
+
+    const SetBookmark = () =>{
+        
+
+        db.transaction((tx)=>{
+            tx.executeSql(`INSERT INTO bookmark (title) values(?)`, [uriWeb],
+            (sql,rs)=>{
+                setBookmarked(true)
+            },error=>{
+                console.log(error);
+            })
+        })
+    }
+
+    const RemoveBookmark = () =>{
+        db.transaction((tx)=>{
+            tx.executeSql('DELETE FROM bookmark where title = (?)', [uriWeb],
+            (sql,rs)=>{
+                console.log("done");
+                setBookmarked(false)
+            },error=>{
+                console.log("Error");
+            })
+        })
     }
 
     
@@ -193,8 +239,6 @@ const Browser = (props) => {
                     </Text>
                     </TouchableOpacity>
                     </View>
-                    
-                    {/*code here*/}
                     <FlatList 
                         data={history}
                         keyExtractor={item=>item.id}
@@ -234,8 +278,13 @@ const Browser = (props) => {
                             }
                         }}
                     />
-                    <TouchableOpacity onPress={() => { }} style={{ marginBottom: 10, }}>
-                        <MaterialIcons name="bookmark-outline" size={30} color="gray" />
+                    <TouchableOpacity onPress={() => { 
+                        bookmarked?
+                        RemoveBookmark()
+                        :
+                        SetBookmark()
+                     }} style={{ marginBottom: 10, }}>
+                        <MaterialIcons name={bookmarked? "bookmark" : "bookmark-outline"} size={30} color={bookmarked? '#FFBC01' : "gray"} />
                     </TouchableOpacity>
                 </View>
                 <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />

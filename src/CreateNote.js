@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
 import { Animated, Appearance, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
-import { Button, Card, Chip, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
+import { ActivityIndicator, Button, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
 
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
@@ -42,6 +42,8 @@ const CreateNote = (props) => {
     const [titleText, setTitleText] = useState("")
     const [noteText, setNoteText] = useState("")
     const [saveButton, setSaveButton] = useState("Save")
+    const [loading, setLoading] = useState(false)
+    const [snackbar, setSnackBar] = useState({visible:false, message:''})
 
 
     const colorSection = new Animated.Value(0)
@@ -110,7 +112,7 @@ const CreateNote = (props) => {
             refTitle.current.blur()
             Animated.timing(colorSection, {
                 toValue: 0,
-                duration: 100,
+                duration: 0,
                 useNativeDriver: false
             }).start(() => {
                 setOpen(false)
@@ -121,7 +123,7 @@ const CreateNote = (props) => {
             refTitle.current.blur()
             Animated.spring(colorSection, {
                 toValue: 370,
-                duration: 50,
+                duration: 10,
                 useNativeDriver: false
             }).start(() => {
                 setOpen(true)
@@ -142,14 +144,26 @@ const CreateNote = (props) => {
             body:data
         }).then(res=>res.json()).then((response)=>{
             setTimeout(() => {
-                fetch(`https://api.ocr.space/parse/imageurl?apikey=K88712079788957&url=${response.url}`).then(res=>res.json()).
+                fetch(`https://api.ocr.space/parse/imageurl?apikey=K88712079788957&url=${response.url}`, error=>{
+                    setLoading(false)
+                    setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
+                }).then(res=>res.json()).
                 then((resp)=>{
-                    setNoteText(resp.ParsedResults[0].ParsedText)
+                    setLoading(false)
+                    setSnackBar({visible:true, message:'Text Generated Successfully!'})
+                    setNoteText(noteText + '\n' + resp.ParsedResults[0].ParsedText)
+                }, error=>{
+                    setLoading(false)
+                    setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
                 }).catch((error)=>{
-                    //show alert of error here
+                    setLoading(false)
+                    setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
                 })
             }, 100);
             
+        },error=>{
+            setLoading(false)
+            setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
         })
         
     }
@@ -159,7 +173,7 @@ const CreateNote = (props) => {
         let result = await ImagePicker.launchCameraAsync({
             cameraType: ImagePicker.CameraType.back,
             allowsEditing: true,
-            aspect: [5, 5],
+            aspect: [1,1],
             quality: 0.5,
             mediaTypes: ImagePicker.MediaTypeOptions.Images
         })
@@ -169,6 +183,7 @@ const CreateNote = (props) => {
         if (!result.canceled) {
             setImage(result.assets[0].uri);
             setTimeout(() => {
+                setLoading(true)
                 let newfile = {uri:result.assets[0].uri, type:`test/${result.assets[0].uri.split(".")[1]}`, name:`test.${result.assets[0].uri.split(".")[1]}`}
                 UploadImage(newfile)
             }, 100);
@@ -181,7 +196,7 @@ const CreateNote = (props) => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [5, 5],
+            aspect: [1,1],
             quality: 0.5,
         });
 
@@ -190,6 +205,7 @@ const CreateNote = (props) => {
             setImage(result.assets[0].uri);
             setTimeout(() => {
                 let newfile = {uri:result.assets[0].uri, type:`test/${result.assets[0].uri.split(".")[1]}`, name:`test.${result.assets[0].uri.split(".")[1]}`}
+                setLoading(true)
                 UploadImage(newfile)
             }, 100);
 
@@ -218,6 +234,7 @@ const CreateNote = (props) => {
         }
 
     }
+
 
     const SetFontSizeSlider = (prop) => {
         if (prop < 25 || prop == 25) {
@@ -263,6 +280,14 @@ const CreateNote = (props) => {
                     console.log("Error");
                 })
         })
+    }
+
+    const AutoSaveNote = (text) =>{
+        setNoteText(text)
+
+        if(props.route.params == undefined){
+            
+        }
     }
 
 
@@ -414,7 +439,7 @@ const CreateNote = (props) => {
                                 scrollEnabled={true} selectionColor="#FFBC01"
                                 textContentType="none"
 
-                                multiline={true} ref={refInput} value={noteText} onChangeText={(text) => { setNoteText(text) }}
+                                multiline={true} ref={refInput} value={noteText} onChangeText={(text) => { AutoSaveNote(text) }}
                                 maxLength={4000} activeOutlineColor="transparent" outlineColor="transparent"
                                 underlineColor="transparent" underlineColorAndroid="transparent"
                                 activeUnderlineColor="transparent"
@@ -451,6 +476,20 @@ const CreateNote = (props) => {
 
                     </View>
                 </View>
+                <Portal>
+                    <Modal visible={loading}
+                    dismissable={false}
+                    contentContainerStyle={{alignItems:'center', justifyContent:'center'}}>
+                        <Card style={{padding:30, borderRadius:50}}>
+                            <ActivityIndicator size={40}/>
+                        </Card>
+                    </Modal>
+                </Portal>
+                <Portal>
+                    <Snackbar visible={snackbar.visible} action={{label:'Done', onPress:()=>{setSnackBar({visible:false, message:''})}}} duration={3000} onDismiss={()=>{setSnackBar({visible:false, message:''})}}>
+                        {snackbar.message}
+                    </Snackbar>
+                </Portal>
             </SafeAreaView>
 
         </View>
