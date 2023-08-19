@@ -20,6 +20,8 @@ import ArchivePage from './src/ArchivePage';
 import ArchivePasswordSplash from './src/splashscreens/ArchivePasswordSplash';
 import PasswordPage from './src/PasswordPage';
 import TrashPage from './src/TrashPage';
+import ToDo from './src/ToDo';
+import ToDoSplash from './src/splashscreens/ToDoSplash';
 
 const Stack = createStackNavigator()
 
@@ -126,6 +128,20 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name='TrashPage' component={TrashPage} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ToDo' component={ToDo} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ToDoSplash' component={ToDoSplash} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

@@ -22,16 +22,13 @@ SplashScreen.preventAutoHideAsync();
 const db = SQLite.openDatabase("CloudNotes.db")
 
 const screenWidth = Dimensions.get("window").width
-const screenHeight = Dimensions.get("window").height
+
 const CreateNote = (props) => {
 
 
-
-    const [image, setImage] = useState(null);
     const [visible, setVisible] = useState(false);
     const openMenu = () => setVisible(true);
     const closeMenu = () => setVisible(false);
-    const [status, requestPermission] = ImagePicker.useCameraPermissions();
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme)
     const refInput = useRef(null);
     const refTitle = useRef(null)
@@ -39,7 +36,7 @@ const CreateNote = (props) => {
     const [noteText, setNoteText] = useState("")
     const [saveButton, setSaveButton] = useState("Save")
     const [loading, setLoading] = useState(false)
-    const [snackbar, setSnackBar] = useState({visible:false, message:''})
+    const [snackbar, setSnackBar] = useState({ visible: false, message: '' })
 
 
     const colorSection = new Animated.Value(0)
@@ -77,23 +74,49 @@ const CreateNote = (props) => {
 
         }
         else {
-            db.transaction(tx => {
-                tx.executeSql(`SELECT * FROM notes WHERE id =${props.route.params.id}`, [],
-                    (sql, rs) => {
-                        if (rs.rows.length > 0) {
-                            setTitleText(rs.rows.item(0).title)
-                            setNoteText(rs.rows.item(0).note)
-                            setPageColor(rs.rows.item(0).pageColor.toString())
-                            setFontColor(rs.rows.item(0).fontColor)
-                            setFontStyle(rs.rows.item(0).fontStyle)
-                            setFontSize(Math.floor(rs.rows.item(0).fontSize))
-                            setSaveButton("Update")
-                        }
-                    },
-                    error => {
-                        console.log("Error");
-                    })
-            })
+            if (props.route.params.page == "Home") {
+
+
+                db.transaction(tx => {
+                    tx.executeSql(`SELECT * FROM notes WHERE id =${props.route.params.id}`, [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                setTitleText(rs.rows.item(0).title)
+                                setNoteText(rs.rows.item(0).note)
+                                setPageColor(rs.rows.item(0).pageColor.toString())
+                                setFontColor(rs.rows.item(0).fontColor)
+                                setFontStyle(rs.rows.item(0).fontStyle)
+                                setFontSize(Math.floor(rs.rows.item(0).fontSize))
+                                setSaveButton("Update")
+                            }
+                        },
+                        error => {
+                            console.log("Error");
+                        })
+                })
+            }
+            else if(props.route.params.page == 'Archive'){
+                
+                db.transaction((tx) => {
+                    tx.executeSql(`SELECT * FROM archived WHERE id = ${props.route.params.id}`, [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                setTitleText(rs.rows.item(0).title)
+                                setNoteText(rs.rows.item(0).note)
+                                setPageColor(rs.rows.item(0).pageColor.toString())
+                                setFontColor(rs.rows.item(0).fontColor)
+                                setFontStyle(rs.rows.item(0).fontStyle)
+                                setFontSize(Math.floor(rs.rows.item(0).fontSize))
+                                setSaveButton("Update archive")
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                })
+            }
+            else if(props.route.params.page == 'HomeCamera'){
+                LaunchCamera()
+            }
         }
     }, [])
 
@@ -126,41 +149,41 @@ const CreateNote = (props) => {
         }
     }
 
-    
+
 
     const UploadImage = async (image) => {
         const data = new FormData()
-        data.append('file',image)
+        data.append('file', image)
         data.append('upload_preset', 'imagetotext')
-        data.append('cloud_name','pankajisrani')
+        data.append('cloud_name', 'pankajisrani')
 
-        fetch('https://api.cloudinary.com/v1_1/pankajisrani/image/upload',{
-            method:'post',
-            body:data
-        }).then(res=>res.json()).then((response)=>{
+        fetch('https://api.cloudinary.com/v1_1/pankajisrani/image/upload', {
+            method: 'post',
+            body: data
+        }).then(res => res.json()).then((response) => {
             setTimeout(() => {
-                fetch(`https://api.ocr.space/parse/imageurl?apikey=K88712079788957&url=${response.url}`, error=>{
+                fetch(`https://api.ocr.space/parse/imageurl?apikey=K88712079788957&url=${response.url}`, error => {
                     setLoading(false)
-                    setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
-                }).then(res=>res.json()).
-                then((resp)=>{
-                    setLoading(false)
-                    setSnackBar({visible:true, message:'Text Generated Successfully!'})
-                    setNoteText(noteText + '\n' + resp.ParsedResults[0].ParsedText)
-                }, error=>{
-                    setLoading(false)
-                    setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
-                }).catch((error)=>{
-                    setLoading(false)
-                    setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
-                })
+                    setSnackBar({ visible: true, message: 'Error generating text, either image is curropt or servers are not responding!' })
+                }).then(res => res.json()).
+                    then((resp) => {
+                        setLoading(false)
+                        setSnackBar({ visible: true, message: 'Text Generated Successfully!' })
+                        setNoteText(noteText.trim() + '\n' + resp.ParsedResults[0].ParsedText.trim())
+                    }, error => {
+                        setLoading(false)
+                        setSnackBar({ visible: true, message: 'Error generating text, either image is curropt or servers are not responding!' })
+                    }).catch((error) => {
+                        setLoading(false)
+                        setSnackBar({ visible: true, message: 'Error generating text, either image is curropt or servers are not responding!' })
+                    })
             }, 100);
-            
-        },error=>{
+
+        }, error => {
             setLoading(false)
-            setSnackBar({visible:true, message:'Error generating text, either image is curropt or servers are not responding!'})
+            setSnackBar({ visible: true, message: 'Error generating text, either image is curropt or servers are not responding!' })
         })
-        
+
     }
 
     const LaunchCamera = async () => {
@@ -168,7 +191,7 @@ const CreateNote = (props) => {
         let result = await ImagePicker.launchCameraAsync({
             cameraType: ImagePicker.CameraType.back,
             quality: 0.7,
-            allowsEditing:true,
+            allowsEditing: true,
             mediaTypes: ImagePicker.MediaTypeOptions.Images
         })
 
@@ -176,7 +199,7 @@ const CreateNote = (props) => {
             setImage(result.assets[0].uri);
             setTimeout(() => {
                 setLoading(true)
-                let newfile = {uri:result.assets[0].uri, type:`test/${result.assets[0].uri.split(".")[1]}`, name:`test.${result.assets[0].uri.split(".")[1]}`}
+                let newfile = { uri: result.assets[0].uri, type: `test/${result.assets[0].uri.split(".")[1]}`, name: `test.${result.assets[0].uri.split(".")[1]}` }
                 UploadImage(newfile)
             }, 100);
 
@@ -187,7 +210,7 @@ const CreateNote = (props) => {
         ImagePicker.getMediaLibraryPermissionsAsync()
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing:true,
+            allowsEditing: true,
             quality: 0.7,
         });
 
@@ -195,7 +218,7 @@ const CreateNote = (props) => {
         if (!result.canceled) {
             setImage(result.assets[0].uri);
             setTimeout(() => {
-                let newfile = {uri:result.assets[0].uri, type:`test/${result.assets[0].uri.split(".")[1]}`, name:`test.${result.assets[0].uri.split(".")[1]}`}
+                let newfile = { uri: result.assets[0].uri, type: `test/${result.assets[0].uri.split(".")[1]}`, name: `test.${result.assets[0].uri.split(".")[1]}` }
                 setLoading(true)
                 UploadImage(newfile)
             }, 100);
@@ -224,6 +247,24 @@ const CreateNote = (props) => {
             })
         }
 
+    }
+    const UpdateArchive = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
+        if (refTitle.current.isFocused() == true) {
+            refTitle.current.blur()
+        }
+        if (refInput.current.isFocused() == true) {
+            refInput.current.blur()
+        }
+        if (titleText || noteText) {
+            db.transaction((tx) => {
+                tx.executeSql(`UPDATE archived SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${props.route.params.id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                    (sql, rs) => {
+                        props.navigation.navigate('ArchivePage')
+                    }, error => {
+                        console.log("Error");
+                    })
+            })
+        }
     }
 
 
@@ -273,11 +314,13 @@ const CreateNote = (props) => {
         })
     }
 
-    const AutoSaveNote = (text) =>{
+
+
+    const AutoSaveNote = (text) => {
         setNoteText(text)
 
-        if(props.route.params == undefined){
-            
+        if (props.route.params == undefined) {
+
         }
     }
 
@@ -305,7 +348,7 @@ const CreateNote = (props) => {
 
             <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
                 <View style={[Styles.container, { justifyContent: 'space-between', }]}>
-                    <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios'? 'height' : 'padding'}>
+                    <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
                         <ImageBackground style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? null : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <TouchableOpacity onPress={() => { props.navigation.navigate("Home") }} style={{ margin: 20 }}>
@@ -319,7 +362,10 @@ const CreateNote = (props) => {
                                     saveButton === "Update" ?
                                         UpdateData(props.route.params.id, titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
                                         :
-                                        SaveToDatabase()
+                                        saveButton == "Update archive" ?
+                                            UpdateArchive(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                            :
+                                            SaveToDatabase()
                                 }}>
                                     <Text style={{
                                         color: pageColor === 'default' ? "#FFBC01" : 'black', fontSize: 19,
@@ -469,15 +515,15 @@ const CreateNote = (props) => {
                 </View>
                 <Portal>
                     <Modal visible={loading}
-                    dismissable={false}
-                    contentContainerStyle={{alignItems:'center', justifyContent:'center'}}>
-                        <Card style={{padding:30, borderRadius:50}}>
-                            <ActivityIndicator size={40}/>
+                        dismissable={false}
+                        contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <Card style={{ padding: 30, borderRadius: 50 }}>
+                            <ActivityIndicator size={40} />
                         </Card>
                     </Modal>
                 </Portal>
                 <Portal>
-                    <Snackbar visible={snackbar.visible} action={{label:'Done', onPress:()=>{setSnackBar({visible:false, message:''})}}} duration={3000} onDismiss={()=>{setSnackBar({visible:false, message:''})}}>
+                    <Snackbar visible={snackbar.visible} action={{ label: 'Done', onPress: () => { setSnackBar({ visible: false, message: '' }) } }} duration={3000} onDismiss={() => { setSnackBar({ visible: false, message: '' }) }}>
                         {snackbar.message}
                     </Snackbar>
                 </Portal>

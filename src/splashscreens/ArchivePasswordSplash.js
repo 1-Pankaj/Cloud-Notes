@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Dimensions, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Appearance, Dimensions, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -17,7 +17,11 @@ const screenHeight = Dimensions.get('window').height
 
 const ArchivePasswordSplash = (props) => {
 
+    const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
 
+    Appearance.addChangeListener(()=>{
+        setColorScheme(Appearance.getColorScheme())
+    })
     const [fontsLoaded] = useFonts({
         'mulish': require("../../assets/fonts/mulish.ttf")
     })
@@ -83,7 +87,7 @@ const ArchivePasswordSplash = (props) => {
                         mode="outlined"
                         style={{ justifyContent: 'center', alignItems: 'center' }}
                         onPress={() => { SkipArchivePass()}}>
-                        <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, color: 'white' }}>
+                        <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, color: colorScheme === 'dark'? 'white' :'black' }}>
                             Skip
                         </Text>
                     </Button>

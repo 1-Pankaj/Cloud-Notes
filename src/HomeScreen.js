@@ -29,7 +29,7 @@ const HomeScreen = (props) => {
     const [openSearch, setOpenSearch] = useState(false)
     const searchRef = useRef(null)
     const [menuVisible, setMenuVisible] = useState(false);
-    const [grid, setGrid] = useState(true)
+    const [grid, setGrid] = useState(false)
     const [dataGrid1, setDataGrid1] = useState(null)
     const [dataGrid2, setDataGrid2] = useState(null)
 
@@ -100,6 +100,7 @@ const HomeScreen = (props) => {
         db.transaction((tx) => {
             tx.executeSql("SELECT * FROM notes ORDER BY id DESC", [],
                 (sql, rs) => {
+
                     if (grid) {
                         setDataGrid1([])
                         setDataGrid2([])
@@ -108,32 +109,13 @@ const HomeScreen = (props) => {
                         if (rs.rows.length > 0) {
                             for (let i = 0; i < rs.rows.length; i = i + 2) {
                                 let item = rs.rows.item(i)
-                                if (item.note.length >= 25) {
-
-                                    results1.push({ id: item.id, title: item.title, note: item.note.slice(0, 25) + "...", date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-                                else if (item.title.length >= 15) {
-
-                                    results1.push({ id: item.id, title: item.title.slice(0, 15) + "...", note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                } else {
-                                    results1.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
+                                results1.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setDataGrid1(results1)
 
                             for (let i = 1; i < rs.rows.length; i = i + 2) {
                                 let item = rs.rows.item(i)
-                                if (item.note.length >= 25) {
-
-                                    results2.push({ id: item.id, title: item.title, note: item.note.slice(0, 25) + "...", date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-                                else if (item.title.length >= 15) {
-
-                                    results2.push({ id: item.id, title: item.title.slice(0, 15) + "...", note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                } else {
-                                    results2.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-
+                                results2.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setDataGrid2(results2)
                         }
@@ -141,22 +123,14 @@ const HomeScreen = (props) => {
                             setDataGrid1(null)
                             setDataGrid2(null)
                         }
-                    } else {
+                    }
+                    else {
                         setData([])
                         let results = []
                         if (rs.rows.length > 0) {
                             for (let i = 0; i < rs.rows.length; i++) {
                                 let item = rs.rows.item(i)
-                                if (item.note.length >= 25) {
-
-                                    results.push({ id: item.id, title: item.title, note: item.note.slice(0, 25) + "...", date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-                                else if (item.title.length >= 15) {
-
-                                    results.push({ id: item.id, title: item.title.slice(0, 15) + "...", note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                } else {
-                                    results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
+                                results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setData(results)
                         } else {
@@ -171,6 +145,58 @@ const HomeScreen = (props) => {
     }
 
 
+    const DeleteFromTable = (id) => {
+        db.transaction(tx => {
+            tx.executeSql("SELECT deletebtn FROM splash", [],
+                (sql, rs) => {
+                    if (rs.rows._array[0].deletebtn == 'false') {
+                        setFabVisible(false)
+                        props.navigation.navigate('DeleteSplash')
+                    }
+                    else {
+
+                        db.transaction(tx => {
+                            tx.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                                (sql, rs) => {
+                                    sql.executeSql(`SELECT * FROM notes where id = (?)`, [id],
+                                        (sql, rs) => {
+                                            const title = rs.rows._array[0].title
+                                            const note = rs.rows._array[0].note
+                                            const date = rs.rows._array[0].date
+                                            const time = rs.rows._array[0].time
+                                            const pageColor = rs.rows._array[0].pageColor
+                                            const fontColor = rs.rows._array[0].fontColor
+                                            const fontStyle = rs.rows._array[0].fontStyle
+                                            const fontSize = rs.rows._array[0].fontSize
+                                            sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values(?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                (sql, rs) => {
+                                                    db.transaction(tx => {
+                                                        tx.executeSql(`DELETE FROM notes WHERE id = (?)`, [id],
+                                                            (sq, rs) => {
+                                                                console.log("deleted");
+                                                                SelectData()
+                                                            },
+                                                            error => {
+                                                                console.log(error);
+                                                            })
+                                                    })
+                                                }, error => {
+                                                    console.log("Error");
+                                                })
+                                        })
+                                }, error => {
+                                    console.log("Error");
+                                })
+                        })
+
+
+                    }
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
+
     const VisibleItem = prop => {
 
         const { data,
@@ -183,20 +209,21 @@ const HomeScreen = (props) => {
         if (rightActionState) {
             Animated.spring(rowHeightAnimatedValue, {
                 toValue: 0,
-                duration: 200,
+                duration: 150,
                 useNativeDriver: false
             }).start(() => {
-                removeRow()
+                DeleteFromTable(data.item.id)
             })
         }
         return (
-            <Animated.View style={{ height: rowHeightAnimatedValue }}>
+            <Animated.View style={{ height: rowHeightAnimatedValue, opacity:rowHeightAnimatedValue}}>
 
                 <TouchableHighlight style={[{
                     borderRadius: 10
                 }]} onPress={() => {
                     props.navigation.navigate("CreateNote", {
-                        id: data.item.id
+                        id: data.item.id,
+                        page: 'Home'
                     })
                 }} underlayColor={colorScheme === "dark" ? "#303030" : "#E3E3E3"}>
 
@@ -260,57 +287,10 @@ const HomeScreen = (props) => {
     }
 
 
-    const DeleteFromTable = (id) => {
-        db.transaction(tx => {
-            tx.executeSql("SELECT deletebtn FROM splash", [],
-                (sql, rs) => {
-                    if (rs.rows._array[0].deletebtn == 'false') {
-                        setFabVisible(false)
-                        props.navigation.navigate('DeleteSplash')
-                    }
-                    else {
-
-                        db.transaction(tx => {
-                            tx.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
-                                (sql, rs) => {
-                                    sql.executeSql(`SELECT * FROM notes where id = (?)`, [id],
-                                        (sql, rs) => {
-                                            const title = rs.rows._array[0].title
-                                            const note = rs.rows._array[0].note
-                                            const date = rs.rows._array[0].date
-                                            const time = rs.rows._array[0].time
-                                            const pageColor = rs.rows._array[0].pageColor
-                                            const fontColor = rs.rows._array[0].fontColor
-                                            const fontStyle = rs.rows._array[0].fontStyle
-                                            const fontSize = rs.rows._array[0].fontSize
-                                            sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values(?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
-                                                (sql, rs) => {
-                                                    db.transaction(tx => {
-                                                        tx.executeSql(`DELETE FROM notes WHERE id = (?)`, [id],
-                                                            (sq, rs) => {
-                                                                console.log("deleted");
-                                                                SelectData()
-                                                            },
-                                                            error => {
-                                                                console.log(error);
-                                                            })
-                                                    })
-                                                }, error => {
-                                                    console.log("Error");
-                                                })
-                                        })
-                                }, error => {
-                                    console.log("Error");
-                                })
-                        })
+    
 
 
-                    }
-                }, error => {
-                    console.log("Error");
-                })
-        })
-    }
+    
 
 
 
@@ -368,7 +348,8 @@ const HomeScreen = (props) => {
         if (rightActionActivated) {
             Animated.spring(rowActionAnimatedValue, {
                 toValue: 500,
-                useNativeDriver: false
+                useNativeDriver: false,
+                duration:100
             }).start(() => {
                 DeleteFromTable(props.data.item.id)
             });
@@ -560,7 +541,7 @@ const HomeScreen = (props) => {
             CheckFirstTime()
         }
 
-    }, [props, isFocused, grid])
+    }, [isFocused])
 
 
 
@@ -662,7 +643,7 @@ const HomeScreen = (props) => {
                 }
 
                 {
-                    data && dataGrid1 && dataGrid2 ?
+                    data || dataGrid1 || dataGrid2 ?
                         grid ?
                             <ScrollView style={{ width: screenWidth }}>
                                 <View style={{ width: screenWidth, flex: 1, flexDirection: 'row', marginBottom: 60, }}>
@@ -674,7 +655,8 @@ const HomeScreen = (props) => {
                                                 activeOpacity={0.6} onPress={() => {
                                                     setFabVisible(false)
                                                     props.navigation.navigate("CreateNote", {
-                                                        id: item.item.id
+                                                        id: item.item.id,
+                                                        page: 'Home'
                                                     })
                                                 }}>
 
@@ -713,7 +695,8 @@ const HomeScreen = (props) => {
                                                 activeOpacity={0.6} onPress={() => {
                                                     setFabVisible(false)
                                                     props.navigation.navigate("CreateNote", {
-                                                        id: item.item.id
+                                                        id: item.item.id,
+                                                        page: 'Home'
                                                     })
                                                 }}>
 
@@ -789,6 +772,8 @@ const HomeScreen = (props) => {
                         </TouchableOpacity>
                     </Tooltip>
 
+
+
                     <Portal>
                         <FAB.Group
                             open={open}
@@ -807,14 +792,18 @@ const HomeScreen = (props) => {
                                 {
                                     icon: 'clipboard-list',
                                     label: 'TO-DO List',
-                                    onPress: () => console.log('Pressed star'),
+                                    onPress: () => {setFabVisible(false)
+                                        props.navigation.navigate('ToDo')},
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },
                                 {
                                     icon: 'camera',
                                     label: 'Open Camera',
-                                    onPress: () => console.log('Pressed star'),
+                                    onPress: () => {setFabVisible(false)
+                                        props.navigation.navigate('CreateNote',{
+                                        page:'HomeCamera'
+                                    })},
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },

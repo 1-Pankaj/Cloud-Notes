@@ -286,7 +286,7 @@ const TrashPage = (props) => {
                         {deleteFun ?
                             <>
                                 <Button onPress={() => { setDialog(false) }}>Cancel</Button>
-                                <Button onPress={() => { FinallyDelete() }}>Delete</Button>
+                                <Button onPress={() => { FinallyDelete() }}>{deleteNoteId === 'All'? 'Delete' : 'Recover' }</Button>
                             </>
                             :
                             <Button onPress={() => { setDialog(false) }}>Done</Button>}
