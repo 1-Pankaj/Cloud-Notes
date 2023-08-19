@@ -1,14 +1,10 @@
 import { React, useEffect, useState } from 'react';
-import { View, Text, Appearance } from 'react-native';
+import { Appearance } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './src/HomeScreen';
-import 'react-native-url-polyfill/auto'
 import {
   Provider as PaperProvider, MD3LightTheme as LightTheme,
-  MD3DarkTheme as DarkTheme,
-  DefaultTheme
-} from 'react-native-paper'
+  MD3DarkTheme as DarkTheme} from 'react-native-paper'
 import SplashScreenPage from './src/SplashScreen'
 import { StatusBar } from 'expo-status-bar';
 import Loading from './src/Loading';
@@ -20,6 +16,10 @@ import Browser from './src/Browser';
 import HomeSplash from './src/splashscreens/HomeSplash';
 import ArchiveSplash from './src/splashscreens/ArchiveSplash';
 import DeleteSplash from './src/splashscreens/DeleteSplash';
+import ArchivePage from './src/ArchivePage';
+import ArchivePasswordSplash from './src/splashscreens/ArchivePasswordSplash';
+import PasswordPage from './src/PasswordPage';
+import TrashPage from './src/TrashPage';
 
 const Stack = createStackNavigator()
 
@@ -98,6 +98,34 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name='DeleteSplash' component={DeleteSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ArchivePage' component={ArchivePage} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ArchivePasswordSplash' component={ArchivePasswordSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='PasswordPage' component={PasswordPage} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='TrashPage' component={TrashPage} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

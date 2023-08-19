@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, StyleSheet, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, StyleSheet, TextInput, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Appbar, Button, Dialog, Divider, Drawer, FAB, IconButton, Menu, Portal, Text, Tooltip } from "react-native-paper";
+import { Button, Dialog, Divider, FAB, Menu, Portal, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
@@ -24,7 +24,6 @@ const db = SQLite.openDatabase("CloudNotes.db")
 const HomeScreen = (props) => {
     const [visible, setVisible] = useState(false);
     const [dialogText, setDialogText] = useState('')
-    const [deleteRow, setDeleteRow] = useState(false)
     const [searchText, setSearchText] = useState("")
     const animatedHiddenSearch = new Animated.Value(0)
     const [openSearch, setOpenSearch] = useState(false)
@@ -75,7 +74,6 @@ const HomeScreen = (props) => {
 
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
 
-    const [textData, setText] = useState("")
     const [data, setData] = useState([])
     const CreateTable = () => {
         db.transaction((tx) => {
@@ -90,10 +88,10 @@ const HomeScreen = (props) => {
                     })
         })
 
-        db.transaction((tx)=>{
-            tx.executeSql("CREATE TABLE IF NOT EXISTS archived (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)",[],
-                (sql,rs)=>{
-                },error=>{
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS archived (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                (sql, rs) => {
+                }, error => {
                     console.log("Error");
                 })
         })
@@ -173,18 +171,6 @@ const HomeScreen = (props) => {
     }
 
 
-
-
-    const DropTable = () => {
-        db.transaction((tx) => {
-            tx.executeSql("DROP TABLE notes", [],
-                (sql, rs) => {
-                    console.log("Dropped");
-
-                })
-        })
-    }
-
     const VisibleItem = prop => {
 
         const { data,
@@ -214,23 +200,23 @@ const HomeScreen = (props) => {
                     })
                 }} underlayColor={colorScheme === "dark" ? "#303030" : "#E3E3E3"}>
 
-                    <View style={{ width: '100%', height: 60, borderRadius: 10, borderWidth: 2, borderColor: colorScheme === 'dark' ? "#404040" : '#909090', backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                        <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.3, position: 'absolute' }} />
+                    <View style={{ width: '100%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                        <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
                         <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
                             <View>
                                 <Text style={{
-                                    fontFamily: data.item.fontStyle === 'default' ? 'mulish' : data.item.fontStyle, fontSize: data.item.fontStyle === 'default' ? 18 : 22,
-                                    fontWeight: data.item.fontStyle === 'default' ? 'bold' : 'normal', color: data.item.fontColor === 'default' ? colorScheme === 'dark' ? 'white' : '#202020' : data.item.fontColor
+                                    fontFamily: 'mulish', fontSize: 18,
+                                    fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
                                 }}
                                     numberOfLines={1}>
-                                    {data.item.title.slice(0, 15)}
+                                    {data.item.title.slice(0, 20).trim()}
                                 </Text>
                                 <Text style={{
-                                    fontFamily: data.item.fontStyle === 'default' ? 'mulish' : data.item.fontStyle, fontSize: data.item.fontStyle === 'default' ? 12 : 14
-                                    , color: data.item.fontColor === 'default' ? colorScheme === 'dark' ? 'white' : '#202020' : data.item.fontColor
+                                    fontFamily: 'mulish', fontSize: 12
+                                    , color: colorScheme === 'dark' ? 'white' : '#202020'
                                 }}
                                     numberOfLines={1}>
-                                    {data.item.note.slice(0, 25)}
+                                    {data.item.note.slice(0, 30).trim()}
                                 </Text>
                             </View>
                             <View style={{ alignItems: 'center', flexDirection: 'row', }}>
@@ -275,74 +261,98 @@ const HomeScreen = (props) => {
 
 
     const DeleteFromTable = (id) => {
-        db.transaction(tx=>{
+        db.transaction(tx => {
             tx.executeSql("SELECT deletebtn FROM splash", [],
-            (sql,rs)=>{
-                if(rs.rows._array[0].deletebtn == 'false'){
-                    setFabVisible(false)
-                    props.navigation.navigate('DeleteSplash')
-                }
-                else{
-                    db.transaction(tx => {
-                        tx.executeSql(`DELETE FROM notes WHERE id = ${id}`, [],
-                            (sq, rs) => {
-                                console.log("deleted");
-                                SelectData()
-                            },
-                            error => {
-                                console.log(error);
-                            })
-                    })
-                }
-            },error=>{
-                console.log("Error");
-            })
+                (sql, rs) => {
+                    if (rs.rows._array[0].deletebtn == 'false') {
+                        setFabVisible(false)
+                        props.navigation.navigate('DeleteSplash')
+                    }
+                    else {
+
+                        db.transaction(tx => {
+                            tx.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                                (sql, rs) => {
+                                    sql.executeSql(`SELECT * FROM notes where id = (?)`, [id],
+                                        (sql, rs) => {
+                                            const title = rs.rows._array[0].title
+                                            const note = rs.rows._array[0].note
+                                            const date = rs.rows._array[0].date
+                                            const time = rs.rows._array[0].time
+                                            const pageColor = rs.rows._array[0].pageColor
+                                            const fontColor = rs.rows._array[0].fontColor
+                                            const fontStyle = rs.rows._array[0].fontStyle
+                                            const fontSize = rs.rows._array[0].fontSize
+                                            sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values(?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                (sql, rs) => {
+                                                    db.transaction(tx => {
+                                                        tx.executeSql(`DELETE FROM notes WHERE id = (?)`, [id],
+                                                            (sq, rs) => {
+                                                                console.log("deleted");
+                                                                SelectData()
+                                                            },
+                                                            error => {
+                                                                console.log(error);
+                                                            })
+                                                    })
+                                                }, error => {
+                                                    console.log("Error");
+                                                })
+                                        })
+                                }, error => {
+                                    console.log("Error");
+                                })
+                        })
+
+
+                    }
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
-    const DeleteFirstTimeCheck = (id)=>{
-        
-    }
 
 
-    const ArchiveFirstTimeCheck = (id) =>{
-        db.transaction((tx)=>{
-            tx.executeSql("SELECT archivebtn FROM splash",[],
-            (sql,rs)=>{
-                if(rs.rows._array[0].archivebtn == 'false'){
-                    setFabVisible(false)
-                    props.navigation.navigate('ArchiveSplash')
-                }
-                else{
-                    db.transaction((tx)=>{
-                        tx.executeSql("SELECT * FROM notes where id = (?)",[id],
-                        (sql,rs)=>{
-                            const title = rs.rows._array[0].title
-                            const note = rs.rows._array[0].note
-                            const date = rs.rows._array[0].date
-                            const time = rs.rows._array[0].time
-                            const pageColor = rs.rows._array[0].pageColor
-                            const fontColor = rs.rows._array[0].fontColor
-                            const fontStyle = rs.rows._array[0].fontStyle
-                            const fontSize = rs.rows._array[0].fontSize
-                            sql.executeSql("INSERT INTO archived (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)",[title,note,date,time,pageColor,fontColor,fontStyle,fontSize],
-                            (sql,rs)=>{
-                                sql.executeSql("DELETE FROM notes where id = (?)",[id],
-                                (sql,rs)=>{
-                                    showDialog("Archived!")
-                                    SelectData()},
-                                error=>{console.log("Error");})
-                            },error=>{
-                                console.log("Error");
-                            })
-                        }, error=>{
-                            console.log("Error");
+    const ArchiveFirstTimeCheck = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT archivebtn FROM splash", [],
+                (sql, rs) => {
+                    if (rs.rows._array[0].archivebtn == 'false') {
+                        setFabVisible(false)
+                        props.navigation.navigate('ArchiveSplash')
+                    }
+                    else {
+                        db.transaction((tx) => {
+                            tx.executeSql("SELECT * FROM notes where id = (?)", [id],
+                                (sql, rs) => {
+                                    const title = rs.rows._array[0].title
+                                    const note = rs.rows._array[0].note
+                                    const date = rs.rows._array[0].date
+                                    const time = rs.rows._array[0].time
+                                    const pageColor = rs.rows._array[0].pageColor
+                                    const fontColor = rs.rows._array[0].fontColor
+                                    const fontStyle = rs.rows._array[0].fontStyle
+                                    const fontSize = rs.rows._array[0].fontSize
+                                    sql.executeSql("INSERT INTO archived (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                        (sql, rs) => {
+                                            sql.executeSql("DELETE FROM notes where id = (?)", [id],
+                                                (sql, rs) => {
+                                                    showDialog("Archived!")
+                                                    SelectData()
+                                                },
+                                                error => { console.log("Error"); })
+                                        }, error => {
+                                            console.log("Error");
+                                        })
+                                }, error => {
+                                    console.log("Error");
+                                })
                         })
-                    })
-                }
-            },error=>{
-                console.log("Error");
-            })
+                    }
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
@@ -366,7 +376,7 @@ const HomeScreen = (props) => {
 
         return (
             <Animated.View style={[styles.rowBack, { height: rowHeightAnimatedValue }]}>
-                <TouchableOpacity style={styles.trash} onPress={()=>{ArchiveFirstTimeCheck(props.data.item.id)}}>
+                <TouchableOpacity style={styles.trash} onPress={() => { ArchiveFirstTimeCheck(props.data.item.id) }}>
                     <Ionicons name="archive" color="white" size={20} />
                 </TouchableOpacity>
 
@@ -506,7 +516,7 @@ const HomeScreen = (props) => {
         )
     }
 
-    
+
 
     const renderHiddenItem = (data, rowMap) => {
         const rowActionAnimatedValue = new Animated.Value(75)
@@ -525,21 +535,21 @@ const HomeScreen = (props) => {
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
     })
-    const CheckFirstTime = () =>{
-        db.transaction((tx)=>{
-            tx.executeSql("SELECT homepage FROM splash",[],
-            (sql,rs)=>{
-                if(rs.rows._array[0].homepage == 'false'){
-                    setFabVisible(false)
-                    props.navigation.navigate('HomeSplash')
-                }
-            },error=>{
-                console.log("Error");
-            })
+    const CheckFirstTime = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT homepage FROM splash", [],
+                (sql, rs) => {
+                    if (rs.rows._array[0].homepage == 'false') {
+                        setFabVisible(false)
+                        props.navigation.navigate('HomeSplash')
+                    }
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
-    
+
 
 
     useEffect(() => {
@@ -585,9 +595,10 @@ const HomeScreen = (props) => {
                     flexDirection: 'row', width: screenWidth, alignItems: 'center', padding: 15,
                     justifyContent: 'space-between'
                 }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => { 
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => {
                         setFabVisible(false)
-                        props.navigation.navigate("Directory") }}>
+                        props.navigation.navigate("Directory")
+                    }}>
                         <MaterialComIcon name="arrow-back-ios" size={22} color="#FFBC01" />
                         <Text style={{
                             color: '#FFBC01', fontFamily: 'mulish',
@@ -644,10 +655,10 @@ const HomeScreen = (props) => {
 
                 </Animated.View>
                 {
-                    data && dataGrid1 && dataGrid2?
-                    <Text style={{alignSelf:'flex-start', marginStart:20,marginTop:15, fontSize:25, fontWeight:'bold'}}>All Notes</Text>
-                    :
-                    null
+                    data && dataGrid1 && dataGrid2 ?
+                        <Text style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 15, fontSize: 25, fontWeight: 'bold' }}>All Notes</Text>
+                        :
+                        null
                 }
 
                 {
@@ -674,13 +685,14 @@ const HomeScreen = (props) => {
                                                     <View style={{ maxWidth: 100, width: 100 }}>
                                                         <Text style={{
                                                             margin: 10, fontSize: item.item.fontStyle == 'default' ? 23 : 30, fontFamily: item.item.fontStyle == 'default' ? null : item.item.fontStyle,
-                                                            fontWeight: item.item.fontStyle == 'default' ? 'bold' : 'normal', color: item.item.fontColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : item.item.fontColor
-                                                        }} numberOfLines={2}>{item.item.title.slice(0, 7)}</Text>
+                                                            fontWeight: item.item.fontStyle == 'default' ? 'bold' : 'normal', color: item.item.pageColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : '#101010',
+                                                            marginTop: item.item.fontStyle === 'default' ? 10 : -1
+                                                        }} numberOfLines={2}>{item.item.title.slice(0, 7).trim()}</Text>
                                                         <Text numberOfLines={2} style={{
                                                             marginStart: 10, fontSize: item.item.fontStyle == 'default' ? 14 : 17, fontFamily: item.item.fontStyle == 'default' ? null : item.item.fontStyle,
-                                                            color: item.item.fontColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : item.item.fontColor
+                                                            color: item.item.pageColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : '#101010', marginTop: item.item.fontStyle === 'default' ? 0 : -6
                                                         }}>
-                                                            {item.item.note.slice(0, 15) + "\n" + item.item.note.slice(15, 20)}</Text>
+                                                            {item.item.note.slice(0, 15).trim() + "\n" + item.item.note.slice(15, 20).trim()}</Text>
                                                     </View>
                                                     <View style={{ marginEnd: 10, marginStart: -10, marginTop: 20, marginBottom: 10, alignSelf: 'flex-end', flexDirection: 'row' }}>
                                                         <View style={{ alignItems: 'center', marginStart: -10 }}>
@@ -712,13 +724,14 @@ const HomeScreen = (props) => {
                                                     <View style={{ maxWidth: 100, width: 100 }}>
                                                         <Text style={{
                                                             margin: 10, fontSize: item.item.fontStyle == 'default' ? 23 : 30, fontFamily: item.item.fontStyle == 'default' ? null : item.item.fontStyle,
-                                                            fontWeight: item.item.fontStyle == 'default' ? 'bold' : 'normal', color: item.item.fontColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : item.item.fontColor
-                                                        }} numberOfLines={2}>{item.item.title.slice(0, 7)}</Text>
+                                                            fontWeight: item.item.fontStyle == 'default' ? 'bold' : 'normal', color: item.item.pageColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : '#101010',
+                                                            marginTop: item.item.fontStyle === 'default' ? 10 : -1
+                                                        }} numberOfLines={2}>{item.item.title.slice(0, 7).trim()}</Text>
                                                         <Text numberOfLines={2} style={{
                                                             marginStart: 10, fontSize: item.item.fontStyle == 'default' ? 14 : 17, fontFamily: item.item.fontStyle == 'default' ? null : item.item.fontStyle,
-                                                            color: item.item.fontColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : item.item.fontColor
+                                                            color: item.item.pageColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : '#101010', marginTop: item.item.fontStyle === 'default' ? 0 : -6
                                                         }}>
-                                                            {item.item.note.slice(0, 15) + "\n" + item.item.note.slice(15, 20)}</Text>
+                                                            {item.item.note.slice(0, 15).trim() + "\n" + item.item.note.slice(15, 20).trim()}</Text>
                                                     </View>
                                                     <View style={{ marginEnd: 10, marginStart: -10, marginTop: 20, marginBottom: 10, alignSelf: 'flex-end', flexDirection: 'row' }}>
                                                         <View style={{ alignItems: 'center', marginStart: -10 }}>

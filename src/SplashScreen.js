@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, TouchableOpacity, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import React, { useCallback } from "react";
+import { TouchableOpacity, View } from "react-native";
+import { Button, Text } from "react-native-paper";
 import Styles from "./Styles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AnimatedLottieView from "lottie-react-native";

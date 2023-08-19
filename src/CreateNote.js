@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
 import { Animated, Appearance, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
-import { ActivityIndicator, Button, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
+import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
 
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
@@ -15,10 +15,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
-import axios from "axios";
-import { firebase } from '../firebase'
-import * as FileSystem from 'expo-file-system'
-import ImageKit from "imagekit-javascript";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -89,7 +85,6 @@ const CreateNote = (props) => {
                             setNoteText(rs.rows.item(0).note)
                             setPageColor(rs.rows.item(0).pageColor.toString())
                             setFontColor(rs.rows.item(0).fontColor)
-                            console.log(rs.rows.item(0));
                             setFontStyle(rs.rows.item(0).fontStyle)
                             setFontSize(Math.floor(rs.rows.item(0).fontSize))
                             setSaveButton("Update")
@@ -172,13 +167,10 @@ const CreateNote = (props) => {
         await ImagePicker.getCameraPermissionsAsync()
         let result = await ImagePicker.launchCameraAsync({
             cameraType: ImagePicker.CameraType.back,
-            allowsEditing: true,
-            aspect: [1,1],
-            quality: 0.5,
+            quality: 0.7,
+            allowsEditing:true,
             mediaTypes: ImagePicker.MediaTypeOptions.Images
         })
-
-        console.log(result);
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
@@ -195,9 +187,8 @@ const CreateNote = (props) => {
         ImagePicker.getMediaLibraryPermissionsAsync()
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1,1],
-            quality: 0.5,
+            allowsEditing:true,
+            quality: 0.7,
         });
 
 
@@ -314,7 +305,7 @@ const CreateNote = (props) => {
 
             <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
                 <View style={[Styles.container, { justifyContent: 'space-between', }]}>
-                    <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior="padding">
+                    <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios'? 'height' : 'padding'}>
                         <ImageBackground style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? null : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <TouchableOpacity onPress={() => { props.navigation.navigate("Home") }} style={{ margin: 20 }}>

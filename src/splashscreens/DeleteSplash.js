@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Dimensions, Image, TouchableOpacity, View } from "react-native";
+import { Dimensions, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';

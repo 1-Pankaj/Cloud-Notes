@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Appearance, Dimensions, FlatList, TextInput, TouchableOpacity, View } from "react-native";
 import Styles from "./Styles";
-import { Button, Divider, ProgressBar, Text } from "react-native-paper";
+import { ProgressBar, Text } from "react-native-paper";
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
