@@ -21,7 +21,7 @@ const SplashScreenPage = (props) => {
                     props.navigation.replace("Home")
                 },
                 error => {
-                    console.log("Error");
+                    console.log(error);
                 })
         })
     }

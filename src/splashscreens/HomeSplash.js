@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Dimensions, View } from "react-native";
+import { Dimensions, Image, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -47,10 +47,9 @@ const HomeSplash = (props) => {
     return (
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={[Styles.container, { justifyContent: 'space-around' }]}>
-                <AnimatedLottieView
-                    source={require('../../assets/homesplash.json')}
-                    loop autoPlay
-                    style={{ width: screenWidth, height: 300 }}/>
+                <Image source={require('../../assets/splashicon.png')}
+                    style={{width:screenWidth, height:300}}
+                />
                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 22, textAlign: 'center' }}>
                     Looks like it's your first time in CloudNotes!</Text>
                 <Text style={{ fontWeight: 'bold', fontSize: 14, textAlign: 'center', paddingHorizontal: 10 }}>

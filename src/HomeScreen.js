@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, StyleSheet, TextInput, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Dialog, Divider, FAB, Menu, Portal, Text, Tooltip } from "react-native-paper";
+import { Button, Divider, FAB, Menu, Portal, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
@@ -23,7 +23,7 @@ const db = SQLite.openDatabase("CloudNotes.db")
 
 const HomeScreen = (props) => {
     const [visible, setVisible] = useState(false);
-    const [dialogText, setDialogText] = useState('')
+    const [refreshing , setRefreshing] = useState(false)
     const [searchText, setSearchText] = useState("")
     const animatedHiddenSearch = new Animated.Value(0)
     const [openSearch, setOpenSearch] = useState(false)
@@ -45,12 +45,7 @@ const HomeScreen = (props) => {
     const { open } = state;
 
     const isFocused = useIsFocused()
-    const showDialog = (prop) => {
-        setVisible(true)
-        setDialogText(prop)
-    }
 
-    const hideDialog = () => setVisible(false);
     const onRowDidOpen = rowKey => {
         console.log('This row opened', rowKey);
     };
@@ -81,7 +76,6 @@ const HomeScreen = (props) => {
                 ("CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)",
                     [],
                     (sql, rs) => {
-
                     },
                     error => {
                         console.log("Error");
@@ -118,6 +112,7 @@ const HomeScreen = (props) => {
                                 results2.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setDataGrid2(results2)
+                            setRefreshing(false)
                         }
                         else {
                             setDataGrid1(null)
@@ -133,6 +128,7 @@ const HomeScreen = (props) => {
                                 results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setData(results)
+                            setRefreshing(false)
                         } else {
                             setData(null)
                         }
@@ -140,6 +136,7 @@ const HomeScreen = (props) => {
                 },
                 error => {
                     console.log("Error");
+                    setRefreshing(false)
                 })
         })
     }
@@ -154,44 +151,43 @@ const HomeScreen = (props) => {
                         props.navigation.navigate('DeleteSplash')
                     }
                     else {
+                        sql.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)",[],
+                        (sql,rs)=>{
+                            sql.executeSql("SELECT * FROM notes where id = (?)",[id],
+                            (sql,rs)=>{
+                                if(rs.rows.length == 0){
 
-                        db.transaction(tx => {
-                            tx.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
-                                (sql, rs) => {
-                                    sql.executeSql(`SELECT * FROM notes where id = (?)`, [id],
-                                        (sql, rs) => {
-                                            const title = rs.rows._array[0].title
-                                            const note = rs.rows._array[0].note
-                                            const date = rs.rows._array[0].date
-                                            const time = rs.rows._array[0].time
-                                            const pageColor = rs.rows._array[0].pageColor
-                                            const fontColor = rs.rows._array[0].fontColor
-                                            const fontStyle = rs.rows._array[0].fontStyle
-                                            const fontSize = rs.rows._array[0].fontSize
-                                            sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values(?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
-                                                (sql, rs) => {
-                                                    db.transaction(tx => {
-                                                        tx.executeSql(`DELETE FROM notes WHERE id = (?)`, [id],
-                                                            (sq, rs) => {
-                                                                console.log("deleted");
-                                                                SelectData()
-                                                            },
-                                                            error => {
-                                                                console.log(error);
-                                                            })
-                                                    })
-                                                }, error => {
-                                                    console.log("Error");
-                                                })
+                                }else{
+                                    let title = rs.rows._array[0].title
+                                    let note = rs.rows._array[0].note
+                                    let date = rs.rows._array[0].date
+                                    let time = rs.rows._array[0].time
+                                    let pageColor = rs.rows._array[0].pageColor
+                                    let fontColor = rs.rows._array[0].fontColor
+                                    let fontStyle = rs.rows._array[0].fontStyle
+                                    let fontSize = rs.rows._array[0].fontSize
+
+                                    sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)",[title,note,date,time,pageColor,fontColor,fontStyle,fontSize],
+                                    (sql,rs)=>{
+                                        sql.executeSql("DELETE FROM notes WHERE id = (?)", [id],
+                                        (sql,rs)=>{
+                                            SelectData()
+                                            ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
+                                        }, error=>{
+                                            console.log("error");
                                         })
-                                }, error => {
-                                    console.log("Error");
-                                })
+                                    }, error=>{
+                                        console.log("Error");
+                                    })
+                                }
+                            }, error=>{
+                                console.log("Error");
+                            })
+                        }, error =>{
+                            console.log("error");
                         })
-
-
                     }
-                }, error => {
+                }, error=>{
                     console.log("Error");
                 })
         })
@@ -216,7 +212,7 @@ const HomeScreen = (props) => {
             })
         }
         return (
-            <Animated.View style={{ height: rowHeightAnimatedValue, opacity:rowHeightAnimatedValue}}>
+            <Animated.View style={{ height: rowHeightAnimatedValue, opacity: rowHeightAnimatedValue }}>
 
                 <TouchableHighlight style={[{
                     borderRadius: 10
@@ -286,14 +282,6 @@ const HomeScreen = (props) => {
         }
     }
 
-
-    
-
-
-    
-
-
-
     const ArchiveFirstTimeCheck = (id) => {
         db.transaction((tx) => {
             tx.executeSql("SELECT archivebtn FROM splash", [],
@@ -318,7 +306,7 @@ const HomeScreen = (props) => {
                                         (sql, rs) => {
                                             sql.executeSql("DELETE FROM notes where id = (?)", [id],
                                                 (sql, rs) => {
-                                                    showDialog("Archived!")
+                                                    ToastAndroid.show("Archived!", ToastAndroid.SHORT)
                                                     SelectData()
                                                 },
                                                 error => { console.log("Error"); })
@@ -349,7 +337,7 @@ const HomeScreen = (props) => {
             Animated.spring(rowActionAnimatedValue, {
                 toValue: 500,
                 useNativeDriver: false,
-                duration:100
+                duration: 100
             }).start(() => {
                 DeleteFromTable(props.data.item.id)
             });
@@ -391,17 +379,7 @@ const HomeScreen = (props) => {
                         </Animated.View>
                     </TouchableOpacity>
                     <Portal>
-                        <Dialog visible={visible} onDismiss={hideDialog}>
-                            <Dialog.Content>
-                                <Text variant="bodyMedium">{dialogText}</Text>
-                            </Dialog.Content>
-                            <Dialog.Actions>
-                                <Button onPress={() => {
-                                    hideDialog()
-                                }}>Done</Button>
 
-                            </Dialog.Actions>
-                        </Dialog>
                     </Portal>
                 </Animated.View>
 
@@ -422,31 +400,13 @@ const HomeScreen = (props) => {
                         if (rs.rows.length > 0) {
                             for (let i = 0; i < rs.rows.length; i = i + 2) {
                                 let item = rs.rows.item(i)
-                                if (item.note.length >= 25) {
-
-                                    results1.push({ id: item.id, title: item.title, note: item.note.slice(0, 25) + "...", date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-                                else if (item.title.length >= 15) {
-
-                                    results1.push({ id: item.id, title: item.title.slice(0, 15) + "...", note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                } else {
-                                    results1.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
+                                results1.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setDataGrid1(results1)
 
                             for (let i = 1; i < rs.rows.length; i = i + 2) {
                                 let item = rs.rows.item(i)
-                                if (item.note.length >= 25) {
-
-                                    results2.push({ id: item.id, title: item.title, note: item.note.slice(0, 25) + "...", date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-                                else if (item.title.length >= 15) {
-
-                                    results2.push({ id: item.id, title: item.title.slice(0, 15) + "...", note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                } else {
-                                    results2.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
+                                results2.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
                             }
                             setDataGrid2(results2)
                         }
@@ -460,16 +420,9 @@ const HomeScreen = (props) => {
                         if (rs.rows.length > 0) {
                             for (let i = 0; i < rs.rows.length; i++) {
                                 let item = rs.rows.item(i)
-                                if (item.note.length >= 25) {
 
-                                    results.push({ id: item.id, title: item.title, note: item.note.slice(0, 25) + "...", date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
-                                else if (item.title.length >= 15) {
+                                results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
 
-                                    results.push({ id: item.id, title: item.title.slice(0, 15) + "...", note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                } else {
-                                    results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
-                                }
                             }
                             setData(results)
                         } else {
@@ -534,14 +487,14 @@ const HomeScreen = (props) => {
 
 
     useEffect(() => {
+        SelectData()
+        CheckFirstTime()
+        CreateTable()
         if (isFocused) {
-            CreateTable()
-            SelectData()
             setFabVisible(true)
-            CheckFirstTime()
+            SelectData()
         }
-
-    }, [isFocused])
+    }, [isFocused, props])
 
 
 
@@ -607,6 +560,8 @@ const HomeScreen = (props) => {
                             <Menu.Item onPress={() => {
                                 closeMenu()
                                 setGrid(!grid)
+                                setRefreshing(true)
+                                SelectData()
                             }} title={grid ? 'List View' : 'Grid View'} leadingIcon={grid ? 'format-list-checkbox' : 'view-grid'} theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
                             <Menu.Item onPress={() => { }} title="Item 2" />
                             <Divider />
@@ -645,7 +600,9 @@ const HomeScreen = (props) => {
                 {
                     data || dataGrid1 || dataGrid2 ?
                         grid ?
-                            <ScrollView style={{ width: screenWidth }}>
+                            <ScrollView style={{ width: screenWidth }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{
+                                setRefreshing(true)
+                                SelectData()}}/>}>
                                 <View style={{ width: screenWidth, flex: 1, flexDirection: 'row', marginBottom: 60, }}>
                                     <FlatList data={dataGrid1}
                                         scrollEnabled={false} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}
@@ -732,6 +689,8 @@ const HomeScreen = (props) => {
                             :
                             <SwipeListView
                                 data={data}
+                                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true)
+                                    SelectData()}}/>}
                                 renderItem={renderItem}
                                 renderHiddenItem={renderHiddenItem}
                                 leftOpenValue={75}
@@ -792,18 +751,22 @@ const HomeScreen = (props) => {
                                 {
                                     icon: 'clipboard-list',
                                     label: 'TO-DO List',
-                                    onPress: () => {setFabVisible(false)
-                                        props.navigation.navigate('ToDo')},
+                                    onPress: () => {
+                                        setFabVisible(false)
+                                        props.navigation.navigate('ToDo')
+                                    },
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },
                                 {
                                     icon: 'camera',
                                     label: 'Open Camera',
-                                    onPress: () => {setFabVisible(false)
-                                        props.navigation.navigate('CreateNote',{
-                                        page:'HomeCamera'
-                                    })},
+                                    onPress: () => {
+                                        setFabVisible(false)
+                                        props.navigation.navigate('CreateNote', {
+                                            page: 'HomeCamera'
+                                        })
+                                    },
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },

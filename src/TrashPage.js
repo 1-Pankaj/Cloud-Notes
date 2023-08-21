@@ -25,6 +25,7 @@ const TrashPage = (props) => {
     const [deleteFun, setDeleteFun] = useState(false)
     const [dialogMessage, setDialogMessage] = useState('')
     const [deleteNoteId, setDeleteNoteId] = useState('')
+    const [deleteId, setDeleteId] = useState('')
 
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
@@ -96,7 +97,8 @@ const TrashPage = (props) => {
     }
 
     const DeleteTrashedNote = (id) => {
-        setDeleteNoteId(id)
+        setDeleteNoteId('All')
+        setDeleteId(id)
         setDeleteFun(true)
         setDialogMessage('Are you sure you want to delete this note?')
         setDialog(true)
@@ -143,7 +145,7 @@ const TrashPage = (props) => {
                                             console.log("Error");
                                         })
                                 }, error => {
-
+                                    console.log("Error");
                                 })
                         }
                     }
@@ -162,7 +164,7 @@ const TrashPage = (props) => {
         }
         else {
             db.transaction((tx) => {
-                tx.executeSql("DELETE FROM deletednotes WHERE id = (?)", [deleteNoteId],
+                tx.executeSql("DELETE FROM deletednotes WHERE id = (?)", [deleteId],
                     (sql, rs) => {
                         FetchTrashedNotes()
                         setDeleteFun(false)
@@ -254,7 +256,9 @@ const TrashPage = (props) => {
                                         <TouchableOpacity onPress={() => { RestoreNote(item.item.id) }}>
                                             <MaterialIcons name="restore-from-trash" size={25} color="#FFBC01" style={{ marginEnd: 20 }} />
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => { DeleteTrashedNote(item.item.id) }}>
+                                        <TouchableOpacity onPress={() => {
+                                            DeleteTrashedNote(item.item.id)
+                                            console.log(deleteFun) }}>
                                             <MaterialIcons name="delete-forever" size={25} color="red" style={{ marginEnd: 20 }} />
                                         </TouchableOpacity>
                                     </View>

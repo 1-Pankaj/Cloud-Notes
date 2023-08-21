@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
 import { Animated, Appearance, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
-import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
+import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text } from "react-native-paper";
 
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 
 import * as SQLite from 'expo-sqlite'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import AntDesign from '@expo/vector-icons/AntDesign'
 import * as ImagePicker from 'expo-image-picker'
 
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
+import * as Speech from 'expo-speech'
 
 
 SplashScreen.preventAutoHideAsync();
@@ -95,8 +97,8 @@ const CreateNote = (props) => {
                         })
                 })
             }
-            else if(props.route.params.page == 'Archive'){
-                
+            else if (props.route.params.page == 'Archive') {
+
                 db.transaction((tx) => {
                     tx.executeSql(`SELECT * FROM archived WHERE id = ${props.route.params.id}`, [],
                         (sql, rs) => {
@@ -114,7 +116,7 @@ const CreateNote = (props) => {
                         })
                 })
             }
-            else if(props.route.params.page == 'HomeCamera'){
+            else if (props.route.params.page == 'HomeCamera') {
                 LaunchCamera()
             }
         }
@@ -196,7 +198,6 @@ const CreateNote = (props) => {
         })
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri);
             setTimeout(() => {
                 setLoading(true)
                 let newfile = { uri: result.assets[0].uri, type: `test/${result.assets[0].uri.split(".")[1]}`, name: `test.${result.assets[0].uri.split(".")[1]}` }
@@ -216,7 +217,6 @@ const CreateNote = (props) => {
 
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri);
             setTimeout(() => {
                 let newfile = { uri: result.assets[0].uri, type: `test/${result.assets[0].uri.split(".")[1]}`, name: `test.${result.assets[0].uri.split(".")[1]}` }
                 setLoading(true)
@@ -225,6 +225,29 @@ const CreateNote = (props) => {
 
         }
     };
+
+    const SpeakText = () => {
+
+
+        if (titleText == '' && noteText == '') {
+            const thingsToSay = 'Both title and note are empty.'
+            Speech.speak(thingsToSay)
+        }
+        else if (!titleText == '' && noteText == '') {
+            const thingsToSay = 'Title is. ' + titleText + '. But Note is Empty.'
+            Speech.speak(thingsToSay)
+        }
+        else if (titleText == '' && !noteText == '') {
+            const thingsToSay = 'Title is Empty. But note is. ' + noteText
+            Speech.speak(thingsToSay)
+        }
+        else {
+            const thingsToSay = 'Title is. ' + titleText + '. And note is. ' + noteText
+            Speech.speak(thingsToSay)
+        }
+
+
+    }
 
 
     const UpdateData = (id, title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
@@ -487,13 +510,14 @@ const CreateNote = (props) => {
 
                     </KeyboardAvoidingView>
                     <View style={{ width: screenWidth, paddingHorizontal: 25, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Tooltip title="Browse Internet">
-                            <TouchableOpacity style={{}} onPress={() => {
-                                props.navigation.navigate("Browser")
-                            }}>
-                                <Ionicons name="globe-outline" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
-                            </TouchableOpacity>
-                        </Tooltip>
+
+                        <TouchableOpacity style={{}} onPress={() => {
+                            SpeakText()
+
+                        }}>
+                            <AntDesign name="sound" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+                        </TouchableOpacity>
+
                         <Menu
                             visible={visible}
                             onDismiss={closeMenu}

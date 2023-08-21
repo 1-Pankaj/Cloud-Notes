@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Dimensions, TextInput, TouchableOpacity, View } from "react-native";
+import { Appearance, Dimensions, TextInput, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -23,6 +23,7 @@ const PasswordPage = (props) => {
     const [input4, setInput4] = useState('-')
     const [password, setPassword] = useState('')
     const [param, setParam] = useState('')
+    const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
 
     const SetPassword = () => {
         if (input1 == '-' || input2 == '-' || input3 == '-' || input4 == '-') {
@@ -101,7 +102,7 @@ const PasswordPage = (props) => {
         }
     }
 
-    const RemovePassword = () =>{
+    const RemovePassword = () => {
         if (password == input1 + input2 + input3 + input4) {
             db.transaction((tx) => {
                 tx.executeSql("UPDATE archivepass set password = ('') where firsttime = 'false'", [],
@@ -132,6 +133,9 @@ const PasswordPage = (props) => {
     }
 
 
+    Appearance.addChangeListener(() => {
+        setColorScheme(Appearance.getColorScheme())
+    })
 
 
 
@@ -141,7 +145,7 @@ const PasswordPage = (props) => {
                 <Text style={{
                     alignSelf: 'flex-start', margin: 20, fontSize: 20,
                     color: '#FFBC01', fontWeight: 'bold'
-                }}>{param == '' ? password == '' ? 'Set Your Password here' : 'Verify yourself' : param == 'reset'? 'Reset your password' : 'Verify to remove password'}</Text>
+                }}>{param == '' ? password == '' ? 'Set Your Password here' : 'Verify yourself' : param == 'reset' ? 'Reset your password' : 'Verify to remove password'}</Text>
                 <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                     <View style={{
                         paddingHorizontal: 20, paddingVertical: 15,
@@ -181,74 +185,72 @@ const PasswordPage = (props) => {
                                         :
                                         SetPassword()
                                     :
-                                    param == 'reset'?
-                                    ResetPassword()
-                                    :
-                                    RemovePassword()
+                                    param == 'reset' ?
+                                        ResetPassword()
+                                        :
+                                        RemovePassword()
                             }
                         }}>
                         <MaterialIcons name="navigate-next" size={35} color='white' />
                     </TouchableOpacity>
-                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('1') }}>
+                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Appearance.getColorScheme() == 'dark' ? '#202020' : 'white', borderTopStartRadius: 20, borderTopEndRadius: 20 }}>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('1') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>1</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('2') }}>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('2') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>2</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('3') }}>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('3') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>3</Text>
-                        </TouchableOpacity>
+                        </TouchableHighlight>
                     </View>
-                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('4') }}>
+                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Appearance.getColorScheme() == 'dark' ? '#202020' : 'white' }}>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('4') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>4</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('5') }}>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('5') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>5</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('6') }}>
-
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('6') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>6</Text>
-                        </TouchableOpacity>
+                        </TouchableHighlight>
                     </View>
-                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('7') }}>
+                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Appearance.getColorScheme() == 'dark' ? '#202020' : 'white' }}>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('7') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>7</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('8') }}>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('8') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>8</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', borderWidth: 2, width: screenWidth / 3, height: 60 }}
-                            onPress={() => { SetNextValue('9') }}>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('9') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>9</Text>
-                        </TouchableOpacity>
+                        </TouchableHighlight>
                     </View>
-                    <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-end', width: screenWidth }}>
+                    <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-end', width: screenWidth, backgroundColor: Appearance.getColorScheme() == 'dark' ? '#202020' : 'white', marginBottom: -10 }}>
 
-                        <TouchableOpacity style={{ width: screenWidth / 3, height: 60, borderWidth: 2, alignItems: 'center', justifyContent: 'center', }}
-                            onPress={() => {
-                                SetNextValue('0')
-                            }}>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
+                            onPress={() => { SetNextValue('0') }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
                             <Text style={{ fontWeight: 'bold', fontSize: 18 }}>0</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ width: screenWidth / 3, height: 60, borderWidth: 2, alignItems: 'center', justifyContent: 'center', }}
+                        </TouchableHighlight>
+                        <TouchableHighlight style={{ width: screenWidth / 3, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}
                             onPress={() => {
                                 setInput1('-')
                                 setInput2('-')
                                 setInput3('-')
                                 setInput4('-')
-                            }}>
+                            }} underlayColor={Appearance.getColorScheme() === 'dark' ? '#101010' : '#dedede'}>
+
                             <MaterialIcons name="backspace" size={25} color='gray' />
-                        </TouchableOpacity>
+                        </TouchableHighlight>
                     </View>
                 </View>
             </View>
