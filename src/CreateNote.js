@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
-import { Animated, Appearance, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text } from "react-native-paper";
 
 
@@ -17,6 +17,7 @@ import { useFonts } from "expo-font";
 import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import * as Speech from 'expo-speech'
+import Voice from '@react-native-voice/voice'
 
 
 SplashScreen.preventAutoHideAsync();
@@ -39,6 +40,8 @@ const CreateNote = (props) => {
     const [saveButton, setSaveButton] = useState("Save")
     const [loading, setLoading] = useState(false)
     const [snackbar, setSnackBar] = useState({ visible: false, message: '' })
+    const [recording, setRecording] = useState(false)
+    const [results, setResults] = useState([])
 
 
     const colorSection = new Animated.Value(0)
@@ -53,6 +56,42 @@ const CreateNote = (props) => {
     const yellowish = "#FFBC01"
     const blueish = "#3142D3"
     const greenish = "#4FC73B"
+
+    const StartStopRecording = async () =>{
+        if(recording === true){
+            ToastAndroid.show("Speech recognition stopped", ToastAndroid.SHORT)
+            Voice.stop()
+            setRecording(false)
+        }else{
+            await Voice.start('en-US');
+            setRecording(true)
+            ToastAndroid.show("Speech recognition started", ToastAndroid.SHORT)
+            
+        }
+    }
+
+    const onSpeechResults = (res) =>{
+        setResults(res.value)
+        res.value.map((res, index)=>{
+            setNoteText(noteText.trim()+'\n' + res.trim())
+        })
+    }
+
+    const onSpeechError = (error) =>{
+        console.log(error);
+        setRecording(false)
+        Voice.stop().then(Voice.destroy())
+    }
+
+    useEffect(()=>{
+
+        Voice.onSpeechError = onSpeechError
+        Voice.onSpeechResults = onSpeechResults
+
+        return () =>{
+            Voice.destroy().then(Voice.removeAllListeners);
+        }
+    }, [])
 
 
     const [dateText, setDateText] = useState(new Date().toUTCString().slice(0, 16))
@@ -372,7 +411,7 @@ const CreateNote = (props) => {
             <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
                 <View style={[Styles.container, { justifyContent: 'space-between', }]}>
                     <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
-                        <ImageBackground style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? null : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
+                        <ImageBackground style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <TouchableOpacity onPress={() => { props.navigation.navigate("Home") }} style={{ margin: 20 }}>
                                 <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
@@ -515,9 +554,16 @@ const CreateNote = (props) => {
                             SpeakText()
 
                         }}>
-                            <AntDesign name="sound" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+                            <AntDesign name="sound" size={23} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
                         </TouchableOpacity>
-
+                        <TouchableOpacity onPress={()=>{StartStopRecording()}}>
+                            {recording?
+                            <Card style={{width:75, height:75, borderRadius:40, backgroundColor:'#fff',alignItems:'center', justifyContent:'center', borderWidth:2, borderColor:'red'}}>
+                                <MaterialIcons name="keyboard-voice" size={30} color="red"/>
+                            </Card>
+                            :
+                            <MaterialIcons name="keyboard-voice" size={25} color={pageColor === 'default'? '#FFBC01' : 'black'}/>}
+                        </TouchableOpacity>
                         <Menu
                             visible={visible}
                             onDismiss={closeMenu}

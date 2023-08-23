@@ -19,8 +19,8 @@ const db = SQLite.openDatabase("CloudNotes.db")
 const Browser = (props) => {
 
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
-    const [url, setUrl] = useState("https://google.com")
-    const [uriWeb, setUriWeb] = useState("https://google.com")
+    const [url, setUrl] = useState("")
+    const [uriWeb, setUriWeb] = useState("")
     const [titleText, setTitleText] = useState("")
     const [canGoBack, setCanGoBack] = useState(false)
     const [canGoForward, setCanGoForward] = useState(false)
@@ -139,9 +139,24 @@ const Browser = (props) => {
 
     const isFocused = useIsFocused()
     useEffect(() => {
+        if (props.route.params === undefined) {
+
+        } else {
+            if (props.route.params.page == 'Bookmark') {
+                setTimeout(() => {
+                    setUriWeb(props.route.params.url.trim())
+                }, 200);
+            }
+            else if (props.route.params.page == 'History') {
+                setTimeout(() => {
+                    setUriWeb(props.route.params.url.trim())
+                    setUrl(props.route.params.url.trim())
+                }, 200);
+            }
+        }
         CreateTable()
         GetUrlFromDatabase()
-    }, [isFocused, uriWeb])
+    }, [])
 
     const showHiddenView = () => {
 
@@ -166,8 +181,6 @@ const Browser = (props) => {
     }
 
     const SetBookmark = () => {
-
-
         db.transaction((tx) => {
             tx.executeSql(`INSERT INTO bookmark (title) values(?)`, [uriWeb],
                 (sql, rs) => {
@@ -182,7 +195,6 @@ const Browser = (props) => {
         db.transaction((tx) => {
             tx.executeSql('DELETE FROM bookmark where title = (?)', [uriWeb],
                 (sql, rs) => {
-                    console.log("done");
                     setBookmarked(false)
                 }, error => {
                     console.log("Error");
@@ -307,6 +319,7 @@ const Browser = (props) => {
                     javaScriptEnabled
                     useWebView2
                     pullToRefreshEnabled
+                    showsVerticalScrollIndicator={false}
                     ref={webviewRef}
                     forceDarkOn={colorScheme === 'dark' ? true : false}
                     allowFileAccess
@@ -330,15 +343,15 @@ const Browser = (props) => {
                     <View style={{ width: screenWidth, alignItems: 'center' }}>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
                         <View style={{
-                            width: screenWidth - 35, height: 45, flexDirection: 'row', backgroundColor: colorScheme === "dark" ? "#303030" : "lightgray", borderRadius: 10,
+                            width: screenWidth - 35, height: 45, flexDirection: 'row', backgroundColor: colorScheme === "dark" ? "#303030" : "#e3e3e3", borderRadius: 10,
                             alignItems: 'center', alignSelf: 'center', marginVertical: 10, justifyContent: 'space-between'
                         }}>
-                            <TouchableOpacity style={{ marginStart: 15 }} onPress={()=>{setBottom(false)}}>
+                            <TouchableOpacity style={{ marginStart: 15 }} onPress={() => { setBottom(false) }}>
                                 <MaterialIcons name="vertical-align-top" size={25} color='#FFBC01' />
                             </TouchableOpacity>
                             <TextInput placeholder="https://example.com/" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
                                 style={{
-                                    borderRadius: 10, flex: 1, paddingHorizontal:20,
+                                    borderRadius: 10, flex: 1, paddingHorizontal: 20,
                                     opacity: 0.7, color: colorScheme === "dark" ? "white" : "black", fontSize: 13,
                                     fontFamily: 'mulish',
                                 }}
@@ -356,12 +369,12 @@ const Browser = (props) => {
                                     }
                                 }}
                             />
-                            
+
                             <TouchableOpacity onPress={() => {
-                                    loading ? webviewRef.current.stopLoading() : webviewRef.current.reload()
-                                }} style={{ marginEnd:15}}>
-                                    <MaterialCommIcons name={loading ? "close" : "reload"} size={25} color="#FFBC01" />
-                                </TouchableOpacity>
+                                loading ? webviewRef.current.stopLoading() : webviewRef.current.reload()
+                            }} style={{ marginEnd: 15 }}>
+                                <MaterialCommIcons name={loading ? "close" : "reload"} size={25} color="#FFBC01" />
+                            </TouchableOpacity>
                         </View>
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', marginTop: 5, justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -372,7 +385,7 @@ const Browser = (props) => {
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => {
                                     canGoForward ? webviewRef.current.goForward() : null
-                                }} style={{ marginStart: 10}}>
+                                }} style={{ marginStart: 10 }}>
                                     <MaterialIcons name="arrow-forward-ios" size={25} color={canGoForward ? "#FFBC01" : "gray"} />
                                 </TouchableOpacity>
                             </View>
@@ -383,17 +396,17 @@ const Browser = (props) => {
                                 {titleText.slice(0, 22)}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginEnd: 20 }}>
-                                <TouchableOpacity onPress={() => { showHiddenView() }} style={{  }}>
+                                <TouchableOpacity onPress={() => { showHiddenView() }} style={{}}>
                                     <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => {
-                                bookmarked ?
-                                    RemoveBookmark()
-                                    :
-                                    SetBookmark()
-                            }} style={{ marginStart: 15}}>
-                                <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={27} color={bookmarked ? '#FFBC01' : "gray"} />
-                            </TouchableOpacity>
+                                    bookmarked ?
+                                        RemoveBookmark()
+                                        :
+                                        SetBookmark()
+                                }} style={{ marginStart: 15 }}>
+                                    <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={27} color={bookmarked ? '#FFBC01' : "gray"} />
+                                </TouchableOpacity>
                             </View>
                         </View>
                         <Animated.View style={{

@@ -8,6 +8,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
+import * as LocalAuthentication from 'expo-local-authentication'
+import { useIsFocused } from "@react-navigation/native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,13 +57,32 @@ const PasswordPage = (props) => {
         })
     }
 
+    const isFocused = useIsFocused()
+
+    const Authenticate = () => {
+        if (LocalAuthentication.hasHardwareAsync()) {
+            if (LocalAuthentication.isEnrolledAsync()) {
+                LocalAuthentication.authenticateAsync().then((rs) => {
+                    if (rs.success) {
+                        props.navigation.replace('ArchivePage')
+                    }
+                })
+            }
+        }
+    }
     useEffect(() => {
         SelectPassword()
         if (props.route.params == undefined) {
         } else {
             setParam(props.route.params.params)
         }
-    }, [])
+        setTimeout(() => {
+            if (param == '' && !password == '') {
+                Authenticate()
+            }    
+        }, 100);
+        
+    }, [password])
 
     const [fontsLoaded] = useFonts({
         'mulish': require("../assets/fonts/mulish.ttf")

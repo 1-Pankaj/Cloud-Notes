@@ -23,7 +23,7 @@ const db = SQLite.openDatabase("CloudNotes.db")
 
 const HomeScreen = (props) => {
     const [visible, setVisible] = useState(false);
-    const [refreshing , setRefreshing] = useState(false)
+    const [refreshing, setRefreshing] = useState(false)
     const [searchText, setSearchText] = useState("")
     const animatedHiddenSearch = new Animated.Value(0)
     const [openSearch, setOpenSearch] = useState(false)
@@ -89,6 +89,30 @@ const HomeScreen = (props) => {
                     console.log("Error");
                 })
         })
+
+        db.transaction((tx)=>{
+            tx.executeSql("CREATE TABLE IF NOT EXISTS starredsplash (firsttime Boolean)",[],
+            (sql,rs)=>{
+            }, error =>{
+                console.log("error");
+            })
+        })
+    }
+
+    const CheckFirstTimeStarred = () =>{
+        setFabVisible(false)
+        db.transaction((tx)=>{
+            tx.executeSql("SELECT firsttime from starredsplash",[],
+            (sql,rs)=>{
+                if(rs.rows.length == 0){
+                    props.navigation.navigate('StarredNotesSplash')
+                }else{
+                    props.navigation.navigate('StarredNotes')
+                }
+            }, error =>{
+                console.log("error");
+            })
+        })
     }
     const SelectData = () => {
         db.transaction((tx) => {
@@ -151,43 +175,43 @@ const HomeScreen = (props) => {
                         props.navigation.navigate('DeleteSplash')
                     }
                     else {
-                        sql.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)",[],
-                        (sql,rs)=>{
-                            sql.executeSql("SELECT * FROM notes where id = (?)",[id],
-                            (sql,rs)=>{
-                                if(rs.rows.length == 0){
+                        sql.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                            (sql, rs) => {
+                                sql.executeSql("SELECT * FROM notes where id = (?)", [id],
+                                    (sql, rs) => {
+                                        if (rs.rows.length == 0) {
 
-                                }else{
-                                    let title = rs.rows._array[0].title
-                                    let note = rs.rows._array[0].note
-                                    let date = rs.rows._array[0].date
-                                    let time = rs.rows._array[0].time
-                                    let pageColor = rs.rows._array[0].pageColor
-                                    let fontColor = rs.rows._array[0].fontColor
-                                    let fontStyle = rs.rows._array[0].fontStyle
-                                    let fontSize = rs.rows._array[0].fontSize
+                                        } else {
+                                            let title = rs.rows._array[0].title
+                                            let note = rs.rows._array[0].note
+                                            let date = rs.rows._array[0].date
+                                            let time = rs.rows._array[0].time
+                                            let pageColor = rs.rows._array[0].pageColor
+                                            let fontColor = rs.rows._array[0].fontColor
+                                            let fontStyle = rs.rows._array[0].fontStyle
+                                            let fontSize = rs.rows._array[0].fontSize
 
-                                    sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)",[title,note,date,time,pageColor,fontColor,fontStyle,fontSize],
-                                    (sql,rs)=>{
-                                        sql.executeSql("DELETE FROM notes WHERE id = (?)", [id],
-                                        (sql,rs)=>{
-                                            SelectData()
-                                            ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
-                                        }, error=>{
-                                            console.log("error");
-                                        })
-                                    }, error=>{
+                                            sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                (sql, rs) => {
+                                                    sql.executeSql("DELETE FROM notes WHERE id = (?)", [id],
+                                                        (sql, rs) => {
+                                                            SelectData()
+                                                            ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
+                                                        }, error => {
+                                                            console.log("error");
+                                                        })
+                                                }, error => {
+                                                    console.log("Error");
+                                                })
+                                        }
+                                    }, error => {
                                         console.log("Error");
                                     })
-                                }
-                            }, error=>{
-                                console.log("Error");
+                            }, error => {
+                                console.log("error");
                             })
-                        }, error =>{
-                            console.log("error");
-                        })
                     }
-                }, error=>{
+                }, error => {
                     console.log("Error");
                 })
         })
@@ -484,6 +508,48 @@ const HomeScreen = (props) => {
     }
 
 
+    const CheckVoiceNotesFirstTime = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS voicenotesplash (firsttime Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT firsttime FROM voicenotesplash", [],
+                        (sql, rs) => {
+                            if (rs.rows.length == 0) {
+                                setFabVisible(false)
+                                props.navigation.navigate('VoiceNotesSplash')
+                            } else {
+                                setFabVisible(false)
+                                props.navigation.navigate('VoiceNotes')
+                            }
+                        })
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
+
+    const CheckFirstTimeReminder = () => {
+        
+        db.transaction((tx)=>{
+            tx.executeSql("CREATE TABLE IF NOT EXISTS remindersplash (firsttime Boolean)",[],
+            (sql,rs)=>{
+                sql.executeSql("SELECT * FROM remindersplash",[],
+                (sql,rs)=>{
+                    if(rs.rows.length == 0){
+                        setFabVisible(false)
+                        props.navigation.navigate('ReminderSplash')
+                    }else{
+                        setFabVisible(false)
+                        props.navigation.navigate('Reminders')
+                    }
+                }, error=>{
+                    console.log("Error");
+                })
+            }, error =>{
+                console.log("Error");
+            })
+        })
+    }
 
 
     useEffect(() => {
@@ -494,7 +560,7 @@ const HomeScreen = (props) => {
             setFabVisible(true)
             SelectData()
         }
-    }, [isFocused, props])
+    }, [isFocused, props, grid])
 
 
 
@@ -561,7 +627,6 @@ const HomeScreen = (props) => {
                                 closeMenu()
                                 setGrid(!grid)
                                 setRefreshing(true)
-                                SelectData()
                             }} title={grid ? 'List View' : 'Grid View'} leadingIcon={grid ? 'format-list-checkbox' : 'view-grid'} theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
                             <Menu.Item onPress={() => { }} title="Item 2" />
                             <Divider />
@@ -600,9 +665,10 @@ const HomeScreen = (props) => {
                 {
                     data || dataGrid1 || dataGrid2 ?
                         grid ?
-                            <ScrollView style={{ width: screenWidth }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{
+                            <ScrollView style={{ width: screenWidth }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                                 setRefreshing(true)
-                                SelectData()}}/>}>
+                                SelectData()
+                            }} />}>
                                 <View style={{ width: screenWidth, flex: 1, flexDirection: 'row', marginBottom: 60, }}>
                                     <FlatList data={dataGrid1}
                                         scrollEnabled={false} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}
@@ -689,8 +755,10 @@ const HomeScreen = (props) => {
                             :
                             <SwipeListView
                                 data={data}
-                                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true)
-                                    SelectData()}}/>}
+                                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                                    setRefreshing(true)
+                                    SelectData()
+                                }} />}
                                 renderItem={renderItem}
                                 renderHiddenItem={renderHiddenItem}
                                 leftOpenValue={75}
@@ -773,14 +841,30 @@ const HomeScreen = (props) => {
                                 {
                                     icon: 'star',
                                     label: 'Starred Notes',
-                                    onPress: () => console.log('Pressed star'),
+                                    onPress: () => CheckFirstTimeStarred(),
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },
                                 {
                                     icon: 'bell',
                                     label: 'Set Reminder',
-                                    onPress: () => console.log('Pressed notifications'),
+                                    onPress: () => {
+                                        CheckFirstTimeReminder()
+                                    },
+                                    style: { backgroundColor: '#FFBC01' },
+                                    color: 'white'
+                                },
+                                {
+                                    icon: 'account-voice',
+                                    label: 'Voice Notes',
+                                    onPress: () => CheckVoiceNotesFirstTime(),
+                                    style: { backgroundColor: '#FFBC01' },
+                                    color: 'white'
+                                },
+                                {
+                                    icon: 'emoticon-happy-outline',
+                                    label: 'Moodify',
+                                    onPress: () => console.log('Mood'),
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },

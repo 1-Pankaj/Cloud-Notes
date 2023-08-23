@@ -22,6 +22,13 @@ import PasswordPage from './src/PasswordPage';
 import TrashPage from './src/TrashPage';
 import ToDo from './src/ToDo';
 import ToDoSplash from './src/splashscreens/ToDoSplash';
+import BookmarkAndHistory from './src/BookmarkAndHistory';
+import VoiceNotes from './src/VoiceNotes';
+import VoiceNotesSplash from './src/splashscreens/VoiceNotesSplash';
+import Reminders from './src/Reminders';
+import ReminderSplash from './src/splashscreens/ReminderSplash';
+import StarredNotesSplash from './src/splashscreens/StarredNotesSplash';
+import StarredNotes from './src/StarredNotes';
 
 const Stack = createStackNavigator()
 
@@ -52,6 +59,7 @@ function App() {
           ...DarkTheme.colors,
           primary: "#FFBC01",
           secondary: 'white',
+          background:'#1c1c1c'
         }
       })
     } else {
@@ -148,6 +156,48 @@ function App() {
             ...(isAndroid && TransitionPresets.ModalPresentationIOS),
             headerShown: false
           }} />
+          <Stack.Screen name='VoiceNotes' component={VoiceNotes} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='VoiceNotesSplash' component={VoiceNotesSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='Reminders' component={Reminders} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ReminderSplash' component={ReminderSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='StarredNotesSplash' component={StarredNotesSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='StarredNotes' component={StarredNotes} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="CreateNote" component={CreateNote} options={{
             gestureEnabled: true,
@@ -157,6 +207,13 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name="Directory" component={Directory} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name="BookmarkAndHistory" component={BookmarkAndHistory} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

@@ -6,6 +6,19 @@
         {
           "photosPermission": "The app accesses your photos to process text from them."
         }
+      ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow CloudNotes to access the microphone",
+          "speechRecognitionPermission": "Allow CloudNotes to securely recognize user speech"
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow CloudNotes to access your microphone."
+        }
       ]
     ],
     "name": "Cloud-Notes",

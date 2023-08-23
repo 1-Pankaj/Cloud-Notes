@@ -39,6 +39,7 @@ const Directory = (props) => {
     })
 
     const isFocused = useIsFocused()
+    
     const GetCount = () => {
         db.transaction((tx) => {
             tx.executeSql("SELECT id from notes", [],
@@ -56,6 +57,23 @@ const Directory = (props) => {
                     console.log("Error");
                 })
         })
+
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS bookmark(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL)", [],
+                (sql, rs) => {
+                }, error => {
+                    console.log("Error");
+                })
+        })
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, url VARCHAR(500) NOT NULL)", [],
+                (sql, rs) => {
+                },
+                error => {
+                    console.log("Error");
+                })
+        })
+
         db.transaction((tx) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
                 (sql, rs) => {
@@ -77,6 +95,14 @@ const Directory = (props) => {
                     setBookmarkCount(rs.rows.length)
                 }, error => {
                     console.log("Error")
+                })
+        })
+        db.transaction((tx) => {
+            tx.executeSql("SELECT url FROM history", [],
+                (sql, rs) => {
+                    setHistoryCount(rs.rows.length)
+                }, error => {
+                    console.log("Error");
                 })
         })
     }
@@ -132,10 +158,10 @@ const Directory = (props) => {
 
     return (
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
-            <ScrollView style={[{padding:8,width:screenWidth, flex:1 }]} contentContainerStyle={{alignItems:'center', flex:1,}}>
-                <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center',alignSelf:'flex-start', marginVertical:20}} onPress={()=>{props.navigation.navigate('Home')}}>
-                    <Ionicons name="chevron-back-outline" color='#FFBC01' size={35} style={{marginStart:1,marginTop:2}}/>
-                    <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01',alignSelf:'center' }}>Directory</Text>
+            <ScrollView style={[{ padding: 8, width: screenWidth, flex: 1 }]} contentContainerStyle={{ alignItems: 'center', flex: 1, }}>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginVertical: 20 }} onPress={() => { props.navigation.navigate('Home') }}>
+                    <Ionicons name="chevron-back-outline" color='#FFBC01' size={35} style={{ marginStart: 1, marginTop: 2 }} />
+                    <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', alignSelf: 'center' }}>Directory</Text>
                 </TouchableOpacity>
                 <View style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 30 }}>
                     <Text style={{ fontSize: 18, fontFamily: 'mulish' }}>Offline Drive</Text>
@@ -180,7 +206,11 @@ const Directory = (props) => {
                 <View style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 30 }}>
                     <Text style={{ fontSize: 18, fontFamily: 'mulish' }}>Browser Storage</Text>
                 </View>
-                <TouchableOpacity style={{ borderTopStartRadius: 10, borderTopEndRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => {  }}>
+                <TouchableOpacity style={{ borderTopStartRadius: 10, borderTopEndRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => {
+                    props.navigation.navigate('BookmarkAndHistory', {
+                        page: 'Bookmark'
+                    })
+                }}>
                     <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderTopStartRadius: 10, borderTopEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Ionicons name="bookmarks-outline" size={23} style={{ alignSelf: 'center', marginStart: 22 }} color="#FFBC01" />
@@ -193,7 +223,11 @@ const Directory = (props) => {
                     </View>
                 </TouchableOpacity>
                 <Divider style={{ width: screenWidth - 40 }} />
-                <TouchableOpacity style={{ borderBottomStartRadius: 10, borderBottomEndRadius: 10 }} activeOpacity={0.6} onPress={() => {  }}>
+                <TouchableOpacity style={{ borderBottomStartRadius: 10, borderBottomEndRadius: 10 }} activeOpacity={0.6} onPress={() => {
+                    props.navigation.navigate('BookmarkAndHistory', {
+                        page: 'History'
+                    })
+                }}>
                     <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderBottomStartRadius: 10, borderBottomEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <MaterialCommIcons name="history" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
