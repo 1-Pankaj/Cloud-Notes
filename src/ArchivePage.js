@@ -133,18 +133,18 @@ const ArchivePage = (props) => {
                             let fontSize = rs.rows._array[i].fontSize
 
                             sql.executeSql("INSERT INTO notes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
-                            (sql,rs)=>{
-                                sql.executeSql("DELETE FROM archived",[],
-                                (sql,rs)=>{
-                                    GetData()
-                                    setDialog(true)
-                                    setDialogMessage("All notes unarchived!")
-                                },error=>{
+                                (sql, rs) => {
+                                    sql.executeSql("DELETE FROM archived", [],
+                                        (sql, rs) => {
+                                            GetData()
+                                            setDialog(true)
+                                            setDialogMessage("All notes unarchived!")
+                                        }, error => {
+                                            console.log("Error");
+                                        })
+                                }, error => {
                                     console.log("Error");
                                 })
-                            },error=>{
-                                console.log("Error");
-                            })
                         }
                     }
                 })
@@ -158,7 +158,10 @@ const ArchivePage = (props) => {
             <View style={[Styles.container, { width: screenWidth }]}>
                 <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', width: screenWidth }}>
                     <TouchableOpacity onPress={() => { props.navigation.navigate("Directory") }} style={{ margin: 20 }}>
-                        <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
+                            <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom: 2 }}>Archived Notes</Text>
+                        </View>
                     </TouchableOpacity>
 
                     <Menu
@@ -193,7 +196,7 @@ const ArchivePage = (props) => {
                     </Menu>
 
                 </View>
-                <Text style={{ alignSelf: 'flex-start', marginStart: 25, marginTop: 20, fontSize: 22, fontWeight: 'bold' }}>Archived Notes</Text>
+                <Text style={{ alignSelf: 'flex-start', marginStart: 25, marginTop: 20, fontSize: 17,fontFamily:'mulish' }}>Archived Notes</Text>
                 <View>
                     {data ?
                         <ScrollView style={{ flex: 1 }}

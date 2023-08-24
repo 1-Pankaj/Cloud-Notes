@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import * as SQLite from 'expo-sqlite'
 import { Appearance, Dimensions, FlatList, ImageBackground, TouchableOpacity, View } from "react-native";
@@ -10,6 +10,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import AnimatedLottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import * as SplashScreen from 'expo-splash-screen'
 
 const screenWidth = Dimensions.get('window').width
 const screenHeight = Dimensions.get('window').height
@@ -198,11 +200,32 @@ const TrashPage = (props) => {
     }, [isFocused])
 
 
+    const [fontsLoaded] = useFonts({
+        'mulish': require("../assets/fonts/mulish.ttf")
+    })
+
+
+
+
+    const onLayoutRootView = useCallback(async () => {
+        if (fontsLoaded) {
+            await SplashScreen.hideAsync();
+        }
+    }, [fontsLoaded]);
+
+    if (!fontsLoaded) {
+        return null
+    }
+
+
     return (
-        <SafeAreaView style={Styles.container}>
+        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: screenWidth }}>
                 <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20, marginStart: 25 }} onPress={() => { props.navigation.navigate('Directory') }}>
-                    <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
+                        <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom:2}}>Trash</Text>
+                    </View>
                 </TouchableOpacity>
                 <Menu
                     onDismiss={() => { setMenuOpen(false) }}
@@ -225,7 +248,7 @@ const TrashPage = (props) => {
                         }} />
                 </Menu>
             </View>
-            <Text style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 50, fontSize: 23, fontWeight: 'bold' }}>Trashed Notes</Text>
+            <Text style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 50, fontSize: 17,fontFamily:'mulish' }}>Trashed Notes</Text>
             {data ?
                 <FlatList data={data}
                     keyExtractor={item => item.id}

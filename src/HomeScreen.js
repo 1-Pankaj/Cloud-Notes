@@ -1,11 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import {
+    Animated, Appearance, Dimensions, FlatList, ImageBackground,
+    RefreshControl, ScrollView, StyleSheet, TextInput, ToastAndroid,
+    TouchableHighlight, TouchableOpacity, View, Image
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Divider, FAB, Menu, Portal, Text, Tooltip } from "react-native-paper";
+import { Button, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
+
 
 import MaterialIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import MaterialComIcon from '@expo/vector-icons/MaterialIcons'
@@ -32,6 +37,10 @@ const HomeScreen = (props) => {
     const [grid, setGrid] = useState(false)
     const [dataGrid1, setDataGrid1] = useState(null)
     const [dataGrid2, setDataGrid2] = useState(null)
+    const [longpress, setLongPress] = useState(false)
+    const [modalLongPress, setModalLongPress] = useState(false)
+    const [lognPressId, setLongPressId] = useState('')
+    const [pinnedData, setPinnedData] = useState(false)
 
 
     const openMenu = () => setMenuVisible(true);
@@ -90,30 +99,64 @@ const HomeScreen = (props) => {
                 })
         })
 
-        db.transaction((tx)=>{
-            tx.executeSql("CREATE TABLE IF NOT EXISTS starredsplash (firsttime Boolean)",[],
-            (sql,rs)=>{
-            }, error =>{
-                console.log("error");
-            })
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS starredsplash (firsttime Boolean)", [],
+                (sql, rs) => {
+                }, error => {
+                    console.log("error");
+                })
+        })
+
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS pinnednote(id INTEGER PRIMARY KEY AUTOINCREMENT, noteid VARCHAR(20), title VARCHAR(20), note VARCHAR(20))", [],
+                (sql, rs) => {
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
-    const CheckFirstTimeStarred = () =>{
+    const CheckFirstTimeStarred = () => {
         setFabVisible(false)
-        db.transaction((tx)=>{
-            tx.executeSql("SELECT firsttime from starredsplash",[],
-            (sql,rs)=>{
-                if(rs.rows.length == 0){
-                    props.navigation.navigate('StarredNotesSplash')
-                }else{
-                    props.navigation.navigate('StarredNotes')
-                }
-            }, error =>{
-                console.log("error");
-            })
+        db.transaction((tx) => {
+            tx.executeSql("SELECT firsttime from starredsplash", [],
+                (sql, rs) => {
+                    if (rs.rows.length == 0) {
+                        props.navigation.navigate('StarredNotesSplash')
+                    } else {
+                        props.navigation.navigate('StarredNotes')
+                    }
+                }, error => {
+                    console.log("error");
+                })
         })
     }
+
+    const PinNote = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM notes WHERE id = (?)", [id],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let title = rs.rows._array[0].title
+                        let note = rs.rows._array[0].note
+                        sql.executeSql("INSERT INTO pinnednote (noteid, title, note) values (?,?,?)", [id, title, note],
+                            (sql, rs) => {
+                                ToastAndroid.show("Pinned Note", ToastAndroid.SHORT)
+                                SelectData()
+                            }, error => {
+                                console.log("Error");
+                            })
+                    } else {
+                        setPinnedData(null)
+                    }
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
+
+
+
     const SelectData = () => {
         db.transaction((tx) => {
             tx.executeSql("SELECT * FROM notes ORDER BY id DESC", [],
@@ -163,6 +206,28 @@ const HomeScreen = (props) => {
                     setRefreshing(false)
                 })
         })
+
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM pinnednote ORDER BY id DESC", [],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let results = []
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            let id = rs.rows._array[i].id
+                            let noteid = rs.rows._array[i].noteid
+                            let title = rs.rows._array[i].title
+                            let note = rs.rows._array[i].note
+
+                            results.push({ id: id, noteid: noteid, title: title, note: note })
+                        }
+                        setPinnedData(results)
+                    } else {
+                        setPinnedData(null)
+                    }
+                }, error => {
+                    console.log("Error");
+                })
+        })
     }
 
 
@@ -195,8 +260,13 @@ const HomeScreen = (props) => {
                                                 (sql, rs) => {
                                                     sql.executeSql("DELETE FROM notes WHERE id = (?)", [id],
                                                         (sql, rs) => {
-                                                            SelectData()
-                                                            ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
+                                                            sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [id],
+                                                                (sql, rs) => {
+                                                                    SelectData()
+                                                                    ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
+                                                                }, error => {
+                                                                    console.log("Error");
+                                                                })
                                                         }, error => {
                                                             console.log("error");
                                                         })
@@ -215,6 +285,56 @@ const HomeScreen = (props) => {
                     console.log("Error");
                 })
         })
+    }
+
+    const StarNote = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS starrednotes(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT * FROM notes WHERE id = (?)", [id],
+                        (sql, rs) => {
+                            if (rs.rows.length == 0) {
+
+                            } else {
+                                let title = rs.rows._array[0].title
+                                let note = rs.rows._array[0].note
+                                let date = rs.rows._array[0].date
+                                let time = rs.rows._array[0].time
+                                let pageColor = rs.rows._array[0].pageColor
+                                let fontColor = rs.rows._array[0].fontColor
+                                let fontStyle = rs.rows._array[0].fontStyle
+                                let fontSize = rs.rows._array[0].fontSize
+
+
+
+                                sql.executeSql('SELECT * FROM starrednotes WHERE title = (?) and note = (?)', [title, note],
+                                    (sql, rs) => {
+                                        if (rs.rows.length == 0) {
+                                            sql.executeSql("INSERT INTO starrednotes(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                (sql, rs) => {
+                                                    ToastAndroid.show(`Note ${title} Starred!`, ToastAndroid.SHORT)
+                                                }, error => {
+                                                    console.log("error");
+                                                })
+                                        } else {
+                                            ToastAndroid.show("This note is already Starred", ToastAndroid.SHORT)
+                                        }
+                                    }, error => {
+                                        console.log("Error");
+                                    })
+                            }
+                        }, error => {
+                            console.log("error");
+                        })
+                }, error => {
+                    console.log("error");
+                })
+        })
+    }
+
+    const OpenLongPressModal = (id) => {
+        setLongPressId(id)
+        setModalLongPress(true)
     }
 
     const VisibleItem = prop => {
@@ -240,12 +360,15 @@ const HomeScreen = (props) => {
 
                 <TouchableHighlight style={[{
                     borderRadius: 10
-                }]} onPress={() => {
-                    props.navigation.navigate("CreateNote", {
-                        id: data.item.id,
-                        page: 'Home'
-                    })
-                }} underlayColor={colorScheme === "dark" ? "#303030" : "#E3E3E3"}>
+                }]}
+                    onLongPress={() => { OpenLongPressModal(data.item.id) }}
+                    onPress={() => {
+                        setFabVisible(false)
+                        props.navigation.navigate("CreateNote", {
+                            id: data.item.id,
+                            page: 'Home'
+                        })
+                    }} underlayColor={colorScheme === "dark" ? "#505050" : "#AAA7A7"}>
 
                     <View style={{ width: '100%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                         <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
@@ -271,7 +394,7 @@ const HomeScreen = (props) => {
                                     <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
                                     <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
                                 </View>
-                                <MaterialComIcon name="arrow-forward-ios" size={22} color="#FFBC01" />
+                                <MaterialComIcon name="arrow-forward-ios" size={22} color={data.item.pageColor === 'default' ? '#FFBC01' : 'white'} />
                             </View>
                         </View>
 
@@ -298,7 +421,7 @@ const HomeScreen = (props) => {
             searchRef.current.focus()
             Animated.spring(animatedHiddenSearch, {
                 toValue: 50,
-                duration: 50,
+                duration: 10,
                 useNativeDriver: false,
             }).start(() => {
                 setOpenSearch(true)
@@ -330,8 +453,14 @@ const HomeScreen = (props) => {
                                         (sql, rs) => {
                                             sql.executeSql("DELETE FROM notes where id = (?)", [id],
                                                 (sql, rs) => {
-                                                    ToastAndroid.show("Archived!", ToastAndroid.SHORT)
-                                                    SelectData()
+                                                    sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [id],
+                                                        (sql, rs) => {
+                                                            ToastAndroid.show("Archived!", ToastAndroid.SHORT)
+                                                            SelectData()
+                                                        }, error => {
+                                                            console.log("Error");
+                                                        })
+
                                                 },
                                                 error => { console.log("Error"); })
                                         }, error => {
@@ -369,8 +498,8 @@ const HomeScreen = (props) => {
 
         return (
             <Animated.View style={[styles.rowBack, { height: rowHeightAnimatedValue }]}>
-                <TouchableOpacity style={styles.trash} onPress={() => { ArchiveFirstTimeCheck(props.data.item.id) }}>
-                    <Ionicons name="archive" color="white" size={20} />
+                <TouchableOpacity style={styles.trash} onPress={() => { StarNote(props.data.item.id) }}>
+                    <Ionicons name="star" color="white" size={20} />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]}
@@ -529,30 +658,69 @@ const HomeScreen = (props) => {
     }
 
     const CheckFirstTimeReminder = () => {
-        
-        db.transaction((tx)=>{
-            tx.executeSql("CREATE TABLE IF NOT EXISTS remindersplash (firsttime Boolean)",[],
-            (sql,rs)=>{
-                sql.executeSql("SELECT * FROM remindersplash",[],
-                (sql,rs)=>{
-                    if(rs.rows.length == 0){
-                        setFabVisible(false)
-                        props.navigation.navigate('ReminderSplash')
-                    }else{
-                        setFabVisible(false)
-                        props.navigation.navigate('Reminders')
-                    }
-                }, error=>{
+
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS remindersplash (firsttime Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT * FROM remindersplash", [],
+                        (sql, rs) => {
+                            if (rs.rows.length == 0) {
+                                setFabVisible(false)
+                                props.navigation.navigate('ReminderSplash')
+                            } else {
+                                setFabVisible(false)
+                                props.navigation.navigate('Reminders')
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
                     console.log("Error");
                 })
-            }, error =>{
-                console.log("Error");
-            })
+        })
+    }
+
+    const LongPressCheck = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS longpress (firsttime Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT id FROM notes", [],
+                        (sql, rs) => {
+                            if (rs.rows.length === 0) {
+
+                            } else {
+                                sql.executeSql("SELECT firsttime FROM longpress", [],
+                                    (sql, rs) => {
+                                        if (rs.rows.length == 0) {
+                                            setLongPress(true)
+                                        }
+                                    }, error => {
+                                        console.log("Error");
+                                    })
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
+
+    const DismissLongPress = () => {
+        db.transaction((tx) => {
+            tx.executeSql("INSERT INTO longpress (firsttime) values (false)", [],
+                (sql, rs) => {
+                    setLongPress(false)
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
 
     useEffect(() => {
+        LongPressCheck()
         SelectData()
         CheckFirstTime()
         CreateTable()
@@ -566,12 +734,6 @@ const HomeScreen = (props) => {
 
     const [fontsLoaded] = useFonts({
         'mulish': require("../assets/fonts/mulish.ttf"),
-        'amatic': require("../assets/fonts/amatic.ttf"),
-        'dancingspirit': require("../assets/fonts/dancingspirit.ttf"),
-        'gochihand': require("../assets/fonts/gochihand.ttf"),
-        'kaushan': require("../assets/fonts/kaushan.ttf"),
-        'thegreat': require('../assets/fonts/thegreat.ttf'),
-        'greatvibes': require("../assets/fonts/greatvibes.ttf")
     })
 
     const onLayoutRootView = useCallback(async () => {
@@ -584,6 +746,18 @@ const HomeScreen = (props) => {
         return null
     }
 
+
+    const UnpinNote = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("DELETE FROM pinnednote WHERE id = (?)", [id],
+                (sql, rs) => {
+                    SelectData()
+                    ToastAndroid.show("Unpinned Note", ToastAndroid.SHORT)
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
 
 
 
@@ -655,21 +829,48 @@ const HomeScreen = (props) => {
                     />
 
                 </Animated.View>
-                {
-                    data && dataGrid1 && dataGrid2 ?
-                        <Text style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 15, fontSize: 25, fontWeight: 'bold' }}>All Notes</Text>
-                        :
-                        null
-                }
-
+                {pinnedData ?
+                    <View style={{ width: screenWidth, alignItems: 'center', marginBottom:20 }}>
+                        <Text style={{ alignSelf: 'flex-start', marginStart: 25, marginTop: 10, fontSize: 25, marginBottom: 10, fontWeight: 'bold' }}>Pinned Notes</Text>
+                        <FlatList data={pinnedData} style={{ alignSelf: 'flex-start', marginStart: 10 }}
+                            horizontal scrollEnabled={true} showsHorizontalScrollIndicator={false}
+                            keyExtractor={item => item.id}
+                            renderItem={item => {
+                                return (
+                                    <TouchableOpacity style={{
+                                        width: 150, height: 50, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, marginStart: 10,
+                                        marginEnd: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
+                                    }}
+                                        activeOpacity={0.6} onPress={() => {
+                                            props.navigation.navigate("CreateNote", {
+                                                id: item.item.noteid,
+                                                page: 'Home'
+                                            })
+                                        }}>
+                                        <View style={{ marginStart: 10 }}>
+                                            <Text style={{ fontWeight: 'bold', fontSize: 17 }}>{item.item.title.trim().slice(0, 10)}</Text>
+                                            <Text style={{ fontSize: 11 }}>{item.item.note.trim().slice(0, 16)}</Text>
+                                        </View>
+                                        <TouchableOpacity style={{ marginEnd: 10, }} hitSlop={10} onPress={() => { UnpinNote(item.item.id) }}>
+                                            <MaterialIcons name="pin-off" size={16} color="#FFBC01" />
+                                        </TouchableOpacity>
+                                    </TouchableOpacity>
+                                )
+                            }}
+                        />
+                    </View>
+                    :
+                    null}
                 {
                     data || dataGrid1 || dataGrid2 ?
                         grid ?
+
                             <ScrollView style={{ width: screenWidth }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                                 setRefreshing(true)
                                 SelectData()
                             }} />}>
-                                <View style={{ width: screenWidth, flex: 1, flexDirection: 'row', marginBottom: 60, }}>
+                                <Text style={{ alignSelf: 'flex-start', marginStart: 25, marginTop: 15, fontSize: 25, fontWeight: 'bold' }}>All Notes</Text>
+                                <View style={{ width: screenWidth, flexDirection: 'row', marginBottom: 60, }}>
                                     <FlatList data={dataGrid1}
                                         scrollEnabled={false} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}
                                         keyExtractor={item => item.id}
@@ -753,28 +954,32 @@ const HomeScreen = (props) => {
                                 </View>
                             </ScrollView>
                             :
-                            <SwipeListView
-                                data={data}
-                                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
-                                    setRefreshing(true)
-                                    SelectData()
-                                }} />}
-                                renderItem={renderItem}
-                                renderHiddenItem={renderHiddenItem}
-                                leftOpenValue={75}
-                                rightOpenValue={-150}
-                                style={{ width: screenWidth - 20, marginTop: 20 }}
-                                onRowDidOpen={onRowDidOpen}
-                                leftActivationValue={200}
-                                stopLeftSwipe={150}
-                                rightActivationValue={-300}
-                                leftActionValue={0}
-                                rightActionValue={-500}
-                                onLeftAction={onLeftAction}
-                                onRightAction={onRightAction}
-                                onLeftActionStatusChange={onLeftActionStatusChange}
-                                onRightActionStatusChange={onRightActionStatusChange}
-                            />
+                            <View style={{ marginTop: 10, flex: 1 }}>
+                                <Text style={{ alignSelf: 'flex-start', marginStart: 15, fontSize: 25, fontWeight: 'bold' }}>All Notes</Text>
+                                <SwipeListView
+                                    data={data}
+                                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                                        setRefreshing(true)
+                                        SelectData()
+                                    }} />}
+                                    renderItem={renderItem}
+                                    renderHiddenItem={renderHiddenItem}
+                                    leftOpenValue={75}
+                                    rightOpenValue={-150}
+                                    style={{ width: screenWidth - 20, marginTop: 20 }}
+                                    onRowDidOpen={onRowDidOpen}
+                                    leftActivationValue={200}
+                                    stopLeftSwipe={150}
+                                    rightActivationValue={-300}
+                                    leftActionValue={0}
+                                    rightActionValue={-500}
+                                    onLeftAction={onLeftAction}
+                                    onRightAction={onRightAction}
+                                    onLeftActionStatusChange={onLeftActionStatusChange}
+                                    onRightActionStatusChange={onRightActionStatusChange}
+                                />
+                            </View>
+
                         :
                         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                             <AnimatedLottieView
@@ -787,7 +992,17 @@ const HomeScreen = (props) => {
                 }
 
 
-
+                <Portal>
+                    <Modal visible={longpress} style={{ alignItems: 'center', justifyContent: 'center' }} onDismiss={() => {
+                        setLongPress(false)
+                        DismissLongPress()
+                    }}>
+                        <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                            <Image source={require('../assets/longpress.png')} style={{ width: 100, height: 108, marginTop: -50 }} />
+                            <Text style={{ color: 'white', fontFamily: 'mulish', marginTop: 50, fontSize: 25, textAlign: 'center', width: screenWidth - 100 }}>Long press the note for more options!</Text>
+                        </View>
+                    </Modal>
+                </Portal>
 
                 <View style={{ justifyContent: 'space-between', flexDirection: 'row', alignItems: 'center', width: screenWidth }}>
                     <Tooltip title="Browse Internet">
@@ -799,6 +1014,39 @@ const HomeScreen = (props) => {
                         </TouchableOpacity>
                     </Tooltip>
 
+                    <Portal>
+                        <Modal visible={modalLongPress} onDismiss={() => { setModalLongPress(false) }} style={{ alignItems: 'center', justifyContent: 'center' }}>
+                            <View style={{
+                                width: screenWidth - 50, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 30,
+                                alignItems: 'center', justifyContent: 'space-evenly', paddingVertical: 20
+                            }}>
+                                <TouchableOpacity style={{
+                                    width: '90%', height: 40, backgroundColor: '#3BBC1A', alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: 20, flexDirection: 'row'
+                                }} activeOpacity={0.7} onPress={() => {
+                                    PinNote(lognPressId)
+                                    setModalLongPress(false)
+                                }}>
+                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Pin Note</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={{
+                                    width: '90%', height: 40, marginTop: 20, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: 20, flexDirection: 'row'
+                                }} activeOpacity={0.7} onPress={() => {
+                                    StarNote(lognPressId)
+                                    setModalLongPress(false)
+                                }}>
+                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Star Note</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={{
+                                    width: '90%', height: 40, backgroundColor: '#375FFF', marginTop: 20, alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: 20, flexDirection: 'row'
+                                }} activeOpacity={0.7} >
+                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Read in Reading Mode</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Modal>
+                    </Portal>
 
 
                     <Portal>

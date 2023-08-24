@@ -42,6 +42,7 @@ const CreateNote = (props) => {
     const [snackbar, setSnackBar] = useState({ visible: false, message: '' })
     const [recording, setRecording] = useState(false)
     const [results, setResults] = useState([])
+    const [starVisible, setStarVisible] = useState(false)
 
 
     const colorSection = new Animated.Value(0)
@@ -57,38 +58,38 @@ const CreateNote = (props) => {
     const blueish = "#3142D3"
     const greenish = "#4FC73B"
 
-    const StartStopRecording = async () =>{
-        if(recording === true){
+    const StartStopRecording = async () => {
+        if (recording === true) {
             ToastAndroid.show("Speech recognition stopped", ToastAndroid.SHORT)
             Voice.stop()
             setRecording(false)
-        }else{
+        } else {
             await Voice.start('en-US');
             setRecording(true)
             ToastAndroid.show("Speech recognition started", ToastAndroid.SHORT)
-            
+
         }
     }
 
-    const onSpeechResults = (res) =>{
+    const onSpeechResults = (res) => {
         setResults(res.value)
-        res.value.map((res, index)=>{
-            setNoteText(noteText.trim()+'\n' + res.trim())
+        res.value.map((res, index) => {
+            setNoteText(noteText.trim() + '\n' + res.trim())
         })
     }
 
-    const onSpeechError = (error) =>{
+    const onSpeechError = (error) => {
         console.log(error);
         setRecording(false)
         Voice.stop().then(Voice.destroy())
     }
 
-    useEffect(()=>{
+    useEffect(() => {
 
         Voice.onSpeechError = onSpeechError
         Voice.onSpeechResults = onSpeechResults
 
-        return () =>{
+        return () => {
             Voice.destroy().then(Voice.removeAllListeners);
         }
     }, [])
@@ -117,7 +118,7 @@ const CreateNote = (props) => {
         else {
             if (props.route.params.page == "Home") {
 
-
+                setStarVisible(true)
                 db.transaction(tx => {
                     tx.executeSql(`SELECT * FROM notes WHERE id =${props.route.params.id}`, [],
                         (sql, rs) => {
@@ -158,8 +159,29 @@ const CreateNote = (props) => {
             else if (props.route.params.page == 'HomeCamera') {
                 LaunchCamera()
             }
+            else if (props.route.params.page == 'Starred') {
+
+                db.transaction((tx) => {
+                    tx.executeSql(`SELECT * FROM starrednotes WHERE id = ${props.route.params.id}`, [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                setTitleText(rs.rows.item(0).title)
+                                setNoteText(rs.rows.item(0).note)
+                                setPageColor(rs.rows.item(0).pageColor.toString())
+                                setFontColor(rs.rows.item(0).fontColor)
+                                setFontStyle(rs.rows.item(0).fontStyle)
+                                setFontSize(Math.floor(rs.rows.item(0).fontSize))
+                                setSaveButton("Update Star")
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                })
+            }
         }
     }, [])
+
+
 
 
 
@@ -329,6 +351,25 @@ const CreateNote = (props) => {
         }
     }
 
+    const UpdateStarred = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
+        if (refTitle.current.isFocused() == true) {
+            refTitle.current.blur()
+        }
+        if (refInput.current.isFocused() == true) {
+            refInput.current.blur()
+        }
+        if (titleText || noteText) {
+            db.transaction((tx) => {
+                tx.executeSql(`UPDATE starrednotes SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${props.route.params.id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                    (sql, rs) => {
+                        props.navigation.navigate('StarredNotes')
+                    }, error => {
+                        console.log("Error");
+                    })
+            })
+        }
+    }
+
 
     const SetFontSizeSlider = (prop) => {
         if (prop < 25 || prop == 25) {
@@ -356,6 +397,16 @@ const CreateNote = (props) => {
 
 
 
+    const StarNote = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
+        db.transaction((sql) => {
+            sql.executeSql("INSERT INTO starrednotes(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                (sql, rs) => {
+                    ToastAndroid.show(`Note ${title} Starred!`, ToastAndroid.SHORT)
+                }, error => {
+                    console.log("error");
+                })
+        })
+    }
 
 
     const InsertData = async (textTitle, noteText, dateText, timeText, pageColor, fontColor, fontStyle, fontSize) => {
@@ -427,7 +478,10 @@ const CreateNote = (props) => {
                                         saveButton == "Update archive" ?
                                             UpdateArchive(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
                                             :
-                                            SaveToDatabase()
+                                            saveButton == 'Update Star' ?
+                                                UpdateStarred(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                                :
+                                                SaveToDatabase()
                                 }}>
                                     <Text style={{
                                         color: pageColor === 'default' ? "#FFBC01" : 'black', fontSize: 19,
@@ -522,7 +576,6 @@ const CreateNote = (props) => {
                                 fontFamily: fontStyle === 'default' ? 'mulish' : fontStyle, fontSize: fontStyle === 'default' ? fontSize + 6 : fontSize + 14, fontWeight: fontStyle === 'default' ? 'bold' : 'normal', marginStart: 20, marginTop: 20
                                 , color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#101010' : fontColor
                             }}
-
                                 multiline value={titleText} onChangeText={(text) => { setTitleText(text) }}
                                 ref={refTitle}
                                 maxLength={100} activeOutlineColor="transparent" outlineColor="transparent"
@@ -556,14 +609,21 @@ const CreateNote = (props) => {
                         }}>
                             <AntDesign name="sound" size={23} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={()=>{StartStopRecording()}}>
-                            {recording?
-                            <Card style={{width:75, height:75, borderRadius:40, backgroundColor:'#fff',alignItems:'center', justifyContent:'center', borderWidth:2, borderColor:'red'}}>
-                                <MaterialIcons name="keyboard-voice" size={30} color="red"/>
-                            </Card>
-                            :
-                            <MaterialIcons name="keyboard-voice" size={25} color={pageColor === 'default'? '#FFBC01' : 'black'}/>}
+                        <TouchableOpacity onPress={() => { StartStopRecording() }}>
+                            {recording ?
+                                <Card style={{ width: 75, height: 75, borderRadius: 40, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
+                                    <MaterialIcons name="keyboard-voice" size={30} color="red" />
+                                </Card>
+                                :
+                                <MaterialIcons name="keyboard-voice" size={25} color={pageColor === 'default' ? '#FFBC01' : 'black'} />}
                         </TouchableOpacity>
+                        {starVisible ?
+                            <TouchableOpacity onPress={() => { StarNote(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize) }}>
+                                <MaterialIcons name="star-border" size={25} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
+                            </TouchableOpacity>
+                            :
+                            null}
+
                         <Menu
                             visible={visible}
                             onDismiss={closeMenu}

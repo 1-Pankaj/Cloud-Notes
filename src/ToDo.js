@@ -256,8 +256,11 @@ const ToDo = (props) => {
     return (
         <SafeAreaView style={[Styles.container, { justifyContent: 'space-around' }]}>
             <View style={{ width: screenWidth, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
-                <TouchableOpacity style={{ marginTop: 20, marginStart: 25 }} onPress={() => { props.navigation.navigate('Home') }}>
-                    <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
+                <TouchableOpacity style={{ marginTop: 20, marginStart: 10 }} onPress={() => { props.navigation.navigate('Home') }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
+                        <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom:2}}>ToDo's</Text>
+                    </View>
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     {selected ?
