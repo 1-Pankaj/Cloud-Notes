@@ -323,8 +323,8 @@ const Directory = (props) => {
             <ScrollView style={[{ padding: 8, width: screenWidth, flex: 1 }]} contentContainerStyle={{ alignItems: 'center', flex: 1, }} showsVerticalScrollIndicator={false}>
                 <View style={{ width: screenWidth - 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginVertical: 20 }} onPress={() => { props.navigation.navigate('Home') }}>
-                        <Ionicons name="chevron-back-outline" color='#FFBC01' size={35} style={{ marginStart: 1, marginTop: 2 }} />
-                        <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', alignSelf: 'center' }}>Directory</Text>
+                        <Ionicons name="chevron-back-outline" color='#FFBC01' size={32} style={{ marginStart: 1, marginTop: 2 }} />
+                        <Text style={{ fontWeight: 'bold', fontSize: 25, color: '#FFBC01', alignSelf: 'center' }}>Directory</Text>
                     </TouchableOpacity>
                 </View>
                 <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row' }}>

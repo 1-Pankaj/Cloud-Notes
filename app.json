@@ -19,6 +19,14 @@
         {
           "microphonePermission": "Allow CloudNotes to access your microphone."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow CloudNotes to access your photos.",
+          "savePhotosPermission": "Allow CloudNotes to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ],
     "name": "Cloud-Notes",

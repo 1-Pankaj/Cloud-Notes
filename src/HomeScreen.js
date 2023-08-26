@@ -6,11 +6,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
+import { Banner, Button, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
-
+import * as Speech from 'expo-speech'
 
 import MaterialIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import MaterialComIcon from '@expo/vector-icons/MaterialIcons'
@@ -724,9 +724,19 @@ const HomeScreen = (props) => {
         SelectData()
         CheckFirstTime()
         CreateTable()
+        Speech.isSpeakingAsync().then((rs)=>{
+            if(rs){
+                Speech.stop()
+            }
+        })
         if (isFocused) {
             setFabVisible(true)
             SelectData()
+            Speech.isSpeakingAsync().then((rs)=>{
+                if(rs){
+                    Speech.stop()
+                }
+            })
         }
     }, [isFocused, props, grid])
 
@@ -760,10 +770,36 @@ const HomeScreen = (props) => {
     }
 
 
+    const ReadingModeCheck = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS readingsplash(firsttime Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT * FROM readingsplash", [],
+                        (sql, rs) => {
+                            if (rs.rows.length === 0) {
+                                setFabVisible(false)
+                                props.navigation.navigate('ReadingModeSplash', {
+                                    noteid: id
+                                })
+                            } else {
+                                setFabVisible(false)
+                                props.navigation.navigate('ReadingMode', {
+                                    noteid: id
+                                })
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
 
 
     return (
         <SafeAreaView style={[Styles.container, { width: "100%", height: '100%' }]} onLayout={onLayoutRootView}>
+
             <View style={[Styles.container, { justifyContent: 'space-around' }]}>
                 <View style={{
                     flexDirection: 'row', width: screenWidth, alignItems: 'center', padding: 15,
@@ -809,6 +845,32 @@ const HomeScreen = (props) => {
 
                     </View>
                 </View>
+                {/* <Banner
+                    visible={false}
+                    style={{width:screenWidth}}
+                    actions={[
+                        {
+                            label: 'Fix it',
+                            onPress: () => setVisible(false),
+                        },
+                        {
+                            label: 'Learn more',
+                            onPress: () => setVisible(false),
+                        },
+                    ]}
+                    icon={({ size }) => (
+                        <Image
+                            source={{
+                                uri: 'https://avatars3.githubusercontent.com/u/17571969?s=400&v=4',
+                            }}
+                            style={{
+                                width: size,
+                                height: size,
+                            }}
+                        />
+                    )}>
+                    There was a problem
+                </Banner> */}
                 <Animated.View style={{
                     alignItems: 'center', width: screenWidth, flexDirection: 'row', justifyContent: 'center',
                     height: animatedHiddenSearch, opacity: animatedHiddenSearch
@@ -830,7 +892,7 @@ const HomeScreen = (props) => {
 
                 </Animated.View>
                 {pinnedData ?
-                    <View style={{ width: screenWidth, alignItems: 'center', marginBottom:20 }}>
+                    <View style={{ width: screenWidth, alignItems: 'center', marginBottom: 20 }}>
                         <Text style={{ alignSelf: 'flex-start', marginStart: 25, marginTop: 10, fontSize: 25, marginBottom: 10, fontWeight: 'bold' }}>Pinned Notes</Text>
                         <FlatList data={pinnedData} style={{ alignSelf: 'flex-start', marginStart: 10 }}
                             horizontal scrollEnabled={true} showsHorizontalScrollIndicator={false}
@@ -842,6 +904,7 @@ const HomeScreen = (props) => {
                                         marginEnd: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
                                     }}
                                         activeOpacity={0.6} onPress={() => {
+                                            setFabVisible(false)
                                             props.navigation.navigate("CreateNote", {
                                                 id: item.item.noteid,
                                                 page: 'Home'
@@ -1017,32 +1080,40 @@ const HomeScreen = (props) => {
                     <Portal>
                         <Modal visible={modalLongPress} onDismiss={() => { setModalLongPress(false) }} style={{ alignItems: 'center', justifyContent: 'center' }}>
                             <View style={{
-                                width: screenWidth - 50, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 30,
-                                alignItems: 'center', justifyContent: 'space-evenly', paddingVertical: 20
+                                width: 250, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 15,
+                                alignItems: 'center', justifyContent: 'space-evenly', opacity: 0.8
                             }}>
                                 <TouchableOpacity style={{
-                                    width: '90%', height: 40, backgroundColor: '#3BBC1A', alignItems: 'center', justifyContent: 'center',
-                                    borderRadius: 20, flexDirection: 'row'
+                                    width: '100%', height: 40, alignItems: 'center',
+                                    flexDirection: 'row', justifyContent: 'center'
                                 }} activeOpacity={0.7} onPress={() => {
                                     PinNote(lognPressId)
                                     setModalLongPress(false)
                                 }}>
-                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Pin Note</Text>
+                                    <MaterialIcons name="pin-outline" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
+                                    <Text style={{ fontWeight: 'bold', color: '#FFBC01' }}>Pin Note</Text>
                                 </TouchableOpacity>
+                                <Divider style={{ width: '100%', height: 0.7 }} />
                                 <TouchableOpacity style={{
-                                    width: '90%', height: 40, marginTop: 20, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
-                                    borderRadius: 20, flexDirection: 'row'
+                                    width: '100%', height: 40, alignItems: 'center',
+                                    flexDirection: 'row', justifyContent: 'center'
                                 }} activeOpacity={0.7} onPress={() => {
                                     StarNote(lognPressId)
                                     setModalLongPress(false)
                                 }}>
-                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Star Note</Text>
+                                    <MaterialComIcon name="star-border" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
+                                    <Text style={{ fontWeight: 'bold', color: '#FFBC01' }}>Star Note</Text>
                                 </TouchableOpacity>
+                                <Divider style={{ width: '100%', height: 0.7 }} />
                                 <TouchableOpacity style={{
-                                    width: '90%', height: 40, backgroundColor: '#375FFF', marginTop: 20, alignItems: 'center', justifyContent: 'center',
-                                    borderRadius: 20, flexDirection: 'row'
-                                }} activeOpacity={0.7} >
-                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Read in Reading Mode</Text>
+                                    width: '100%', height: 40, alignItems: 'center',
+                                    flexDirection: 'row', justifyContent: 'center'
+                                }} activeOpacity={0.7} onPress={() => {
+                                    setModalLongPress(false)
+                                    ReadingModeCheck(lognPressId)
+                                }}>
+                                    <MaterialComIcon name="menu-book" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
+                                    <Text style={{ fontWeight: 'bold', color: '#FFBC01' }}>Open in Reading Mode</Text>
                                 </TouchableOpacity>
                             </View>
                         </Modal>

@@ -259,7 +259,7 @@ const ToDo = (props) => {
                 <TouchableOpacity style={{ marginTop: 20, marginStart: 10 }} onPress={() => { props.navigation.navigate('Home') }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
-                        <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom:2}}>ToDo's</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom:2}}>ToDo's</Text>
                     </View>
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>

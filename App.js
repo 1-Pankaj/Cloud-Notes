@@ -29,6 +29,8 @@ import Reminders from './src/Reminders';
 import ReminderSplash from './src/splashscreens/ReminderSplash';
 import StarredNotesSplash from './src/splashscreens/StarredNotesSplash';
 import StarredNotes from './src/StarredNotes';
+import ReadingModeSplash from './src/splashscreens/ReadingModeSplash';
+import ReadingMode from './src/ReadingMode';
 
 const Stack = createStackNavigator()
 
@@ -192,6 +194,20 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name='StarredNotes' component={StarredNotes} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ReadingModeSplash' component={ReadingModeSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='ReadingMode' component={ReadingMode} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

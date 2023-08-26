@@ -233,7 +233,7 @@ const StarredNotes = (props) => {
                 <TouchableOpacity style={{ marginTop: 20, marginStart: 15 }} onPress={() => { props.navigation.navigate('Home') }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
-                        <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom: 2 }}>Starred Notes</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom: 2 }}>Starred Notes</Text>
                     </View>
                 </TouchableOpacity>
                 {data ?

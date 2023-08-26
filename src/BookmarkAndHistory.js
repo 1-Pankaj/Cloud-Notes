@@ -128,8 +128,8 @@ const BookmarkAndHistory = (props) => {
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', padding: 8, justifyContent: 'space-between' }}>
                 <TouchableOpacity style={{ marginStart: 10, marginTop: 20, marginBottom: 20 }} onPress={() => { props.navigation.navigate('Directory') }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialIcon name="arrow-back-ios" size={29} style={{ marginTop: 2 }} color="#FFBC01" />
-                        <Text style={{ fontSize: 27, color: '#FFBC01', fontWeight: 'bold' }}>{pageType}</Text>
+                        <MaterialIcon name="arrow-back-ios" size={25} style={{ marginTop: 2 }} color="#FFBC01" />
+                        <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>{pageType}</Text>
                     </View>
                 </TouchableOpacity>
             </View>

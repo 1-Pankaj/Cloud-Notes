@@ -224,7 +224,7 @@ const TrashPage = (props) => {
                 <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20, marginStart: 25 }} onPress={() => { props.navigation.navigate('Directory') }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
-                        <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom:2}}>Trash</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom:2}}>Trash</Text>
                     </View>
                 </TouchableOpacity>
                 <Menu

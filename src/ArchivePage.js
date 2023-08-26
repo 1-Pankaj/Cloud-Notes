@@ -160,7 +160,7 @@ const ArchivePage = (props) => {
                     <TouchableOpacity onPress={() => { props.navigation.navigate("Directory") }} style={{ margin: 20 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
-                            <Text style={{ fontWeight: 'bold', fontSize: 27, color: '#FFBC01', marginBottom: 2 }}>Archived Notes</Text>
+                            <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom: 2 }}>Archived Notes</Text>
                         </View>
                     </TouchableOpacity>
 

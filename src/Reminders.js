@@ -237,7 +237,7 @@ const Reminders = (props) => {
                 <TouchableOpacity style={{ marginStart: 10, marginTop: 20, marginBottom: 20 }} onPress={() => { props.navigation.navigate('Home') }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
-                        <Text style={{ fontSize: 27, marginBottom: 2, fontWeight: 'bold', color: '#FFBC01' }}>Reminders</Text>
+                        <Text style={{ fontSize: 23, marginBottom: 2, fontWeight: 'bold', color: '#FFBC01' }}>Reminders</Text>
                     </View>
                 </TouchableOpacity>
             </View>
