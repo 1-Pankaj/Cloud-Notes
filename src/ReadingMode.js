@@ -11,7 +11,7 @@ import { useIsFocused } from "@react-navigation/native";
 import Styles from "./Styles";
 
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { Button, Chip, Divider, Menu, Modal, Text } from "react-native-paper";
+import { Button, Chip, Divider, Menu, Modal, Surface, Text } from "react-native-paper";
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen'
 import ToggleSwitch from "toggle-switch-react-native";
@@ -62,7 +62,6 @@ const ReadingMode = (props) => {
     const [finalSelection, setFinalSelection] = useState('')
     const [includeTitle, setIncludeTitle] = useState(true)
     const [shareFontSize, setShareFontSize] = useState(15)
-    const [sharePageColor, setSharePageColor] = useState('default')
     const [shareItalic, setShareItalic] = useState(false)
     const [shareBold, setShareBold] = useState(false)
     const [shareUnderline, setShareUnderline] = useState(false)
@@ -76,6 +75,8 @@ const ReadingMode = (props) => {
     const [newspaper, setNewsPaper] = useState(false)
     const [loading, setLoading] = useState(false)
     const [done, setDone] = useState(false)
+    const [wordModal, setWordModal] = useState(false)
+    const [readingTime, setReadingTime] = useState(0)
 
 
     Appearance.addChangeListener(() => {
@@ -97,6 +98,13 @@ const ReadingMode = (props) => {
         }
 
 
+    }
+
+    const GetReadingTime = () => {
+        const words = wordCount;
+        const wordsPerMinute = 150;
+        const readingtime = Math.ceil(words / wordsPerMinute)
+        setReadingTime(readingtime)
     }
     const GetSelectedText = (selection) => {
         if (selection.start == selection.end) {
@@ -235,7 +243,7 @@ const ReadingMode = (props) => {
             setNoteId(props.route.params.noteid)
             GetData()
             GetWordCount()
-
+            GetReadingTime()
         }
     }, [isFocused, noteid, note, title])
 
@@ -244,6 +252,7 @@ const ReadingMode = (props) => {
     useEffect(() => {
         GetData()
         GetWordCount()
+        GetReadingTime()
     }, [noteid, note])
 
 
@@ -277,7 +286,7 @@ const ReadingMode = (props) => {
                     setLoading(false)
                     setDone(false)
                 }, 5000)
-            }).catch((err)=>{
+            }).catch((err) => {
                 setLoading(false)
                 setDone(false)
                 ToastAndroid.show("Error Encountered: ", err)
@@ -285,10 +294,10 @@ const ReadingMode = (props) => {
         })
     }
 
-    const ShareImageToOtherApps = async () =>{
-        Sharing.isAvailableAsync().then((rs)=>{
-            if(rs){
-                viewshotRef.current.capture().then((uri)=>{
+    const ShareImageToOtherApps = async () => {
+        Sharing.isAvailableAsync().then((rs) => {
+            if (rs) {
+                viewshotRef.current.capture().then((uri) => {
                     Sharing.shareAsync(uri)
                 })
             }
@@ -322,7 +331,7 @@ const ReadingMode = (props) => {
                 <Text style={{ color: pageColor === 'default' ? '#FFBC01' : textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor, fontSize: 23, fontWeight: 'bold', marginBottom: 2 }}>Reading Mode</Text>
             </TouchableOpacity>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly', width: screenWidth }}>
-                <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20 }} activeOpacity={0.6}>
+                <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20 }} activeOpacity={0.6} onPress={() => { setWordModal(true) }}>
                     <View style={{ width: 130, height: 40, borderRadius: 30, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                         <Text style={{ fontFamily: 'mulish', color: textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor }}>{wordCount}</Text>
                         <Text style={{ fontFamily: 'mulish', color: textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor }}> Words</Text>
@@ -392,7 +401,7 @@ const ReadingMode = (props) => {
             </View>
             <Modal visible={modalShare} style={{ width: screenWidth, flex: 1, justifyContent: 'space-around', alignItems: 'center' }}
                 onDismiss={() => { setModalShare(false) }} dismissableBackButton>
-                <ViewShot ref={viewshotRef} options={{fileName:'CloudNotes'}} style={{ width: 300, height: 400, borderRadius: 30, backgroundColor: pageColor === 'default' ? colorScheme === 'dark' ? '#101010' : 'white' : pageColor, alignItems: 'center', alignSelf: 'center' }}>
+                <ViewShot ref={viewshotRef} options={{ fileName: 'CloudNotes' }} style={{ width: 300, height: 400, borderRadius: 30, backgroundColor: pageColor === 'default' ? colorScheme === 'dark' ? '#101010' : 'white' : pageColor, alignItems: 'center', alignSelf: 'center' }}>
                     <View style={{ width: '100%', height: '100%', position: 'absolute', borderRadius: 30 }}>
 
 
@@ -409,11 +418,11 @@ const ReadingMode = (props) => {
                         }
                     </View>
                     {includeTitle ?
-                        <Text style={{ fontSize: shareFontSize + 8, marginTop: 20, marginHorizontal: 30, textAlign: 'left', alignSelf: 'flex-start', color: shareTextColor === 'default' ? textColor === 'default'? colorScheme === 'dark' ? 'white' : '#101010' : textColor : shareTextColor, fontWeight: 'bold' }}>{title}</Text>
+                        <Text style={{ fontSize: shareFontSize + 8, marginTop: 20, marginHorizontal: 30, textAlign: 'left', alignSelf: 'flex-start', color: shareTextColor === 'default' ? textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor : shareTextColor, fontWeight: 'bold' }}>{title}</Text>
                         :
                         null}
                     <ScrollView showsVerticalScrollIndicator={false} style={{ marginBottom: 20, width: '100%' }}>
-                        <Text style={{ marginHorizontal: 30, alignSelf: 'flex-start', textAlign: 'left', marginVertical: 20, fontSize: shareFontSize, color: shareTextColor === 'default' ? textColor === 'default'? colorScheme === 'dark' ? 'white' : '#101010' : textColor : shareTextColor, fontFamily: shareFontFamily === '' ? null : shareFontFamily, fontStyle: shareItalic ? 'italic' : 'normal', fontWeight: shareBold ? 'bold' : 'normal', textDecorationLine: shareLine ? 'line-through' : shareUnderline ? 'underline' : 'none' }}>{finalSelection.trim()}</Text>
+                        <Text style={{ marginHorizontal: 30, alignSelf: 'flex-start', textAlign: 'left', marginVertical: 20, fontSize: shareFontSize, color: shareTextColor === 'default' ? textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor : shareTextColor, fontFamily: shareFontFamily === '' ? null : shareFontFamily, fontStyle: shareItalic ? 'italic' : 'normal', fontWeight: shareBold ? 'bold' : 'normal', textDecorationLine: shareLine ? 'line-through' : shareUnderline ? 'underline' : 'none' }}>{finalSelection.trim()}</Text>
                     </ScrollView>
                 </ViewShot>
                 <View style={{ width: screenWidth - 30, marginTop: 30, backgroundColor: colorScheme === 'dark' ? '#101010' : '#e3e3e3', borderRadius: 20, alignItems: 'center' }}>
@@ -602,15 +611,15 @@ const ReadingMode = (props) => {
                                     <Ionicons name="download-outline" size={25} color="#FFBC01" />}
 
                         </TouchableOpacity>
-                        <Button onPress={()=>{
+                        <Button onPress={() => {
                             setIncludeTitle(!includeTitle)
                         }}>
-                            {includeTitle?
-                            'Remove Title'
-                            :
-                            'Include Title'}
+                            {includeTitle ?
+                                'Remove Title'
+                                :
+                                'Include Title'}
                         </Button>
-                        <TouchableOpacity onPress={()=>{
+                        <TouchableOpacity onPress={() => {
                             ShareImageToOtherApps()
                         }}>
                             <MaterialIcons name="ios-share" size={25} color="#FFBC01" />
@@ -959,6 +968,39 @@ const ReadingMode = (props) => {
                                 </View>
                             </View>
                         </View>}
+                </View>
+            </Modal>
+            <Modal visible={wordModal} style={{ alignItems: 'center', justifyContent: 'center' }} onDismiss={() => { setWordModal(false) }}>
+                <View style={{ width: 300, height: 400, borderRadius: 30, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white' }}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10, marginTop: 20, }} onPress={()=>{setWordModal(false)}}>
+                        <MaterialIcons name="close" size={30} color="#FFBC01" />
+                        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#FFBC01', marginBottom:2 }}> Extra Info</Text>
+                    </TouchableOpacity>
+                    <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 18 }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginStart: 20 }}>Words Count</Text>
+                        <View style={{ width: 100, height: 45, borderRadius: 30, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#707070' : '#202020', alignItems: 'center', justifyContent: 'center', marginEnd: 20 }}>
+                            <Text>{wordCount}</Text>
+                        </View>
+                    </View>
+                    <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 18 }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginStart: 20 }}>Reading Time</Text>
+                        <View style={{ width: 100, height: 45, borderRadius: 30, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#707070' : '#202020', alignItems: 'center', justifyContent: 'center', marginEnd: 20 }}>
+                            <Text>{readingTime} min</Text>
+                        </View>
+                    </View>
+                    <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 18 }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginStart: 20 }}>Creation Date</Text>
+                        <View style={{ width: 100, height: 45, borderRadius: 30, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#707070' : '#202020', alignItems: 'center', justifyContent: 'center', marginEnd: 20 }}>
+                            <Text>{date}</Text>
+                        </View>
+                    </View>
+                    <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 18 }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginStart: 20 }}>Creation Time</Text>
+                        <View style={{ width: 100, height: 45, borderRadius: 30, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#707070' : '#202020', alignItems: 'center', justifyContent: 'center', marginEnd: 20 }}>
+                            <Text>{time}</Text>
+                        </View>
+                    </View>
+
                 </View>
             </Modal>
         </SafeAreaView>

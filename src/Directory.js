@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View, Image, ToastAndroid } from "react-native";
 import Styles from "./Styles";
-import { Divider, Text } from "react-native-paper";
+import { Button, Card, Divider, Text } from "react-native-paper";
 
 import Ionicons from '@expo/vector-icons/Ionicons'
 
@@ -12,6 +12,9 @@ import { useFonts } from "expo-font";
 import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useIsFocused } from "@react-navigation/native";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,6 +25,25 @@ const screenHeight = Dimensions.get("window").height
 
 
 const Directory = (props) => {
+
+    GoogleSignin.configure({
+        webClientId: '29670230722-7i4utp5aqudiuklhp7rfgri5530sq02h.apps.googleusercontent.com',
+    });
+
+
+    const SignInWithGoogle = async () => {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+        const { idToken } = await GoogleSignin.signIn()
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken)
+
+        const userSignIn = auth().signInWithCredential(googleCredential)
+        userSignIn.then((user) => {
+            ToastAndroid.show('Signed in ' + user.user.displayName, ToastAndroid.SHORT)
+            setUser(user)
+        }).catch((error) => {
+            console.log(error);
+        })
+    }
 
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
     const [allNotesCount, setAllNotesCount] = useState(0)
@@ -36,6 +58,8 @@ const Directory = (props) => {
     const [dataTrash, setDataTrash] = useState(null)
     const [dataArchive, setDataArchive] = useState(null)
     const [passwordProtected, setPasswordProtected] = useState(false)
+    const [user, setUser] = useState()
+    const [initializing, setInitializing] = useState(true);
 
     const animatedSearchWidth = useRef(new Animated.Value(0)).current
 
@@ -193,6 +217,16 @@ const Directory = (props) => {
         }, 150);
     }, [animatedSearchWidth])
 
+    function onAuthStateChanged(user) {
+        setUser(user);
+        if (initializing) setInitializing(false);
+    }
+
+    useEffect(() => {
+        const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+        return subscriber;
+    })
+
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {
             await SplashScreen.hideAsync();
@@ -326,6 +360,31 @@ const Directory = (props) => {
                         <Ionicons name="chevron-back-outline" color='#FFBC01' size={32} style={{ marginStart: 1, marginTop: 2 }} />
                         <Text style={{ fontWeight: 'bold', fontSize: 25, color: '#FFBC01', alignSelf: 'center' }}>Directory</Text>
                     </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {user ?
+                            <Button mode="elevated" style={{marginTop:5, marginEnd:20}} icon='sync' onPress={() => {
+                            }}>
+                                Sync
+                            </Button>
+                            :
+                            null}
+                        <TouchableOpacity style={{ marginEnd: 25, marginTop: 5 }} onPress={() => {
+                            user ?
+                                null
+                                :
+                                SignInWithGoogle()
+                        }}>
+                            {user ?
+                                <Card mode="elevated" style={{ borderRadius: 30 }}>
+                                    <Image source={{ uri: auth().currentUser.photoURL }} style={{ width: 35, height: 35, borderRadius: 30 }} />
+                                </Card>
+                                :
+
+                                <Card mode="elevated" style={{ borderRadius: 30 }}>
+                                    <MaterialCommIcons name="account-circle" size={35} color="#FFBC01" />
+                                </Card>}
+                        </TouchableOpacity>
+                    </View>
                 </View>
                 <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row' }}>
                     <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010' }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}

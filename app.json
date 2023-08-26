@@ -27,6 +27,9 @@
           "savePhotosPermission": "Allow CloudNotes to save photos.",
           "isAccessMediaLocationEnabled": true
         }
+      ],
+      [
+        "@react-native-google-signin/google-signin"
       ]
     ],
     "name": "Cloud-Notes",
@@ -51,6 +54,7 @@
         "foregroundImage": "./assets/favicon.png",
         "backgroundColor": "#ffffff"
       },
+      "googleServicesFile": "./google-services.json",
       "package": "com.pankajisrani.cloudnotes"
     },
     "web": {

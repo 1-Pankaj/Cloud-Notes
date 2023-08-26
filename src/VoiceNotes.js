@@ -5,7 +5,7 @@ import Styles from "./Styles";
 import { Button, Text } from "react-native-paper";
 
 import * as SplashScreen from 'expo-splash-screen'
-
+import storage from '@react-native-firebase/storage'
 
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
@@ -59,6 +59,10 @@ const VoiceNotes = (props) => {
         })
 
         setRecordings(updatedRecordings)
+        // const refrence = storage().ref('voice-notes')
+        // refrence.putFile(recording.getURI()).then((snapshot)=>{
+        //     console.log(snapshot.ref.getDownloadURL());
+        // })
     }
 
     const getDurationFormatted = (millis) => {

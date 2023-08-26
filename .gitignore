@@ -39,3 +39,6 @@ firebase.js
 
 #secrets
 secrets.js
+
+#google-services
+google-services.json

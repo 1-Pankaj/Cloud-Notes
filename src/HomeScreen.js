@@ -18,6 +18,9 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { SwipeListView } from "react-native-swipe-list-view";
 import AnimatedLottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+
 
 const screenWidth = Dimensions.get("screen").width
 
@@ -27,6 +30,29 @@ const db = SQLite.openDatabase("CloudNotes.db")
 
 
 const HomeScreen = (props) => {
+
+
+    GoogleSignin.configure({
+        webClientId: '29670230722-7i4utp5aqudiuklhp7rfgri5530sq02h.apps.googleusercontent.com',
+    });
+
+
+    const SignInWithGoogle = async () => {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+        const { idToken } = await GoogleSignin.signIn()
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken)
+
+        const userSignIn = auth().signInWithCredential(googleCredential)
+        userSignIn.then((user) => {
+            ToastAndroid.show('Signed in as ' + user.user.displayName, ToastAndroid.SHORT)
+        }).catch((error) => {
+            console.log(error);
+        })
+    }
+
+
+
+
     const [visible, setVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
     const [searchText, setSearchText] = useState("")
@@ -41,6 +67,9 @@ const HomeScreen = (props) => {
     const [modalLongPress, setModalLongPress] = useState(false)
     const [lognPressId, setLongPressId] = useState('')
     const [pinnedData, setPinnedData] = useState(false)
+    const [initializing, setInitializing] = useState(true);
+    const [user, setUser] = useState();
+
 
 
     const openMenu = () => setMenuVisible(true);
@@ -717,30 +746,37 @@ const HomeScreen = (props) => {
                 })
         })
     }
-
+    function onAuthStateChanged(user) {
+        setUser(user);
+        if (initializing) setInitializing(false);
+    }
 
     useEffect(() => {
         LongPressCheck()
         SelectData()
+        
         CheckFirstTime()
         CreateTable()
-        Speech.isSpeakingAsync().then((rs)=>{
-            if(rs){
+        Speech.isSpeakingAsync().then((rs) => {
+            if (rs) {
                 Speech.stop()
             }
         })
         if (isFocused) {
             setFabVisible(true)
             SelectData()
-            Speech.isSpeakingAsync().then((rs)=>{
-                if(rs){
+            Speech.isSpeakingAsync().then((rs) => {
+                if (rs) {
                     Speech.stop()
                 }
             })
         }
     }, [isFocused, props, grid])
 
-
+    useEffect(()=>{
+        const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+        return subscriber;
+    },[])
 
     const [fontsLoaded] = useFonts({
         'mulish': require("../assets/fonts/mulish.ttf"),
@@ -752,10 +788,9 @@ const HomeScreen = (props) => {
         }
     }, [fontsLoaded]);
 
-    if (!fontsLoaded) {
+    if (!fontsLoaded || initializing) {
         return null
     }
-
 
     const UnpinNote = (id) => {
         db.transaction((tx) => {
@@ -833,14 +868,30 @@ const HomeScreen = (props) => {
                             anchor={<TouchableOpacity style={{ marginEnd: 5 }} onPress={() => { openMenu() }}>
                                 <MaterialIcons name="dots-horizontal-circle-outline" size={25} color="#FFBC01" />
                             </TouchableOpacity>}>
-                            <Menu.Item onPress={() => {
+                            {data || dataGrid1 || dataGrid2?
+                                <Menu.Item onPress={() => {
                                 closeMenu()
                                 setGrid(!grid)
                                 setRefreshing(true)
                             }} title={grid ? 'List View' : 'Grid View'} leadingIcon={grid ? 'format-list-checkbox' : 'view-grid'} theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
-                            <Menu.Item onPress={() => { }} title="Item 2" />
+                            :
+                            null}
+                            <Menu.Item onPress={() => {
+                                closeMenu()
+                            }} title="Settings" leadingIcon="cog-outline" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
                             <Divider />
-                            <Menu.Item onPress={() => { }} title="Item 3" />
+                            <Menu.Item onPress={() => {
+                                closeMenu()
+                                SignInWithGoogle()
+                            }} title={user? 'Profile' : 'Sign in'} leadingIcon="account-circle" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
+                            {user?
+                                <Menu.Item onPress={() => {
+                                closeMenu()
+                                auth().signOut()
+                                ToastAndroid.show("Logout successful", ToastAndroid.SHORT)
+                            }} title='Logout' leadingIcon="logout" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
+                            :
+                            null}
                         </Menu>
 
                     </View>
@@ -1176,7 +1227,10 @@ const HomeScreen = (props) => {
                                 {
                                     icon: 'account-voice',
                                     label: 'Voice Notes',
-                                    onPress: () => CheckVoiceNotesFirstTime(),
+                                    onPress: () => {user?
+                                        CheckVoiceNotesFirstTime()
+                                        :
+                                        ToastAndroid.show("You must be signed in to use this feature!", ToastAndroid.SHORT)},
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },
