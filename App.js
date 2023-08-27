@@ -23,8 +23,6 @@ import TrashPage from './src/TrashPage';
 import ToDo from './src/ToDo';
 import ToDoSplash from './src/splashscreens/ToDoSplash';
 import BookmarkAndHistory from './src/BookmarkAndHistory';
-import VoiceNotes from './src/VoiceNotes';
-import VoiceNotesSplash from './src/splashscreens/VoiceNotesSplash';
 import Reminders from './src/Reminders';
 import ReminderSplash from './src/splashscreens/ReminderSplash';
 import StarredNotesSplash from './src/splashscreens/StarredNotesSplash';
@@ -152,20 +150,6 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name='ToDoSplash' component={ToDoSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
-          <Stack.Screen name='VoiceNotes' component={VoiceNotes} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
-          <Stack.Screen name='VoiceNotesSplash' component={VoiceNotesSplash} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

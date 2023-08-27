@@ -386,7 +386,7 @@ const Directory = (props) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row' }}>
+                <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', marginTop:10 }}>
                     <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010' }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}
                         cursorColor="#FFBC01" selectionColor="#FFBC01" maxLength={25} numberOfLines={1}
                         multiline={false} value={searchText} onChangeText={(text) => { SearchTextInDatabase(text) }} />

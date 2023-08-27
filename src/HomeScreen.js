@@ -666,25 +666,7 @@ const HomeScreen = (props) => {
     }
 
 
-    const CheckVoiceNotesFirstTime = () => {
-        db.transaction((tx) => {
-            tx.executeSql("CREATE TABLE IF NOT EXISTS voicenotesplash (firsttime Boolean)", [],
-                (sql, rs) => {
-                    sql.executeSql("SELECT firsttime FROM voicenotesplash", [],
-                        (sql, rs) => {
-                            if (rs.rows.length == 0) {
-                                setFabVisible(false)
-                                props.navigation.navigate('VoiceNotesSplash')
-                            } else {
-                                setFabVisible(false)
-                                props.navigation.navigate('VoiceNotes')
-                            }
-                        })
-                }, error => {
-                    console.log("Error");
-                })
-        })
-    }
+    
 
     const CheckFirstTimeReminder = () => {
 
@@ -880,10 +862,15 @@ const HomeScreen = (props) => {
                                 closeMenu()
                             }} title="Settings" leadingIcon="cog-outline" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
                             <Divider />
+                            {user?
+                                <Menu.Item onPress={() => {
+                                closeMenu()
+                            }} title='Profile' leadingIcon="account-circle" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
+                            :
                             <Menu.Item onPress={() => {
                                 closeMenu()
                                 SignInWithGoogle()
-                            }} title={user? 'Profile' : 'Sign in'} leadingIcon="account-circle" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
+                            }} title='Sign in' leadingIcon="account-circle" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />}
                             {user?
                                 <Menu.Item onPress={() => {
                                 closeMenu()
@@ -1224,16 +1211,7 @@ const HomeScreen = (props) => {
                                     style: { backgroundColor: '#FFBC01' },
                                     color: 'white'
                                 },
-                                {
-                                    icon: 'account-voice',
-                                    label: 'Voice Notes',
-                                    onPress: () => {user?
-                                        CheckVoiceNotesFirstTime()
-                                        :
-                                        ToastAndroid.show("You must be signed in to use this feature!", ToastAndroid.SHORT)},
-                                    style: { backgroundColor: '#FFBC01' },
-                                    color: 'white'
-                                },
+                                
                                 {
                                     icon: 'emoticon-happy-outline',
                                     label: 'Moodify',

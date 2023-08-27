@@ -185,9 +185,10 @@ const Reminders = (props) => {
             Notifications.addNotificationResponseReceivedListener((response) => {
                 setTimeout(() => {
                     if(response.notification.request.identifier == undefined){
-
+                        console.log("error");
                     }else{
                         DeleteReminder(response.notification.request.identifier)
+                        console.log("Done");
                     }
                 }, 200);
             });

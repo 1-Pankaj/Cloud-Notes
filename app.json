@@ -30,6 +30,9 @@
       ],
       [
         "@react-native-google-signin/google-signin"
+      ],
+      [
+        "@react-native-firebase/app"
       ]
     ],
     "name": "Cloud-Notes",
