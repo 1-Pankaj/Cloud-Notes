@@ -27,6 +27,7 @@ const ArchivePage = (props) => {
     const [password, setPassword] = useState('')
     const [dialog, setDialog] = useState(false)
     const [dialogMessage, setDialogMessage] = useState('')
+    const [notebackgroundEnabled , setNotebackgroundEnabled] = useState(false)
 
     const [visible, setVisible] = useState(false);
 
@@ -70,8 +71,32 @@ const ArchivePage = (props) => {
 
     const isFocused = useIsFocused()
 
+    const GetFeatures = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS features (todo Boolean, reminder Boolean, starred Boolean, moodify Boolean, notebackground Boolean, gridlist Boolean, archive Boolean, readingmode Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT * FROM features", [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                
+                                let notebackground = rs.rows._array[0].notebackground
+                                
+
+                                setNotebackgroundEnabled(notebackground)
+
+
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
     useEffect(() => {
         GetData()
+        GetFeatures()
         SelectPassword()
     }, [isFocused])
 
@@ -116,6 +141,8 @@ const ArchivePage = (props) => {
                 })
         })
     }
+
+    
 
     const UnarchiveAll = () => {
         db.transaction((tx) => {
@@ -219,7 +246,10 @@ const ArchivePage = (props) => {
                                                 width: screenWidth - 20, height: 60, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, flexDirection: 'row',
                                                 alignItems: 'center', justifyContent: 'space-between'
                                             }}>
-                                                <ImageBackground style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.item.pageColor, opacity: 0.6, position: 'absolute' }} />
+                                                {notebackgroundEnabled?
+                                                    <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.item.pageColor, opacity: 0.6, position: 'absolute' }} />
+                                                    :
+                                                    null}
                                                 <View style={{ marginStart: 20 }}>
                                                     <Text style={{
                                                         fontSize: 20,
@@ -234,11 +264,11 @@ const ArchivePage = (props) => {
                                                         <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.item.date.length === 9 ? item.item.date.slice(0, 4) : item.item.date.slice(0, 5)}</Text>
                                                         <Text style={{ fontFamily: 'mulish', fontSize: 10, marginStart: -15 }}>{item.item.time.length === 10 ? item.item.time.slice(0, 4) + item.item.time.slice(7, 10) : item.item.time.slice(0, 5) + item.item.time.slice(8, 11)}</Text>
                                                     </View>
-                                                    <Ionicons name="chevron-forward-outline" size={25} color={item.item.pageColor === 'default' ? "#FFBC01" : 'white'} />
+                                                    <Ionicons name="chevron-forward-outline" size={25} color={notebackgroundEnabled? item.item.pageColor === 'default' ? "#FFBC01" : 'white' : '#FFBC01'} />
                                                     <TouchableHighlight onPress={() => { UnarchiveSingle(item.item.id) }}
                                                         underlayColor={colorScheme === 'dark' ? '#101010' : 'lightgray'}
                                                         style={{ width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 30 }}>
-                                                        <MaterialIcons name="unarchive" size={22} color={item.item.pageColor === 'default' ? "#FFBC01" : 'white'} />
+                                                        <MaterialIcons name="unarchive" size={22} color={notebackgroundEnabled? item.item.pageColor === 'default' ? "#FFBC01" : 'white' : '#FFBC01'} />
                                                     </TouchableHighlight>
 
                                                 </View>

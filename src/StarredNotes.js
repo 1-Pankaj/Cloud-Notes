@@ -28,10 +28,35 @@ const StarredNotes = (props) => {
     const [deletefun2, setDeleteFun2] = useState(false)
     const [id, setId] = useState('')
     const [menuVisible, setMenuVisible] = useState(false)
+    const [notebackgroundEnabled, setNotebackgroundEnabled] = useState(false)
 
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
     })
+
+    const GetFeatures = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS features (todo Boolean, reminder Boolean, starred Boolean, moodify Boolean, notebackground Boolean, gridlist Boolean, archive Boolean, readingmode Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT * FROM features", [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                
+                                let notebackground = rs.rows._array[0].notebackground
+                                
+
+                                setNotebackgroundEnabled(notebackground)
+
+
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
 
     const [data, setData] = useState(null)
 
@@ -75,6 +100,7 @@ const StarredNotes = (props) => {
 
     useEffect(() => {
         GetData()
+        GetFeatures()
     }, [isFocused])
 
 
@@ -264,7 +290,10 @@ const StarredNotes = (props) => {
                                     })
                                 }}>
                                     <View style={{ width: '100%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                        <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                        {notebackgroundEnabled?
+                                            <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                            :
+                                            null}
                                         <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
                                             <View>
                                                 <Text style={{
@@ -288,7 +317,7 @@ const StarredNotes = (props) => {
                                                     <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
                                                 </View>
                                                 <TouchableOpacity hitSlop={5} style={{ marginEnd: 15 }} onPress={() => { DeleteVerify(data.item.id) }}>
-                                                    <MaterialCommIcons name="delete-alert" size={20} color={data.item.pageColor === 'default' ? '#FFBC01' : 'white'} />
+                                                    <MaterialCommIcons name="delete-alert" size={20} color={notebackgroundEnabled? data.item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
                                                 </TouchableOpacity>
                                                 <TouchableOpacity hitSlop={5} style={{ marginEnd: 5 }} onPress={() => { UnstarVerify(data.item.id) }}>
                                                     <MaterialCommIcons name="star-off" size={20} color='red' />

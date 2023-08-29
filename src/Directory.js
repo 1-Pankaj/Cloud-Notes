@@ -60,6 +60,8 @@ const Directory = (props) => {
     const [passwordProtected, setPasswordProtected] = useState(false)
     const [user, setUser] = useState()
     const [initializing, setInitializing] = useState(true);
+    const [archiveEnabled, setArchiveEnabled] = useState(false)
+    const [starredEnabled, setStarredEnabled] = useState(false)
 
     const animatedSearchWidth = useRef(new Animated.Value(0)).current
 
@@ -203,7 +205,39 @@ const Directory = (props) => {
     }
 
 
+    const GetFeatures = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS features (todo Boolean, reminder Boolean, starred Boolean, moodify Boolean, notebackground Boolean, gridlist Boolean, archive Boolean, readingmode Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT * FROM features", [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                let results = []
+                                let archive = rs.rows._array[0].archive
+                                let gridlist = rs.rows._array[0].gridlist
+                                let moodify = rs.rows._array[0].moodify
+                                let notebackground = rs.rows._array[0].notebackground
+                                let readingmode = rs.rows._array[0].readingmode
+                                let reminder = rs.rows._array[0].reminder
+                                let starred = rs.rows._array[0].starred
+                                let todo = rs.rows._array[0].todo
+
+                                setArchiveEnabled(archive)
+                                setStarredEnabled(starred)
+
+
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
+
     useEffect(() => {
+        GetFeatures()
         GetCount()
     }, [isFocused])
 
@@ -362,7 +396,7 @@ const Directory = (props) => {
                     </TouchableOpacity>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         {user ?
-                            <Button mode="elevated" style={{marginTop:5, marginEnd:20}} icon='sync' onPress={() => {
+                            <Button mode="elevated" style={{ marginTop: 5, marginEnd: 20 }} icon='sync' onPress={() => {
                             }}>
                                 Sync
                             </Button>
@@ -386,7 +420,7 @@ const Directory = (props) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', marginTop:10 }}>
+                <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', marginTop: 10 }}>
                     <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010' }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}
                         cursorColor="#FFBC01" selectionColor="#FFBC01" maxLength={25} numberOfLines={1}
                         multiline={false} value={searchText} onChangeText={(text) => { SearchTextInDatabase(text) }} />
@@ -408,7 +442,7 @@ const Directory = (props) => {
                                             })
                                         }} activeOpacity={0.6}>
                                             <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
                                                 <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
                                                     <View>
                                                         <Text style={{
@@ -459,7 +493,7 @@ const Directory = (props) => {
                                                 })
                                             }}>
                                             <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
                                                 <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
                                                     <View>
                                                         <Text style={{
@@ -506,7 +540,7 @@ const Directory = (props) => {
                                             props.navigation.navigate('TrashPage')
                                         }} activeOpacity={0.6}>
                                             <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
                                                 <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
                                                     <View>
                                                         <Text style={{
@@ -557,7 +591,7 @@ const Directory = (props) => {
                                                 })
                                             }} activeOpacity={0.6}>
                                                 <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                    <ImageBackground style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                    <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
                                                     <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
                                                         <View>
                                                             <Text style={{
@@ -601,8 +635,8 @@ const Directory = (props) => {
                         <View style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 30 }}>
                             <Text style={{ fontSize: 18, fontFamily: 'mulish' }}>Offline Drive</Text>
                         </View>
-                        <TouchableOpacity style={{ borderTopStartRadius: 10, borderTopEndRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('Home') }}>
-                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderTopStartRadius: 10, borderTopEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <TouchableOpacity style={{ borderTopStartRadius: 10, borderTopEndRadius: 10, marginTop: 20, borderBottomStartRadius: archiveEnabled || starredEnabled ? 0 : 10, borderBottomEndRadius: archiveEnabled || starredEnabled ? 0 : 10 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('Home') }}>
+                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderTopStartRadius: 10, borderTopEndRadius: 10, borderBottomStartRadius: archiveEnabled || starredEnabled? 0 : 10, borderBottomEndRadius: archiveEnabled || starredEnabled ? 0 : 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Ionicons name="folder-open-outline" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
                                     <Text style={{ fontSize: 17, marginStart: 15 }}>Notes</Text>
@@ -613,32 +647,42 @@ const Directory = (props) => {
                                 </View>
                             </View>
                         </TouchableOpacity>
-                        <Divider style={{ width: screenWidth - 40 }} />
-                        <TouchableOpacity style={{}} activeOpacity={0.6} onPress={() => { ArchivePasswordCheck() }}>
-                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Ionicons name="archive-outline" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
-                                    <Text style={{ fontSize: 16.2, marginStart: 15 }}>Archives</Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{archivedNoteCount}</Text>
-                                    <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
-                                </View>
+                        {archiveEnabled ?
+                            <View>
+                                <Divider style={{ width: screenWidth - 40 }} />
+                                <TouchableOpacity style={{ borderBottomStartRadius: starredEnabled ? 0 : 10, borderBottomEndRadius: starredEnabled ? 0 : 10 }} activeOpacity={0.6} onPress={() => { ArchivePasswordCheck() }}>
+                                    <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomStartRadius: starredEnabled ? 0 : 10, borderBottomEndRadius: starredEnabled ? 0 : 10 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Ionicons name="archive-outline" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
+                                            <Text style={{ fontSize: 16.2, marginStart: 15 }}>Archives</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{archivedNoteCount}</Text>
+                                            <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
                             </View>
-                        </TouchableOpacity>
-                        <Divider style={{ width: screenWidth - 40 }} />
-                        <TouchableOpacity style={{ borderBottomStartRadius: 10, borderBottomEndRadius: 10 }} activeOpacity={0.6} onPress={() => { StarredNotesCheck() }}>
-                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderBottomStartRadius: 10, borderBottomEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Ionicons name="star-outline" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
-                                    <Text style={{ fontSize: 16.2, marginStart: 15 }}>Starred Notes</Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{starredNotesCount}</Text>
-                                    <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
-                                </View>
+                            :
+                            null}
+                        {starredEnabled ?
+                            <View>
+                                <Divider style={{ width: screenWidth - 40 }} />
+                                <TouchableOpacity style={{ borderBottomStartRadius: 10, borderBottomEndRadius: 10 }} activeOpacity={0.6} onPress={() => { StarredNotesCheck() }}>
+                                    <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderBottomStartRadius: 10, borderBottomEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Ionicons name="star-outline" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
+                                            <Text style={{ fontSize: 16.2, marginStart: 15 }}>Starred Notes</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{starredNotesCount}</Text>
+                                            <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
                             </View>
-                        </TouchableOpacity>
+                            :
+                            null}
                         <TouchableOpacity style={{ borderRadius: 10, marginTop: 30 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('TrashPage') }}>
                             <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>

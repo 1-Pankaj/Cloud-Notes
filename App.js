@@ -29,6 +29,8 @@ import StarredNotesSplash from './src/splashscreens/StarredNotesSplash';
 import StarredNotes from './src/StarredNotes';
 import ReadingModeSplash from './src/splashscreens/ReadingModeSplash';
 import ReadingMode from './src/ReadingMode';
+import MarketplaceSplash from './src/splashscreens/MarketplaceSplash';
+import Marketplace from './src/Marketplace';
 
 const Stack = createStackNavigator()
 
@@ -115,6 +117,20 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name='ArchivePage' component={ArchivePage} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='MarketplaceSplash' component={MarketplaceSplash} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='Marketplace' component={Marketplace} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

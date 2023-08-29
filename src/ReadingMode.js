@@ -19,6 +19,7 @@ import * as Clipboard from 'expo-clipboard'
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import ViewShot from "react-native-view-shot";
+import { SegmentedControl } from "react-native-ui-lib";
 
 
 const db = SQLite.openDatabase("CloudNotes.db")
@@ -324,7 +325,7 @@ const ReadingMode = (props) => {
 
     return (
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
-            <ImageBackground style={{ width: screenWidth, height: screenHeight + 100, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute' }} />
+            <View style={{ width: screenWidth, height: screenHeight + 100, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute' }} />
             <TouchableOpacity style={{ flexDirection: "row", alignSelf: 'flex-start', marginTop: 20, marginStart: 5, alignItems: 'center' }}
                 onPress={() => { props.navigation.navigate('Home') }}>
                 <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? '#FFBC01' : textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor} />
@@ -414,7 +415,7 @@ const ReadingMode = (props) => {
                                     :
                                     <ImageBackground source={require(`../assets/metal.png`)} style={{ width: '100%', height: '100%', position: 'absolute', borderRadius: 30, }} />
                             :
-                            <ImageBackground style={{ width: '100%', height: '100%', position: 'absolute', borderRadius: 30, }} />
+                            <View style={{ width: '100%', height: '100%', position: 'absolute', borderRadius: 30, }} />
                         }
                     </View>
                     {includeTitle ?
@@ -635,8 +636,16 @@ const ReadingMode = (props) => {
                         <MaterialIcons name="close" size={25} color={pageColor === 'default' ? '#FFBC01' : textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor} />
                     </TouchableOpacity>
                     <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly', marginTop: 20 }}>
-                        <Chip mode="outlined" selected={modalmode === 'Display' ? true : false} onPress={() => { setModalMode('Display') }} selectedColor="#FFBC01"><Text style={{ paddingHorizontal: 20, paddingVertical: 2 }}>Display</Text></Chip>
-                        <Chip mode="outlined" onPress={() => { setModalMode('Audio') }} selected={modalmode === 'Audio' ? true : false} selectedColor="#FFBC01"><Text style={{ paddingHorizontal: 20, paddingVertical: 2 }}>Audio</Text></Chip>
+                        <SegmentedControl activeBackgroundColor="#FFBC01" style={{ width: 200, height: 50, borderColor: 'transparent' }}
+                            backgroundColor={colorScheme === 'dark' ? '#353535' : '#e3e3e3'} segmentsStyle={{ height: 50 }} initialIndex={0}
+                            outlineColor={colorScheme === 'dark' ? '#707070' : '#909090'}
+                            borderRadius={10} activeColor="white"
+                            segments={[{ label: 'Display' }, { label: 'Audio', }]} onChangeIndex={(num) => {
+                                num == 1 ?
+                                    setModalMode('Audio')
+                                    :
+                                    setModalMode('Display')
+                            }} />
                     </View>
                     {modalmode === 'Display' ?
                         <View style={{ width: '100%', alignItems: 'center', marginTop: 20, justifyContent: 'space-around', marginBottom: 50 }}>
@@ -972,9 +981,9 @@ const ReadingMode = (props) => {
             </Modal>
             <Modal visible={wordModal} style={{ alignItems: 'center', justifyContent: 'center' }} onDismiss={() => { setWordModal(false) }}>
                 <View style={{ width: 300, height: 400, borderRadius: 30, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white' }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10, marginTop: 20, }} onPress={()=>{setWordModal(false)}}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10, marginTop: 20, }} onPress={() => { setWordModal(false) }}>
                         <MaterialIcons name="close" size={30} color="#FFBC01" />
-                        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#FFBC01', marginBottom:2 }}> Extra Info</Text>
+                        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#FFBC01', marginBottom: 2 }}> Extra Info</Text>
                     </TouchableOpacity>
                     <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 18 }}>
                         <Text style={{ fontSize: 18, fontWeight: 'bold', marginStart: 20 }}>Words Count</Text>

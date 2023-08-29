@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, TextInput, TouchableOpacity, View } from "react-native";
+import { Appearance, Dimensions, FlatList, TextInput, TouchableOpacity, View } from "react-native";
 import Styles from "./Styles";
 import { ProgressBar, Text } from "react-native-paper";
 
@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import WebView from "react-native-webview";
 import * as SQLite from 'expo-sqlite'
 import { useIsFocused } from "@react-navigation/native";
+import { ExpandableSection } from "react-native-ui-lib";
 
 const screenWidth = Dimensions.get("window").width
 const screenHeight = Dimensions.get("window").height
@@ -30,7 +31,6 @@ const Browser = (props) => {
     const [history, setHistory] = useState([])
     const [bottom, setBottom] = useState(true)
 
-    const animatedViewHeight = new Animated.Value(0)
     const [open, setOpen] = useState(false)
     const [bookmarked, setBookmarked] = useState(false)
 
@@ -158,27 +158,6 @@ const Browser = (props) => {
         GetUrlFromDatabase()
     }, [])
 
-    const showHiddenView = () => {
-
-        {
-            open ?
-                Animated.timing(animatedViewHeight, {
-                    toValue: 0,
-                    useNativeDriver: false,
-                }).start(() => {
-                    setOpen(false)
-                })
-                :
-                Animated.spring(animatedViewHeight, {
-                    toValue: 400,
-                    speed: 100,
-                    useNativeDriver: false
-                }).start(() => { setOpen(true) })
-
-        }
-
-
-    }
 
     const SetBookmark = () => {
         db.transaction((tx) => {
@@ -231,7 +210,7 @@ const Browser = (props) => {
                                 {titleText.slice(0, 22)}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginEnd: 20 }}>
-                                <TouchableOpacity onPress={() => { showHiddenView() }} style={{ marginBottom: 15, }}>
+                                <TouchableOpacity onPress={() => { setOpen(!open) }} style={{ marginBottom: 15, }}>
                                     <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => {
@@ -241,42 +220,45 @@ const Browser = (props) => {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        <Animated.View style={{
-                            width: screenWidth, height: animatedViewHeight, flexDirection: 'column', alignItems: 'center',
-                        }}>
-                            <View style={{ alignItems: 'center', width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 10 }}>
-                                <Text style={{
-                                    marginStart: 15, fontFamily: 'mulish', fontWeight: 'bold', fontSize: 25,
-                                }}>
-                                    History
-                                </Text>
-                                <TouchableOpacity style={{ marginEnd: 15 }} onPress={() => { DropTable() }}>
-                                    <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, color: "#FFBC01" }}>
-                                        Clear all
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                            <FlatList
-                                data={history}
-                                keyExtractor={item => item.id}
-                                renderItem={item => (
-                                    <TouchableOpacity onPress={() => {
-                                        setUriWeb(item.item.url)
-                                        showHiddenView()
+                        <ExpandableSection
+                            expanded={open}>
+                            <View style={{ height: 400 }}>
+
+                                <View style={{ alignItems: 'center', width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 10 }}>
+                                    <Text style={{
+                                        marginStart: 15, fontFamily: 'mulish', fontWeight: 'bold', fontSize: 25,
                                     }}>
-                                        <View style={{
-                                            width: screenWidth - 20, height: 30, backgroundColor: colorScheme === "dark" ? "#202020" : "#fff", borderRadius: 10,
-                                            alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexDirection: 'row'
-                                        }}>
-                                            <Text style={{ paddingHorizontal: 10, fontFamily: 'mulish', color: 'gray', fontSize: 13, marginEnd: 20 }} numberOfLines={1}>{item.item.url}</Text>
-                                            <TouchableOpacity style={{ marginEnd: 20 }} onPress={() => { RemoveUrl(item.item.id) }}>
-                                                <Ionicons name="close" size={20} color={colorScheme === "dark" ? "lightgray" : "#202020"} />
-                                            </TouchableOpacity>
-                                        </View>
+                                        History
+                                    </Text>
+                                    <TouchableOpacity style={{ marginEnd: 15 }} onPress={() => { DropTable() }}>
+                                        <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, color: "#FFBC01" }}>
+                                            Clear all
+                                        </Text>
                                     </TouchableOpacity>
-                                )}
-                            />
-                        </Animated.View>
+                                </View>
+                                <FlatList
+                                    data={history}
+                                    keyExtractor={item => item.id}
+                                    renderItem={item => (
+                                        <TouchableOpacity onPress={() => {
+                                            setUriWeb(item.item.url)
+                                            setOpen(!open)
+                                        }}>
+                                            <View style={{
+                                                width: screenWidth - 20, height: 30, backgroundColor: colorScheme === "dark" ? "#202020" : "#fff", borderRadius: 10,
+                                                alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexDirection: 'row'
+                                            }}>
+                                                <Text style={{ paddingHorizontal: 10, fontFamily: 'mulish', color: 'gray', fontSize: 13, marginEnd: 20 }} numberOfLines={1}>{item.item.url}</Text>
+                                                <TouchableOpacity style={{ marginEnd: 20 }} onPress={() => { RemoveUrl(item.item.id) }}>
+                                                    <Ionicons name="close" size={20} color={colorScheme === "dark" ? "lightgray" : "#202020"} />
+                                                </TouchableOpacity>
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+
+                            </View>
+                        </ExpandableSection>
                         <View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around' }}>
                             <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 10 }} onPress={() => { setBottom(true) }}>
                                 <MaterialIcons name="vertical-align-bottom" size={20} color="#FFBC01" />
@@ -340,7 +322,7 @@ const Browser = (props) => {
 
                 />
                 {bottom ?
-                    <View style={{ width: screenWidth, alignItems: 'center' }}>
+                    <View style={{ width: screenWidth, alignItems: 'center', maxHeight: 600 }}>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
                         <View style={{
                             width: screenWidth - 35, height: 45, flexDirection: 'row', backgroundColor: colorScheme === "dark" ? "#303030" : "#e3e3e3", borderRadius: 10,
@@ -376,6 +358,45 @@ const Browser = (props) => {
                                 <MaterialCommIcons name={loading ? "close" : "reload"} size={25} color="#FFBC01" />
                             </TouchableOpacity>
                         </View>
+                        <ExpandableSection top
+                            expanded={open}>
+                            <View style={{ height: 400 }}>
+
+                                <View style={{ alignItems: 'center', width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 10 }}>
+                                    <Text style={{
+                                        marginStart: 15, fontFamily: 'mulish', fontWeight: 'bold', fontSize: 25,
+                                    }}>
+                                        History
+                                    </Text>
+                                    <TouchableOpacity style={{ marginEnd: 15 }} onPress={() => { DropTable() }}>
+                                        <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, color: "#FFBC01" }}>
+                                            Clear all
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <FlatList
+                                    data={history}
+                                    keyExtractor={item => item.id}
+                                    renderItem={item => (
+                                        <TouchableOpacity onPress={() => {
+                                            setUriWeb(item.item.url)
+                                            setOpen(!open)
+                                        }}>
+                                            <View style={{
+                                                width: screenWidth - 20, height: 30, backgroundColor: colorScheme === "dark" ? "#202020" : "#fff", borderRadius: 10,
+                                                alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexDirection: 'row'
+                                            }}>
+                                                <Text style={{ paddingHorizontal: 10, fontFamily: 'mulish', color: 'gray', fontSize: 13, marginEnd: 20 }} numberOfLines={1}>{item.item.url}</Text>
+                                                <TouchableOpacity style={{ marginEnd: 20 }} onPress={() => { RemoveUrl(item.item.id) }}>
+                                                    <Ionicons name="close" size={20} color={colorScheme === "dark" ? "lightgray" : "#202020"} />
+                                                </TouchableOpacity>
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+
+                            </View>
+                        </ExpandableSection>
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', marginTop: 5, justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <TouchableOpacity onPress={() => {
@@ -396,7 +417,7 @@ const Browser = (props) => {
                                 {titleText.slice(0, 22)}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginEnd: 20 }}>
-                                <TouchableOpacity onPress={() => { showHiddenView() }} style={{}}>
+                                <TouchableOpacity onPress={() => { setOpen(!open) }} style={{}}>
                                     <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => {
@@ -409,42 +430,8 @@ const Browser = (props) => {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        <Animated.View style={{
-                            width: screenWidth, height: animatedViewHeight, flexDirection: 'column', alignItems: 'center',
-                        }}>
-                            <View style={{ alignItems: 'center', width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 10 }}>
-                                <Text style={{
-                                    marginStart: 15, fontFamily: 'mulish', fontWeight: 'bold', fontSize: 25,
-                                }}>
-                                    History
-                                </Text>
-                                <TouchableOpacity style={{ marginEnd: 15 }} onPress={() => { DropTable() }}>
-                                    <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 14, color: "#FFBC01" }}>
-                                        Clear all
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                            <FlatList
-                                data={history}
-                                keyExtractor={item => item.id}
-                                renderItem={item => (
-                                    <TouchableOpacity onPress={() => {
-                                        setUriWeb(item.item.url)
-                                        showHiddenView()
-                                    }}>
-                                        <View style={{
-                                            width: screenWidth - 20, height: 30, backgroundColor: colorScheme === "dark" ? "#202020" : "#fff", borderRadius: 10,
-                                            alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexDirection: 'row'
-                                        }}>
-                                            <Text style={{ paddingHorizontal: 10, fontFamily: 'mulish', color: 'gray', fontSize: 13, marginEnd: 20 }} numberOfLines={1}>{item.item.url}</Text>
-                                            <TouchableOpacity style={{ marginEnd: 20 }} onPress={() => { RemoveUrl(item.item.id) }}>
-                                                <Ionicons name="close" size={20} color={colorScheme === "dark" ? "lightgray" : "#202020"} />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </TouchableOpacity>
-                                )}
-                            />
-                        </Animated.View>
+
+
                     </View>
                     :
                     null}

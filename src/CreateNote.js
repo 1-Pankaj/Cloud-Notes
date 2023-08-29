@@ -18,6 +18,7 @@ import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice'
+import { ExpandableSection } from "react-native-ui-lib";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -187,30 +188,7 @@ const CreateNote = (props) => {
 
 
 
-    const PickColor = () => {
-        if (open) {
-            refInput.current.blur()
-            refTitle.current.blur()
-            Animated.timing(colorSection, {
-                toValue: 0,
-                duration: 0,
-                useNativeDriver: false
-            }).start(() => {
-                setOpen(false)
-            })
 
-        } else {
-            refInput.current.blur()
-            refTitle.current.blur()
-            Animated.spring(colorSection, {
-                toValue: 370,
-                duration: 10,
-                useNativeDriver: false
-            }).start(() => {
-                setOpen(true)
-            })
-        }
-    }
 
 
 
@@ -462,13 +440,13 @@ const CreateNote = (props) => {
             <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
                 <View style={[Styles.container, { justifyContent: 'space-between', }]}>
                     <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
-                        <ImageBackground style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
+                        <View style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <TouchableOpacity onPress={() => { props.navigation.navigate("Home") }} style={{ margin: 20 }}>
                                 <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
                             </TouchableOpacity>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <TouchableOpacity style={{ marginEnd: 30 }} onPress={() => { PickColor() }}>
+                                <TouchableOpacity style={{ marginEnd: 30 }} onPress={() => { setOpen(!open) }}>
                                     <Ionicons name={open ? "close" : "color-fill-outline"} size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => {
@@ -490,7 +468,9 @@ const CreateNote = (props) => {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        <Animated.View style={{ width: screenWidth, height: colorSection, opacity: colorSection }}>
+                        <ExpandableSection
+                            top={false}
+                            expanded={open}>
                             <View style={{ width: screenWidth }}>
                                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Page Colour</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
@@ -566,7 +546,7 @@ const CreateNote = (props) => {
 
                                 </View>
                             </View>
-                        </Animated.View>
+                        </ExpandableSection>
 
                         <Text style={{ marginBottom: 10, fontSize: 12 }}>{dateText} {timeText}</Text>
 
@@ -607,7 +587,7 @@ const CreateNote = (props) => {
                             SpeakText()
 
                         }}>
-                            <AntDesign name="sound" size={23} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+                            <MaterialIcons name="volume-up" size={30} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => { StartStopRecording() }}>
                             {recording ?

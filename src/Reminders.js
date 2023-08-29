@@ -113,21 +113,21 @@ const Reminders = (props) => {
 
     const isFocused = useIsFocused()
 
-    const DeleteReminder = (id) =>{
-        db.transaction((tx)=>{
+    const DeleteReminder = (id) => {
+        db.transaction((tx) => {
             tx.executeSql("SELECT * FROM reminder WHERE id = (?)", [id],
-            (sql,rs)=>{
-                cancelNotification(rs.rows._array[0].notificationid)
-                sql.executeSql("DELETE FROM reminder WHERE id = (?)",[id],
-                (sql,rs)=>{
-                    ToastAndroid.show("Deleted", ToastAndroid.SHORT)
-                    GetData()
-                }, error =>{
-                    console.log("error");
+                (sql, rs) => {
+                    cancelNotification(rs.rows._array[0].notificationid)
+                    sql.executeSql("DELETE FROM reminder WHERE id = (?)", [id],
+                        (sql, rs) => {
+                            ToastAndroid.show("Deleted", ToastAndroid.SHORT)
+                            GetData()
+                        }, error => {
+                            console.log("error");
+                        })
+                }, error => {
+                    console.log("Error");
                 })
-            }, error =>{
-                console.log("Error");
-            })
         })
     }
 
@@ -184,9 +184,9 @@ const Reminders = (props) => {
         responseListener.current =
             Notifications.addNotificationResponseReceivedListener((response) => {
                 setTimeout(() => {
-                    if(response.notification.request.identifier == undefined){
+                    if (response.notification.request.identifier == undefined) {
                         console.log("error");
-                    }else{
+                    } else {
                         DeleteReminder(response.notification.request.identifier)
                         console.log("Done");
                     }
@@ -205,7 +205,7 @@ const Reminders = (props) => {
         setVisible(false)
     }, [setVisible])
 
-    const onConfirm = (data)=>{
+    const onConfirm = (data) => {
         setVisible(false)
         schedulePushNotification(data.hours, data.minutes, titleText, messageText)
     }
@@ -253,18 +253,20 @@ const Reminders = (props) => {
                         keyExtractor={item => item.id}
                         renderItem={(item) => {
                             return (
-                                <View style={{ width: screenWidth - 50, paddingVertical: 10, backgroundColor: colorScheme === 'dark' ? '#212121' : 'white', borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth:1, borderColor:colorScheme === 'dark'? '#303030' : '#e3e3e3',
-                                marginTop:10}}>
+                                <View style={{
+                                    width: screenWidth - 50, paddingVertical: 10, backgroundColor: colorScheme === 'dark' ? '#212121' : 'white', borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3',
+                                    marginTop: 10
+                                }}>
                                     <View style={{ marginStart: 15, marginTop: 5, marginBottom: 5, marginEnd: 15 }}>
                                         <Text style={{ fontSize: 17, fontWeight: 'bold' }}>{item.item.title.trim()}</Text>
                                         <Text style={{ fontSize: 12, marginTop: 2 }}>{item.item.message.trim()}</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', height: '100%' }}>
-                                        <View style={{marginEnd:10}}>
-                                            <Text style={{fontSize:10, marginEnd:10}}>Upcoming</Text>
-                                            <Text style={{alignSelf:'center'}}>{item.item.time}</Text>
+                                        <View style={{ marginEnd: 10 }}>
+                                            <Text style={{ fontSize: 10, marginEnd: 10 }}>Upcoming</Text>
+                                            <Text style={{ alignSelf: 'center' }}>{item.item.time}</Text>
                                         </View>
-                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15 }} onPress={()=>{DeleteReminder(item.item.id)}}>
+                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15 }} onPress={() => { DeleteReminder(item.item.id) }}>
                                             <MaterialIcons name="close" size={15} color={colorScheme === 'dark' ? 'white' : '#101010'} />
                                         </TouchableOpacity>
                                     </View>

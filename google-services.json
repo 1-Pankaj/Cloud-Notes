@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "29670230722",
+    "project_id": "cloudnotes-android",
+    "storage_bucket": "cloudnotes-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29670230722:android:5198ac0c6fee2d0eae495b",
+        "android_client_info": {
+          "package_name": "com.pankajisrani.cloudnotes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "29670230722-c4hccrq6flgsh2l10pu6gonbecgrl6ap.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pankajisrani.cloudnotes",
+            "certificate_hash": "103e2ab63efd5b2a5ac413fc2cf12b558c770355"
+          }
+        },
+        {
+          "client_id": "29670230722-roov8bk09290nrt5ha3k81kqi0fmcm8k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pankajisrani.cloudnotes",
+            "certificate_hash": "b87d12a067e8a76661dbfbe59399013ff833e00d"
+          }
+        },
+        {
+          "client_id": "29670230722-7i4utp5aqudiuklhp7rfgri5530sq02h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAe15Xg_yxKEiNWP35COnzpGI02r7zvbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "29670230722-7i4utp5aqudiuklhp7rfgri5530sq02h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
