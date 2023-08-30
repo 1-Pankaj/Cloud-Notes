@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     Appearance, Dimensions, FlatList,
     RefreshControl, ScrollView, TextInput, ToastAndroid,
-    TouchableOpacity, View, Image
+    TouchableOpacity, View, Image, LayoutAnimation
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
@@ -75,6 +75,9 @@ const HomeScreen = (props) => {
     const [reminderEnabled, setReminderEnabled] = useState(false)
     const [starredEnabled, setStarredEnabled] = useState(false)
     const [todoEnabled, setTodoEnabled] = useState(false)
+    const [todayData, setTodayData] = useState(null)
+    const [previousData, setPreviousData] = useState(null)
+    const [noteCount, setNoteCount] = useState(0)
 
 
 
@@ -187,7 +190,6 @@ const HomeScreen = (props) => {
         db.transaction((tx) => {
             tx.executeSql("SELECT * FROM notes ORDER BY id DESC", [],
                 (sql, rs) => {
-                    setData([])
                     let results = []
                     if (rs.rows.length > 0) {
                         for (let i = 0; i < rs.rows.length; i++) {
@@ -204,6 +206,43 @@ const HomeScreen = (props) => {
                 error => {
                     console.log("Error");
                     setRefreshing(false)
+                })
+        })
+
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM notes WHERE date = (?)", [new Date().toLocaleDateString()],
+                (sql, rs) => {
+                    let results = []
+                    if (rs.rows.length > 0) {
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            let item = rs.rows.item(i)
+                            results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
+                        }
+                        setTodayData(results)
+                        setRefreshing(false)
+                    } else {
+                        setTodayData(null)
+                    }
+                }, error => {
+                    console.log("Error");
+                })
+        })
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM notes WHERE date != (?)", [new Date().toLocaleDateString()],
+                (sql, rs) => {
+                    let results = []
+                    if (rs.rows.length > 0) {
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            let item = rs.rows.item(i)
+                            results.push({ id: item.id, title: item.title, note: item.note, date: item.date, time: item.time, pageColor: item.pageColor, fontColor: item.fontColor, fontStyle: item.fontStyle, fontSize: item.fontSize })
+                        }
+                        setPreviousData(results)
+                        setRefreshing(false)
+                    } else {
+                        setPreviousData(null)
+                    }
+                }, error => {
+                    console.log("Error");
                 })
         })
 
@@ -228,6 +267,14 @@ const HomeScreen = (props) => {
                     console.log("Error");
                 })
         })
+
+        if (previousData && todayData) {
+            setNoteCount(previousData.length + todayData.length)
+        } else if (previousData && !todayData) {
+            setNoteCount(previousData.length)
+        } else if (todayData && !previousData) {
+            setNoteCount(todayData.length)
+        }
     }
 
 
@@ -260,6 +307,8 @@ const HomeScreen = (props) => {
                                                 (sql, rs) => {
                                                     sql.executeSql("DELETE FROM notes WHERE id = (?)", [id],
                                                         (sql, rs) => {
+                                                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+                                                            SelectData()
                                                             sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [id],
                                                                 (sql, rs) => {
                                                                     SelectData()
@@ -677,6 +726,7 @@ const HomeScreen = (props) => {
     }
 
     useEffect(() => {
+
         LongPressCheck()
         SelectData()
         GetFeatures()
@@ -834,9 +884,9 @@ const HomeScreen = (props) => {
                 </ExpandableSection>
                 {pinnedData ?
                     <View style={{ width: screenWidth, alignItems: 'center', marginBottom: 20 }}>
-                        <Text style={{ alignSelf: 'flex-start', marginStart: 10, marginTop: 10, fontSize: 25, marginBottom: 10, fontWeight: 'bold' }}>Pinned Notes</Text>
+                        <Text style={{ alignSelf: 'flex-start', marginStart: 10, marginTop: 20, fontSize: 25, marginBottom: 5, fontWeight: 'bold' }}>Pinned Notes</Text>
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center' }}>
-                            <FlatList data={pinnedData} style={{ alignSelf: 'flex-start', marginStart: 10 }}
+                            <FlatList data={pinnedData} style={{ alignSelf: 'flex-start', marginStart: 10, marginTop: 10 }}
                                 horizontal scrollEnabled={true} showsHorizontalScrollIndicator={false}
                                 keyExtractor={item => item.id}
                                 renderItem={item => {
@@ -927,77 +977,150 @@ const HomeScreen = (props) => {
                             </View>
                             :
                             <View style={{ marginTop: 10, flex: 1 }}>
-                                <Text style={{ alignSelf: 'flex-start', marginStart: 15, fontSize: 25, fontWeight: 'bold' }}>All Notes</Text>
+
 
                                 {data ?
                                     <ScrollView style={{ width: screenWidth, marginBottom: 20, marginTop: 10 }} contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }} bounces refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                                         setRefreshing(true)
                                         SelectData()
                                     }} />} showsVerticalScrollIndicator={false}>
-                                        <StackAggregator backgroundColor="transparent" contentContainerStyle={{ alignItems: 'center', flex: 1, overflow: 'visible', }} itemBorderRadius={10}
-                                            buttonProps={{ color: '#FFBC01' }} containerStyle={{ overflow: 'visible' }} marginV={false}
-                                            collapsed={false} spread={true} animated width={screenWidth} style={{ width: screenWidth, flex: 1, maxHeight:200 }}>
-                                            {data.map((item) => {
-                                                return (
-                                                    <Drawer key={item.id}
-                                                        rightItems={[{ icon: require('../assets/delete.png'), text: 'Trash', width: 80, background: 'red', onPress: () => { DeleteFromTable(item.id) } }, archiveEnabled ? { icon: require('../assets/archive.png'), text: 'Archive', width: 80, background: '#3BBC1A', onPress: () => ArchiveFirstTimeCheck(item.id) } : { onPress: () => { }, width: 1, background: 'red' }]}
-                                                        leftItem={starredEnabled ? { icon: require('../assets/star.png'), text: 'Star', width: 80, background: '#FFBC01', onPress: () => StarNote(item.id) } : { background: 'red', onPress: () => { } }}
-                                                        useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 10, alignItems: 'center' }}
-                                                        fullRightThreshold={0.7} onFullSwipeRight={() => { DeleteFromTable(item.id) }} bounciness={100}
-                                                        fullSwipeRight disableHaptic>
+                                        {todayData ?
+                                            <View style={{ width: screenWidth, marginTop: 10 }}>
+                                                <Text style={{ alignSelf: 'flex-start', marginStart: 15, fontSize: 25, fontWeight: 'bold' }}>Today</Text>
+                                                <StackAggregator backgroundColor="transparent" contentContainerStyle={{ alignItems: 'center', overflow: 'visible', height: 200, marginTop: -10 }} itemBorderRadius={10}
+                                                    buttonProps={{ color: '#FFBC01' }} containerStyle={{ overflow: 'visible', marginTop: 20 }} marginV={false}
+                                                    collapsed={todayData.length > 3 ? true : false} spread={true} animated width={screenWidth} style={{ width: screenWidth, marginTop: 20 }}>
+                                                    {todayData.map((item, index) => {
+                                                        return (
+                                                            <Drawer key={index}
+                                                                rightItems={[{ icon: require('../assets/delete.png'), text: 'Trash', width: 80, background: 'red', onPress: () => { DeleteFromTable(item.id) } }, archiveEnabled ? { icon: require('../assets/archive.png'), text: 'Archive', width: 80, background: '#3BBC1A', onPress: () => ArchiveFirstTimeCheck(item.id) } : { onPress: () => { }, width: 1, background: 'red' }]}
+                                                                leftItem={starredEnabled ? { icon: require('../assets/star.png'), text: 'Star', width: 80, background: '#FFBC01', onPress: () => StarNote(item.id) } : { background: 'red', onPress: () => { } }}
+                                                                useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 10, alignItems: 'center' }}
+                                                                fullRightThreshold={0.7} onFullSwipeRight={() => { DeleteFromTable(item.id) }} bounciness={100}
+                                                                fullSwipeRight disableHaptic>
 
-                                                        <Card style={[{
-                                                            borderRadius: 10
-                                                        }]} borderRadius={10}
-                                                            onLongPress={() => { OpenLongPressModal(item.id) }}
-                                                            onPress={() => {
-                                                                setFabVisible(false)
-                                                                props.navigation.navigate("CreateNote", {
-                                                                    id: item.id,
-                                                                    page: 'Home'
-                                                                })
-                                                            }} >
+                                                                <Card style={[{
+                                                                    borderRadius: 10
+                                                                }]} borderRadius={10}
+                                                                    onLongPress={() => { OpenLongPressModal(item.id) }}
+                                                                    onPress={() => {
+                                                                        setFabVisible(false)
+                                                                        props.navigation.navigate("CreateNote", {
+                                                                            id: item.id,
+                                                                            page: 'Home'
+                                                                        })
+                                                                    }} >
 
 
-                                                            <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                                {notebackgroundEnabled ?
-                                                                    <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
-                                                                    :
-                                                                    null}
-                                                                <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
-                                                                    <View>
-                                                                        <Text style={{
-                                                                            fontFamily: 'mulish', fontSize: 18,
-                                                                            fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                                        }}
-                                                                            numberOfLines={1}>
-                                                                            {item.title.slice(0, 20).trim()}
-                                                                        </Text>
-                                                                        <Text style={{
-                                                                            fontFamily: 'mulish', fontSize: 12
-                                                                            , color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                                        }}
-                                                                            numberOfLines={1}>
-                                                                            {item.note.slice(0, 30).trim()}
-                                                                        </Text>
-                                                                    </View>
-                                                                    <View style={{ alignItems: 'center', flexDirection: 'row', }}>
-                                                                        <View style={{ alignItems: 'center', marginEnd: 20 }}>
-                                                                            <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.date.length === 9 ? item.date.slice(0, 4) : item.date.slice(0, 5)}</Text>
-                                                                            <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</Text>
+                                                                    <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        {notebackgroundEnabled ?
+                                                                            <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
+                                                                            :
+                                                                            null}
+                                                                        <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
+                                                                            <View>
+                                                                                <Text style={{
+                                                                                    fontFamily: 'mulish', fontSize: 18,
+                                                                                    fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                                                }}
+                                                                                    numberOfLines={1}>
+                                                                                    {item.title.slice(0, 20).trim()}
+                                                                                </Text>
+                                                                                <Text style={{
+                                                                                    fontFamily: 'mulish', fontSize: 12
+                                                                                    , color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                                                }}
+                                                                                    numberOfLines={1}>
+                                                                                    {item.note.slice(0, 30).trim()}
+                                                                                </Text>
+                                                                            </View>
+                                                                            <View style={{ alignItems: 'center', flexDirection: 'row', }}>
+                                                                                <View style={{ alignItems: 'center', marginEnd: 20 }}>
+                                                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.date.length === 9 ? item.date.slice(0, 4) : item.date.slice(0, 5)}</Text>
+                                                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</Text>
+                                                                                </View>
+                                                                                <MaterialComIcon name="arrow-forward-ios" size={22} color={notebackgroundEnabled ? item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
+                                                                            </View>
                                                                         </View>
-                                                                        <MaterialComIcon name="arrow-forward-ios" size={22} color={notebackgroundEnabled ? item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
                                                                     </View>
-                                                                </View>
+                                                                </Card>
+                                                            </Drawer>
+                                                        )
+                                                    })}
+                                                </StackAggregator>
+                                            </View>
+                                            :
+                                            null}
+                                        {previousData ?
+                                            <View style={{ width: screenWidth, marginTop: 30 }}>
+                                                <Text style={{ alignSelf: 'flex-start', marginStart: 15, fontSize: 25, fontWeight: 'bold' }}>Previously</Text>
+                                                <StackAggregator backgroundColor="transparent" contentContainerStyle={{ alignItems: 'center', overflow: 'visible', height: 200, marginTop: -10 }} itemBorderRadius={10}
+                                                    buttonProps={{ color: '#FFBC01' }} containerStyle={{ overflow: 'visible', marginTop: 20 }} marginV={false}
+                                                    collapsed={previousData.length > 3 ? true : false} spread={true} animated width={screenWidth} style={{ width: screenWidth, }}>
+                                                    {previousData.map((item, index) => {
+                                                        return (
+                                                            <Drawer key={index}
+                                                                rightItems={[{ icon: require('../assets/delete.png'), text: 'Trash', width: 80, background: 'red', onPress: () => { DeleteFromTable(item.id) } }, archiveEnabled ? { icon: require('../assets/archive.png'), text: 'Archive', width: 80, background: '#3BBC1A', onPress: () => ArchiveFirstTimeCheck(item.id) } : { onPress: () => { }, width: 1, background: 'red' }]}
+                                                                leftItem={starredEnabled ? { icon: require('../assets/star.png'), text: 'Star', width: 80, background: '#FFBC01', onPress: () => StarNote(item.id) } : { background: 'red', onPress: () => { } }}
+                                                                useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 10, alignItems: 'center' }}
+                                                                fullRightThreshold={0.7} onFullSwipeRight={() => { DeleteFromTable(item.id) }} bounciness={100}
+                                                                fullSwipeRight disableHaptic>
 
-                                                            </View>
+                                                                <Card style={[{
+                                                                    borderRadius: 10
+                                                                }]} borderRadius={10}
+                                                                    onLongPress={() => { OpenLongPressModal(item.id) }}
+                                                                    onPress={() => {
+                                                                        setFabVisible(false)
+                                                                        props.navigation.navigate("CreateNote", {
+                                                                            id: item.id,
+                                                                            page: 'Home'
+                                                                        })
+                                                                    }} >
 
-                                                        </Card>
 
-                                                    </Drawer>
-                                                )
-                                            })}
-                                        </StackAggregator>
+                                                                    <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        {notebackgroundEnabled ?
+                                                                            <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
+                                                                            :
+                                                                            null}
+                                                                        <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
+                                                                            <View>
+                                                                                <Text style={{
+                                                                                    fontFamily: 'mulish', fontSize: 18,
+                                                                                    fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                                                }}
+                                                                                    numberOfLines={1}>
+                                                                                    {item.title.slice(0, 20).trim()}
+                                                                                </Text>
+                                                                                <Text style={{
+                                                                                    fontFamily: 'mulish', fontSize: 12
+                                                                                    , color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                                                }}
+                                                                                    numberOfLines={1}>
+                                                                                    {item.note.slice(0, 30).trim()}
+                                                                                </Text>
+                                                                            </View>
+                                                                            <View style={{ alignItems: 'center', flexDirection: 'row', }}>
+                                                                                <View style={{ alignItems: 'center', marginEnd: 20 }}>
+                                                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.date.length === 9 ? item.date.slice(0, 4) : item.date.slice(0, 5)}</Text>
+                                                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</Text>
+                                                                                </View>
+                                                                                <MaterialComIcon name="arrow-forward-ios" size={22} color={notebackgroundEnabled ? item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
+                                                                            </View>
+                                                                        </View>
+
+                                                                    </View>
+
+                                                                </Card>
+
+                                                            </Drawer>
+                                                        )
+                                                    })}
+                                                </StackAggregator>
+                                            </View>
+                                            :
+                                            null}
                                     </ScrollView>
                                     :
                                     null}
@@ -1038,6 +1161,14 @@ const HomeScreen = (props) => {
                         </TouchableOpacity>
                     </Tooltip>
 
+                    {refreshing ?
+                        <AnimatedLottieView source={require('../assets/refreshing.json')} cacheStrategy="strong" />
+                        :
+                        <View>
+                            <Text style={{ marginBottom:10, marginEnd:35 }}>{noteCount} Notes</Text>
+                        </View>}
+
+                    <View style={{marginEnd:35}}><Text style={{color:'transparent'}}>0</Text></View>
                     <Portal>
                         <Modal visible={modalLongPress} onDismiss={() => { setModalLongPress(false) }} style={{ alignItems: 'center', justifyContent: 'center' }}>
                             <View style={{

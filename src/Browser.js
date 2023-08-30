@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Appearance, Dimensions, FlatList, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, FlatList, TextInput, TouchableOpacity, View } from "react-native";
 import Styles from "./Styles";
 import { ProgressBar, Text } from "react-native-paper";
 
@@ -33,6 +33,10 @@ const Browser = (props) => {
 
     const [open, setOpen] = useState(false)
     const [bookmarked, setBookmarked] = useState(false)
+
+    const HandleScroll = (y) =>{
+        //build browser animation
+    }
 
     const GetUrlFromDatabase = () => {
         db.transaction((tx) => {
@@ -261,7 +265,7 @@ const Browser = (props) => {
                         </ExpandableSection>
                         <View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around' }}>
                             <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 10 }} onPress={() => { setBottom(true) }}>
-                                <MaterialIcons name="vertical-align-bottom" size={20} color="#FFBC01" />
+                                <MaterialIcons name="arrow-drop-down" size={20} color="#FFBC01" />
                             </TouchableOpacity>
                             <TextInput placeholder="https://example.com/" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
                                 style={{
@@ -305,6 +309,9 @@ const Browser = (props) => {
                     ref={webviewRef}
                     forceDarkOn={colorScheme === 'dark' ? true : false}
                     allowFileAccess
+                    onScroll={(e) => {
+                        HandleScroll(e.nativeEvent.contentOffset.y)
+                    }}
                     sharedCookiesEnabled
                     thirdPartyCookiesEnabled
                     onLoadStart={() => { setLoading(true) }}
@@ -322,14 +329,14 @@ const Browser = (props) => {
 
                 />
                 {bottom ?
-                    <View style={{ width: screenWidth, alignItems: 'center', maxHeight: 600 }}>
+                    <Animated.View style={{ width: screenWidth, alignItems: 'center', maxHeight: 600, height:height }}>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
                         <View style={{
                             width: screenWidth - 35, height: 45, flexDirection: 'row', backgroundColor: colorScheme === "dark" ? "#303030" : "#e3e3e3", borderRadius: 10,
                             alignItems: 'center', alignSelf: 'center', marginVertical: 10, justifyContent: 'space-between'
                         }}>
                             <TouchableOpacity style={{ marginStart: 15 }} onPress={() => { setBottom(false) }}>
-                                <MaterialIcons name="vertical-align-top" size={25} color='#FFBC01' />
+                                <MaterialIcons name="arrow-drop-up" size={25} color='#FFBC01' />
                             </TouchableOpacity>
                             <TextInput placeholder="https://example.com/" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
                                 style={{
@@ -432,7 +439,7 @@ const Browser = (props) => {
                         </View>
 
 
-                    </View>
+                    </Animated.View>
                     :
                     null}
             </View>

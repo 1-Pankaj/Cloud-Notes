@@ -189,7 +189,7 @@ const Marketplace = (props) => {
             title: 'Archive',
             enabled: data === null ? 0 : data[0].archive,
             message: "CloudNotes provides an Effecient way to protect your private and important notes with CloudNotes Archive. Secure your Archive with password or Fingerprint lock for better protection.\n\nWith archive you get better privacy protection for your notes and you can decide wether to sync your archive with cloud or not, "
-            +"Plus you gain access to a unique password protected section which has seprate password from CloudNotes App.\n\nTo archive any note, simply slide the note to the left on All Notes section of Home Screen and archive from there. Archived notes are stored in Directory and you can access them from there anytime.",
+                + "Plus you gain access to a unique password protected section which has seprate password from CloudNotes App.\n\nTo archive any note, simply slide the note to the left on All Notes section of Home Screen and archive from there. Archived notes are stored in Directory and you can access them from there anytime.",
             icon: <MaterialCommIcons name="archive-lock-outline" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'archive',
@@ -210,8 +210,8 @@ const Marketplace = (props) => {
             title: 'Reading Mode',
             enabled: data === null ? 0 : data[0].readingmode,
             message: "Reading long notes getting messy with edit mode? CloudNotes has a seprate Reading mode for your long notes. Customize your reading experience in many ways, save highlighted parts to your phone gallery or share them with others as an Image."
-            +"\n\nAs your note's length increases, it becomes hefty to edit and read note altogether, so to clear out this situation CloudNotes has seprate Reading Mode for your notes.\n\n"
-            +"To access Reading Mode, Long press any note on Home Page All Notes section and choose Open in reading mode option from pop-up",
+                + "\n\nAs your note's length increases, it becomes hefty to edit and read note altogether, so to clear out this situation CloudNotes has seprate Reading Mode for your notes.\n\n"
+                + "To access Reading Mode, Long press any note on Home Page All Notes section and choose Open in reading mode option from pop-up",
             icon: <FontAwesome5 name="book-reader" color="#FFBC01" size={25} />,
             last: 50,
             tablename: 'readingmode',
@@ -315,34 +315,36 @@ const Marketplace = (props) => {
                     key={item => item.index}
                     renderItem={item => {
                         return (
-                            <View style={{ width: screenWidth - 40, marginTop: 15, paddingVertical: 20, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: item.item.last }}>
+                            <TouchableRipple onPress={() => { ShowModalMore(item.item.index) }}
+                                borderless style={{ width: screenWidth - 40, marginTop: 15, paddingVertical: 20, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: item.item.last }}>
 
-                                <View style={{ alignItems: 'flex-start', marginStart: 20, }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <TouchableRipple borderless onPress={() => { ShowModalMore(item.item.index) }} android_ripple={{ borderless: true }} style={{ borderRadius: 10 }}>
+                                <View style={{ width: '100%', height: '100%', flexDirection: "row", alignItems: 'center', justifyContent:'space-between' }}>
+                                    <View style={{ alignItems: 'flex-start', marginStart: 20, }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+
                                             <Card style={{ width: 45, height: 45, alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'dark' ? '#303030' : '#ECECEC', borderRadius: 10 }}>
                                                 {item.item.icon}
                                             </Card>
-                                        </TouchableRipple>
-                                        <Text style={{ fontWeight: 'bold', fontSize: 18, marginStart: 20 }}>{item.item.title}</Text>
+                                            <Text style={{ fontWeight: 'bold', fontSize: 18, marginStart: 20 }}>{item.item.title}</Text>
+                                        </View>
+                                        <Text style={{ maxWidth: 200, fontSize: 13, marginTop: 3 }} numberOfLines={2}>{item.item.message.trim().slice(0, 60)}</Text>
                                     </View>
-                                    <Text style={{ maxWidth: 200, fontSize: 13, marginTop: 3 }} numberOfLines={2}>{item.item.message.trim().slice(0, 60)}</Text>
+
+
+                                    <View style={{ alignItems: 'center', marginEnd: 20 }}>
+                                        <TouchableOpacity style={{ paddingHorizontal: 10, paddingVertical: 3, backgroundColor: '#FFBC01', borderRadius: 20 }} activeOpacity={0.6}
+                                            onPress={() => {
+                                                item.item.enabled == 1 ?
+                                                    null
+                                                    :
+                                                    EnablePackage(item.item.tablename)
+                                            }}>
+                                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>{item.item.enabled == 1 ? 'Open' : 'Install'}</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
 
-
-                                <View style={{ alignItems: 'center', marginEnd: 20 }}>
-                                    <TouchableOpacity style={{ paddingHorizontal: 10, paddingVertical: 3, backgroundColor: '#FFBC01', borderRadius: 20 }} activeOpacity={0.6}
-                                        onPress={() => {
-                                            item.item.enabled == 1 ?
-                                                null
-                                                :
-                                                EnablePackage(item.item.tablename)
-                                        }}>
-                                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>{item.item.enabled == 1 ? 'Open' : 'Install'}</Text>
-                                    </TouchableOpacity>
-                                </View>
-
-                            </View>
+                            </TouchableRipple>
 
                         )
                     }}
@@ -381,16 +383,16 @@ const Marketplace = (props) => {
                 setModalMore(false)
             }} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={false}>
                 <View style={{ width: screenWidth, height: screenHeight - 20, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4', borderTopStartRadius: 20, borderTopEndRadius: 20, justifyContent: 'center', alignItems: 'center' }}>
-                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginStart: 10, marginTop: 25, marginBottom: 25 }}
-                            onPress={() => {
-                                setFabVisible(true)
-                                setModalMore(false)
-                            }}>
-                            <MaterialIcons name="arrow-back-ios" size={24} color="#FFBC01" />
-                            <Text style={{ fontSize: 20, color: '#FFBC01', fontWeight: 'bold' }}>{listData[modalMoreIndex].title}</Text>
-                        </TouchableOpacity>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginStart: 10, marginTop: 25, marginBottom: 25 }}
+                        onPress={() => {
+                            setFabVisible(true)
+                            setModalMore(false)
+                        }}>
+                        <MaterialIcons name="arrow-back-ios" size={24} color="#FFBC01" />
+                        <Text style={{ fontSize: 20, color: '#FFBC01', fontWeight: 'bold' }}>{listData[modalMoreIndex].title}</Text>
+                    </TouchableOpacity>
                     <ScrollView style={{ flex: 1, width: screenWidth }} contentContainerStyle={{ alignItems: 'center' }} showsVerticalScrollIndicator={false}>
-                        
+
                         <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginStart: 20, marginTop: 20 }}>
                                 <Card style={{ width: 55, height: 55, alignItems: 'center', justifyContent: 'center', backgroundColor: colorScheme === 'dark' ? '#303030' : '#ECECEC', borderRadius: 10 }}>
@@ -424,7 +426,7 @@ const Marketplace = (props) => {
 
                             {listData[modalMoreIndex].enabled == 1 ?
                                 <TouchableOpacity style={{ width: 199, height: 49, borderRadius: 50, borderColor: '#FFBC01', borderWidth: 1, justifyContent: 'center', alignItems: 'center', }} activeOpacity={0.6}
-                                onPress={()=>[DisablePackage(listData[modalMoreIndex].tablename)]}>
+                                    onPress={() => [DisablePackage(listData[modalMoreIndex].tablename)]}>
                                     <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFBC01' }}>Uninstall</Text>
                                 </TouchableOpacity>
                                 :
@@ -438,7 +440,7 @@ const Marketplace = (props) => {
                                 }}>
                                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}>{listData[modalMoreIndex].enabled == 1 ? 'Open' : 'Install'}</Text>
                             </TouchableOpacity>
-                                <Text style={{paddingHorizontal:35, textAlign:'center', marginTop:20, fontFamily:'mulish', fontSize:12, marginBottom:20}}>If you wish to remove this package, you can remove it anytime and your data won't be lost and you can continue from where you left after installing again.</Text>
+                            <Text style={{ paddingHorizontal: 35, textAlign: 'center', marginTop: 20, fontFamily: 'mulish', fontSize: 12, marginBottom: 20 }}>If you wish to remove this package, you can remove it anytime and your data won't be lost and you can continue from where you left after installing again.</Text>
                         </View>
                     </ScrollView>
                 </View>
