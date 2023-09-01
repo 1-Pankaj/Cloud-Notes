@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, Easing, FlatList, TextInput, TouchableOpacity, View } from "react-native";
 import Styles from "./Styles";
 import { ProgressBar, Text } from "react-native-paper";
 
@@ -33,9 +33,22 @@ const Browser = (props) => {
 
     const [open, setOpen] = useState(false)
     const [bookmarked, setBookmarked] = useState(false)
+    const animatedTranslate = new Animated.Value(600)
 
-    const HandleScroll = (y) =>{
-        //build browser animation
+    const HandleScroll = (y) => {
+        if (y.toFixed() > 1000) {
+            Animated.timing(animatedTranslate, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: false
+            }).start()
+        } else {
+            Animated.timing(animatedTranslate, {
+                toValue: 600,
+                duration: 200,
+                useNativeDriver: false
+            }).start()
+        }
     }
 
     const GetUrlFromDatabase = () => {
@@ -154,13 +167,12 @@ const Browser = (props) => {
             else if (props.route.params.page == 'History') {
                 setTimeout(() => {
                     setUriWeb(props.route.params.url.trim())
-                    setUrl(props.route.params.url.trim())
                 }, 200);
             }
         }
         CreateTable()
         GetUrlFromDatabase()
-    }, [])
+    }, [isFocused])
 
 
     const SetBookmark = () => {
@@ -193,8 +205,8 @@ const Browser = (props) => {
                 {bottom ?
                     null
                     :
-                    <>
-                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Animated.View style={{ maxHeight: animatedTranslate }}>
+                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <TouchableOpacity onPress={() => {
                                     canGoBack ? webviewRef.current.goBack() : null
@@ -209,7 +221,7 @@ const Browser = (props) => {
                             </View>
                             <Text style={{
                                 alignSelf: 'center', marginEnd: 10, marginStart: 10, marginBottom: 15, fontFamily: 'mulish',
-                                fontSize: 18
+                                fontSize: 15
                             }}>
                                 {titleText.slice(0, 22)}
                             </Text>
@@ -263,7 +275,7 @@ const Browser = (props) => {
 
                             </View>
                         </ExpandableSection>
-                        <View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around' }}>
+                        <Animated.View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', maxHeight:animatedTranslate }}>
                             <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 10 }} onPress={() => { setBottom(true) }}>
                                 <MaterialIcons name="arrow-drop-down" size={20} color="#FFBC01" />
                             </TouchableOpacity>
@@ -295,9 +307,9 @@ const Browser = (props) => {
                             }} style={{ marginBottom: 10, }}>
                                 <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={30} color={bookmarked ? '#FFBC01' : "gray"} />
                             </TouchableOpacity>
-                        </View>
+                        </Animated.View>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
-                    </>}
+                    </Animated.View>}
 
                 <WebView
                     style={{ flex: 1, width: screenWidth, alignItems: 'center', justifyContent: 'center' }}
@@ -329,7 +341,9 @@ const Browser = (props) => {
 
                 />
                 {bottom ?
-                    <Animated.View style={{ width: screenWidth, alignItems: 'center', maxHeight: 600, height:height }}>
+                    <Animated.View style={{
+                        width: screenWidth, alignItems: 'center', maxHeight: animatedTranslate
+                    }}>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
                         <View style={{
                             width: screenWidth - 35, height: 45, flexDirection: 'row', backgroundColor: colorScheme === "dark" ? "#303030" : "#e3e3e3", borderRadius: 10,
@@ -419,7 +433,7 @@ const Browser = (props) => {
                             </View>
                             <Text style={{
                                 alignSelf: 'center', marginEnd: 10, marginStart: 10, fontFamily: 'mulish',
-                                fontSize: 18
+                                fontSize: 15
                             }}>
                                 {titleText.slice(0, 22)}
                             </Text>

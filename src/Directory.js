@@ -476,57 +476,63 @@ const Directory = (props) => {
                             />
                             :
                             <Text>No data in All Notes</Text>}
-                        <Text style={{ alignSelf: 'flex-start', margin: 20, fontWeight: 'bold', fontSize: 22 }}>In Starred Notes</Text>
-                        {dataStar ?
-                            <FlatList
-                                scrollEnabled={false}
-                                data={dataStar}
-                                showsVerticalScrollIndicator={false}
-                                keyExtractor={item => item.id}
-                                renderItem={data => {
-                                    return (
-                                        <TouchableOpacity style={{ width: screenWidth, marginTop: 10 }} activeOpacity={0.6}
-                                            onPress={() => {
-                                                props.navigation.navigate("CreateNote", {
-                                                    id: data.item.id,
-                                                    page: 'Starred'
-                                                })
-                                            }}>
-                                            <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
-                                                <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
-                                                    <View>
-                                                        <Text style={{
-                                                            fontFamily: 'mulish', fontSize: 18,
-                                                            fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                        }}
-                                                            numberOfLines={1}>
-                                                            {data.item.title.slice(0, 20).trim()}
-                                                        </Text>
-                                                        <Text style={{
-                                                            fontFamily: 'mulish', fontSize: 12
-                                                            , color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                        }}
-                                                            numberOfLines={1}>
-                                                            {data.item.note.slice(0, 30).trim()}
-                                                        </Text>
-                                                    </View>
-                                                    <View style={{ alignItems: 'center', flexDirection: 'row', }}>
-                                                        <View style={{ alignItems: 'center', marginEnd: 20 }}>
-                                                            <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
-                                                            <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
-                                                        </View>
-                                                        <MaterialIcons name="arrow-forward-ios" size={22} color='#FFBC01' />
-                                                    </View>
-                                                </View>
-
-                                            </View>
-                                        </TouchableOpacity>
-                                    )
-                                }}
-                            />
+                        {starredEnabled ?
+                            <Text style={{ alignSelf: 'flex-start', margin: 20, fontWeight: 'bold', fontSize: 22 }}>In Starred Notes</Text>
                             :
-                            <Text>No data in Starred Notes</Text>}
+                            null}
+                        {starredEnabled ?
+                            dataStar ?
+                                <FlatList
+                                    scrollEnabled={false}
+                                    data={dataStar}
+                                    showsVerticalScrollIndicator={false}
+                                    keyExtractor={item => item.id}
+                                    renderItem={data => {
+                                        return (
+                                            <TouchableOpacity style={{ width: screenWidth, marginTop: 10 }} activeOpacity={0.6}
+                                                onPress={() => {
+                                                    props.navigation.navigate("CreateNote", {
+                                                        id: data.item.id,
+                                                        page: 'Starred'
+                                                    })
+                                                }}>
+                                                <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                    <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                    <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
+                                                        <View>
+                                                            <Text style={{
+                                                                fontFamily: 'mulish', fontSize: 18,
+                                                                fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                            }}
+                                                                numberOfLines={1}>
+                                                                {data.item.title.slice(0, 20).trim()}
+                                                            </Text>
+                                                            <Text style={{
+                                                                fontFamily: 'mulish', fontSize: 12
+                                                                , color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                            }}
+                                                                numberOfLines={1}>
+                                                                {data.item.note.slice(0, 30).trim()}
+                                                            </Text>
+                                                        </View>
+                                                        <View style={{ alignItems: 'center', flexDirection: 'row', }}>
+                                                            <View style={{ alignItems: 'center', marginEnd: 20 }}>
+                                                                <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
+                                                                <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
+                                                            </View>
+                                                            <MaterialIcons name="arrow-forward-ios" size={22} color='#FFBC01' />
+                                                        </View>
+                                                    </View>
+
+                                                </View>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
+                                />
+                                :
+                                <Text>No data in Starred Notes</Text>
+                            :
+                            null}
                         <Text style={{ alignSelf: 'flex-start', margin: 20, fontWeight: 'bold', fontSize: 22 }}>In Trashed Notes</Text>
                         {dataTrash ?
                             <FlatList
@@ -574,61 +580,67 @@ const Directory = (props) => {
                             />
                             :
                             <Text>No data in Trashed Notes</Text>}
-                        <Text style={{ alignSelf: 'flex-start', margin: 20, fontWeight: 'bold', fontSize: 22 }}>In Archived Notes</Text>
-                        {!passwordProtected ?
-                            dataArchive ?
-                                <FlatList
-                                    scrollEnabled={false}
-                                    data={dataArchive}
-                                    keyExtractor={item => item.id}
-                                    showsVerticalScrollIndicator={false}
-                                    renderItem={data => {
-                                        return (
-                                            <TouchableOpacity style={{ width: screenWidth, marginTop: 10 }} onPress={() => {
-                                                props.navigation.navigate('CreateNote', {
-                                                    id: data.item.id,
-                                                    page: 'Archive'
-                                                })
-                                            }} activeOpacity={0.6}>
-                                                <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                                    <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
-                                                    <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
-                                                        <View>
-                                                            <Text style={{
-                                                                fontFamily: 'mulish', fontSize: 18,
-                                                                fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                            }}
-                                                                numberOfLines={1}>
-                                                                {data.item.title.slice(0, 20).trim()}
-                                                            </Text>
-                                                            <Text style={{
-                                                                fontFamily: 'mulish', fontSize: 12
-                                                                , color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                            }}
-                                                                numberOfLines={1}>
-                                                                {data.item.note.slice(0, 30).trim()}
-                                                            </Text>
-                                                        </View>
-                                                        <View style={{ alignItems: 'center', flexDirection: 'row', }}>
-                                                            <View style={{ alignItems: 'center', marginEnd: 20 }}>
-                                                                <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
-                                                                <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
-                                                            </View>
-                                                            <MaterialIcons name="arrow-forward-ios" size={22} color='#FFBC01' />
-                                                        </View>
-                                                    </View>
-
-                                                </View>
-                                            </TouchableOpacity>
-                                        )
-                                    }}
-                                />
-                                :
-                                <Text>No data in Archived Notes</Text>
+                        {archiveEnabled ?
+                            <Text style={{ alignSelf: 'flex-start', margin: 20, fontWeight: 'bold', fontSize: 22 }}>In Archived Notes</Text>
                             :
-                            <View>
-                                <Text>Your archive is password protected</Text>
-                            </View>}
+                            null}
+                        {archiveEnabled ?
+                            !passwordProtected ?
+                                dataArchive ?
+                                    <FlatList
+                                        scrollEnabled={false}
+                                        data={dataArchive}
+                                        keyExtractor={item => item.id}
+                                        showsVerticalScrollIndicator={false}
+                                        renderItem={data => {
+                                            return (
+                                                <TouchableOpacity style={{ width: screenWidth, marginTop: 10 }} onPress={() => {
+                                                    props.navigation.navigate('CreateNote', {
+                                                        id: data.item.id,
+                                                        page: 'Archive'
+                                                    })
+                                                }} activeOpacity={0.6}>
+                                                    <View style={{ width: '90%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                        <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                        <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
+                                                            <View>
+                                                                <Text style={{
+                                                                    fontFamily: 'mulish', fontSize: 18,
+                                                                    fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                                }}
+                                                                    numberOfLines={1}>
+                                                                    {data.item.title.slice(0, 20).trim()}
+                                                                </Text>
+                                                                <Text style={{
+                                                                    fontFamily: 'mulish', fontSize: 12
+                                                                    , color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                                }}
+                                                                    numberOfLines={1}>
+                                                                    {data.item.note.slice(0, 30).trim()}
+                                                                </Text>
+                                                            </View>
+                                                            <View style={{ alignItems: 'center', flexDirection: 'row', }}>
+                                                                <View style={{ alignItems: 'center', marginEnd: 20 }}>
+                                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
+                                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
+                                                                </View>
+                                                                <MaterialIcons name="arrow-forward-ios" size={22} color='#FFBC01' />
+                                                            </View>
+                                                        </View>
+
+                                                    </View>
+                                                </TouchableOpacity>
+                                            )
+                                        }}
+                                    />
+                                    :
+                                    <Text>No data in Archived Notes</Text>
+                                :
+                                <View>
+                                    <Text>Your archive is password protected</Text>
+                                </View>
+                            :
+                            null}
                     </ScrollView>
                     :
                     <View>
@@ -636,7 +648,7 @@ const Directory = (props) => {
                             <Text style={{ fontSize: 18, fontFamily: 'mulish' }}>Offline Drive</Text>
                         </View>
                         <TouchableOpacity style={{ borderTopStartRadius: 10, borderTopEndRadius: 10, marginTop: 20, borderBottomStartRadius: archiveEnabled || starredEnabled ? 0 : 10, borderBottomEndRadius: archiveEnabled || starredEnabled ? 0 : 10 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('Home') }}>
-                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderTopStartRadius: 10, borderTopEndRadius: 10, borderBottomStartRadius: archiveEnabled || starredEnabled? 0 : 10, borderBottomEndRadius: archiveEnabled || starredEnabled ? 0 : 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderTopStartRadius: 10, borderTopEndRadius: 10, borderBottomStartRadius: archiveEnabled || starredEnabled ? 0 : 10, borderBottomEndRadius: archiveEnabled || starredEnabled ? 0 : 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Ionicons name="folder-open-outline" size={26} style={{ alignSelf: 'center', marginStart: 20 }} color="#FFBC01" />
                                     <Text style={{ fontSize: 17, marginStart: 15 }}>Notes</Text>
