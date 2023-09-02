@@ -474,7 +474,7 @@ const HomeScreen = (props) => {
                                                     console.log("error");
                                                 })
                                         } else {
-                                            ToastAndroid.show("This note is already Starred", ToastAndroid.SHORT)
+                                            ToastAndroid.show(title+" note is already Starred", ToastAndroid.SHORT)
                                         }
                                     }, error => {
                                         console.log("Error");
@@ -895,11 +895,56 @@ const HomeScreen = (props) => {
                     if (rs.rows.length > 0) {
                         for (let i = 0; i < rs.rows.length; i++) {
                             let noteid = rs.rows._array[i].noteid
-                            DeleteFromTable(noteid)
-                            setSelectionData([])
-                            SelectData()
-                            setSelectionMode(false)
+                            // DeleteFromTable(noteid)
+
+                            db.transaction((tx) => {
+                                tx.executeSql("SELECT * FROM notes WHERE id = (?)", [noteid],
+                                    (sql, rs) => {
+                                        if (rs.rows.length > 0) {
+                                            let title = rs.rows._array[0].title
+                                            let note = rs.rows._array[0].note
+                                            let date = rs.rows._array[0].date
+                                            let time = rs.rows._array[0].time
+                                            let pageColor = rs.rows._array[0].pageColor
+                                            let fontColor = rs.rows._array[0].fontColor
+                                            let fontStyle = rs.rows._array[0].fontStyle
+                                            let fontSize = rs.rows._array[0].fontSize
+
+                                            sql.executeSql("SELECT deletebtn FROM splash", [],
+                                                (sql, rs) => {
+                                                    sql.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                                                        (sql, rs) => {
+                                                            sql.executeSql("INSERT INTO deletednotes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                                (sql, rs) => {
+                                                                    sql.executeSql("DELETE FROM notes WHERE id = (?)", [noteid],
+                                                                        (sql, rs) => {
+                                                                            sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [noteid],
+                                                                                (sql, rs) => {
+                                                                                }, error => {
+                                                                                    console.log("Error");
+                                                                                })
+                                                                        }, error => {
+                                                                            console.log("error");
+                                                                        })
+                                                                }, error => {
+                                                                    console.log("Error");
+                                                                })
+                                                        }, error => {
+                                                            console.log("Error");
+                                                        })
+                                                }, error => {
+                                                    console.log("Error");
+                                                })
+                                        }
+                                    }, error => {
+                                        console.log("Error");
+                                    })
+                            })
                         }
+                        setSelectionData([])
+                        SelectData()
+                        setSelectionMode(false)
+                        ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                     }
                 }, error => {
                     console.log("Error");
@@ -913,11 +958,43 @@ const HomeScreen = (props) => {
                     if (rs.rows.length > 0) {
                         for (let i = 0; i < rs.rows.length; i++) {
                             let noteid = rs.rows._array[i].noteid
-                            ArchiveFirstTimeCheck(noteid)
-                            setSelectionData([])
-                            SelectData()
-                            setSelectionMode(false)
+
+
+                            sql.executeSql("SELECT * FROM notes where id = (?)", [noteid],
+                                (sql, rs) => {
+                                    const title = rs.rows._array[0].title
+                                    const note = rs.rows._array[0].note
+                                    const date = rs.rows._array[0].date
+                                    const time = rs.rows._array[0].time
+                                    const pageColor = rs.rows._array[0].pageColor
+                                    const fontColor = rs.rows._array[0].fontColor
+                                    const fontStyle = rs.rows._array[0].fontStyle
+                                    const fontSize = rs.rows._array[0].fontSize
+                                    sql.executeSql("INSERT INTO archived (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                        (sql, rs) => {
+                                            sql.executeSql("DELETE FROM notes where id = (?)", [noteid],
+                                                (sql, rs) => {
+                                                    sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [noteid],
+                                                        (sql, rs) => {
+
+                                                        }, error => {
+                                                            console.log("Error");
+                                                        })
+
+                                                },
+                                                error => { console.log("Error"); })
+                                        }, error => {
+                                            console.log("Error");
+                                        })
+                                }, error => {
+                                    console.log("Error");
+                                })
+
                         }
+                        setSelectionData([])
+                        SelectData()
+                        setSelectionMode(false)
+                        ToastAndroid.show("Archived!", ToastAndroid.SHORT)
                     }
                 }, error => {
                     console.log("Error");
@@ -1341,7 +1418,7 @@ const HomeScreen = (props) => {
                                                     </View>
                                                     <StackAggregator backgroundColor="transparent" contentContainerStyle={{ alignItems: 'center', overflow: 'visible', height: 200, marginTop: -10 }} itemBorderRadius={10}
                                                         buttonProps={{ color: '#FFBC01' }} containerStyle={{ overflow: 'visible', marginTop: 20 }} marginV={false}
-                                                        collapsed={todayData.length > 3 ? true : false} spread={true} animated width={screenWidth} style={{ width: screenWidth, marginTop: 20 }}>
+                                                        collapsed={todayData.length > 5 ? true : false} spread={true} animated width={screenWidth} style={{ width: screenWidth, marginTop: 20 }}>
                                                         {todayData.map((item, index) => {
                                                             return (
                                                                 <Drawer key={index}
@@ -1452,7 +1529,7 @@ const HomeScreen = (props) => {
                                                     </View>
                                                     <StackAggregator backgroundColor="transparent" contentContainerStyle={{ alignItems: 'center', overflow: 'visible', height: 200, marginTop: -10, }} itemBorderRadius={10}
                                                         buttonProps={{ color: '#FFBC01' }} containerStyle={{ overflow: 'visible', marginTop: 20, marginBottom: 100, }} marginV={false}
-                                                        collapsed={previousData.length > 3 ? true : false} spread={true} animated width={screenWidth} style={{ width: screenWidth, }}>
+                                                        collapsed={previousData.length > 10 ? true : false} spread={true} animated width={screenWidth} style={{ width: screenWidth, }}>
                                                         {previousData.map((item, index) => {
                                                             return (
                                                                 <Drawer key={index}
@@ -1675,7 +1752,7 @@ const HomeScreen = (props) => {
                                                 null}
                                             {searchData && searchText && sortFun == 'id' && !selectionMode ?
                                                 <View style={{ width: screenWidth, marginTop: 30 }}>
-                                                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center'}}>
+                                                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center' }}>
                                                         <Text style={{ marginStart: 15, fontSize: 25, fontWeight: 'bold' }}>Search Results</Text>
                                                     </View>
                                                     <StackAggregator backgroundColor="transparent" contentContainerStyle={{ alignItems: 'center', overflow: 'visible', height: 200, marginTop: -10, }} itemBorderRadius={10}
@@ -1809,7 +1886,7 @@ const HomeScreen = (props) => {
                                 alignItems: 'center', justifyContent: 'space-evenly', opacity: 0.8
                             }}>
                                 <TouchableOpacity style={{
-                                    width: '100%', height: 40, alignItems: 'center',
+                                    width: '100%', height: 50, alignItems: 'center',
                                     flexDirection: 'row', justifyContent: 'center'
                                 }} activeOpacity={0.7} onPress={() => {
                                     PinNote(lognPressId)
@@ -1820,7 +1897,7 @@ const HomeScreen = (props) => {
                                 </TouchableOpacity>
                                 <Divider style={{ width: '100%', height: 1 }} />
                                 <TouchableOpacity style={{
-                                    width: '100%', height: 40, alignItems: 'center',
+                                    width: '100%', height: 50, alignItems: 'center',
                                     flexDirection: 'row', justifyContent: 'center'
                                 }} activeOpacity={0.7} onPress={() => {
                                     setSelectionMode(true)
@@ -1833,7 +1910,7 @@ const HomeScreen = (props) => {
                                     <View style={{ width: '100%' }}>
                                         <Divider style={{ width: '100%', height: 1 }} />
                                         <TouchableOpacity style={{
-                                            width: '100%', height: 40, alignItems: 'center',
+                                            width: '100%', height: 50, alignItems: 'center',
                                             flexDirection: 'row', justifyContent: 'center'
                                         }} activeOpacity={0.7} onPress={() => {
                                             StarNote(lognPressId)
@@ -1845,11 +1922,27 @@ const HomeScreen = (props) => {
                                     </View>
                                     :
                                     null}
+                                {archiveEnabled ?
+                                    <View style={{ width: '100%' }}>
+                                        <Divider style={{ width: '100%', height: 1 }} />
+                                        <TouchableOpacity style={{
+                                            width: '100%', height: 50, alignItems: 'center',
+                                            flexDirection: 'row', justifyContent: 'center'
+                                        }} activeOpacity={0.7} onPress={() => {
+                                            ArchiveFirstTimeCheck(lognPressId)
+                                            setModalLongPress(false)
+                                        }}>
+                                            <MaterialComIcon name="archive" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
+                                            <Text style={{ fontWeight: 'bold', color: '#FFBC01' }}>Archive Note</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    :
+                                    null}
                                 {readingmodeEnabled ?
                                     <View style={{ width: '100%' }}>
                                         <Divider style={{ width: '100%', height: 1 }} />
                                         <TouchableOpacity style={{
-                                            width: '100%', height: 40, alignItems: 'center',
+                                            width: '100%', height: 50, alignItems: 'center',
                                             flexDirection: 'row', justifyContent: 'center'
                                         }} activeOpacity={0.7} onPress={() => {
                                             setModalLongPress(false)
@@ -1861,6 +1954,20 @@ const HomeScreen = (props) => {
                                     </View>
                                     :
                                     null}
+                                <View style={{ width: '100%' }}>
+                                    <Divider style={{ width: '100%', height: 1 }} />
+                                    <TouchableOpacity style={{
+                                        width: '100%', height: 50, alignItems: 'center',
+                                        flexDirection: 'row', justifyContent: 'center', backgroundColor: 'red', borderBottomEndRadius: 16,
+                                        borderBottomStartRadius: 16
+                                    }} activeOpacity={0.7} onPress={() => {
+                                        setModalLongPress(false)
+                                        DeleteFromTable(lognPressId)
+                                    }}>
+                                        <MaterialComIcon name="delete-outline" size={20} color="white" style={{ marginStart: -5, marginEnd: 5 }} />
+                                        <Text style={{ fontWeight: 'bold', color: 'white' }}>Move to Trash</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </Modal>
                     </Portal>

@@ -4,7 +4,7 @@ import * as SQLite from 'expo-sqlite'
 import { Appearance, Dimensions, ToastAndroid, TouchableOpacity, View, TextInput as TextInputBasic, FlatList, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Dialog, Menu, Modal, Portal, RadioButton, Text, TextInput } from "react-native-paper";
+import { Button, Dialog, Menu, Modal, Portal, RadioButton, Snackbar, Text, TextInput } from "react-native-paper";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import MaterialComIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import AnimatedLottieView from "lottie-react-native";
@@ -36,7 +36,10 @@ const ToDo = (props) => {
     const [emojiData3, setEmojiData3] = useState(null)
     const [emojiData4, setEmojiData4] = useState(null)
     const [emojiData5, setEmojiData5] = useState(null)
-    const [category, setEmojiCategory] = useState('')
+    const [allCount, setAllCount] = useState(0)
+    const [doneCount, setDoneCount] = useState(0)
+    const [snackbarVisible, setSnackbarVisible] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState('')
 
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
@@ -60,20 +63,20 @@ const ToDo = (props) => {
         })
     }
 
-    const setEmojiInDatabase = () =>{
-        db.transaction((tx)=>{
-            if(!emoji == ''){
-                tx.executeSql("UPDATE todo SET emoji = (?) where id = (?)", [emoji,idEmoji],
-                (sql,rs)=>{
-                    GetData()
-                    setEmojiModal(false)
-                    setEmoji('')
-                }, error =>{
-                    console.log("Error");
-                })
+    const setEmojiInDatabase = () => {
+        db.transaction((tx) => {
+            if (!emoji == '') {
+                tx.executeSql("UPDATE todo SET emoji = (?) where id = (?)", [emoji, idEmoji],
+                    (sql, rs) => {
+                        GetData()
+                        setEmojiModal(false)
+                        setEmoji('')
+                    }, error => {
+                        console.log("Error");
+                    })
             }
         })
-        
+
     }
 
     const OpenEmojiModal = (id) => {
@@ -106,6 +109,7 @@ const ToDo = (props) => {
                                 setData(null)
                                 setSelected(null)
                             } else {
+                                setAllCount(rs.rows.length)
                                 let results = []
                                 for (let i = 0; i < rs.rows.length; i++) {
                                     let id = rs.rows._array[i].id
@@ -126,6 +130,7 @@ const ToDo = (props) => {
                                             setSelected(null)
                                         } else {
                                             let select = []
+                                            setDoneCount(rs.rows.length)
                                             for (let i = 0; i < rs.rows.length; i++) {
                                                 let id = rs.rows._array[i].id
                                                 select.push({ id: id })
@@ -144,6 +149,7 @@ const ToDo = (props) => {
                     console.log("Error");
                 })
         })
+
     }
 
     const DeleteItemsVerify = () => {
@@ -203,6 +209,27 @@ const ToDo = (props) => {
                                 console.log("Error");
                             })
                     }
+
+                    sql.executeSql("SELECT * FROM todo", [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                let fullLength = rs.rows.length
+                                sql.executeSql("SELECT * FROM todo WHERE selected = 'true'", [],
+                                    (sql, rs) => {
+                                        if (rs.rows.length > 0) {
+                                            let selected = rs.rows.length
+                                            if (selected == fullLength) {
+                                                setSnackbarVisible(true)
+                                                setSnackbarMessage("You have completed all of your tasks, do you want to record this progress in Directory?")
+                                            }
+                                        }
+                                    }, error => {
+                                        console.log("Error");
+                                    })
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
                 }, error => {
                     console.log("Error");
                 })
@@ -210,29 +237,47 @@ const ToDo = (props) => {
 
     }
 
+    const RecordTasks = () =>{
+        db.transaction((tx)=>{
+            tx.executeSql("CREATE TABLE IF NOT EXISTS recordTasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(100) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, tasknum VARCHAR(200) NOT NULL)",[],
+            (sql,rs)=>{
+                let title = 'Task'
+                sql.executeSql("INSERT INTO recordTasks (title, date, time, tasknum) values (?,?,?,?)",[title, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), allCount],
+                (sql,rs)=>{
+                    setSnackbarVisible(true)
+                    setSnackbarMessage('Record successful, can be found in Directory')
+                }, error =>{
+                    console.log("Error");
+                })
+            }, error =>{
+                console.log("Error");
+            })
+        })
+    }
+
     const GetEmojiData = () => {
         let results = []
-        for (let i = 0; i<50; i++){
-            results.push({emoji:emojis[i].emoji})
+        for (let i = 0; i < 50; i++) {
+            results.push({ emoji: emojis[i].emoji })
         }
 
         let results1 = []
-        for (let i = 50; i<100; i++){
-            results1.push({emoji:emojis[i].emoji})
+        for (let i = 50; i < 100; i++) {
+            results1.push({ emoji: emojis[i].emoji })
         }
         let results2 = []
-        for (let i = 100; i<150; i++){
-            results2.push({emoji:emojis[i].emoji})
+        for (let i = 100; i < 150; i++) {
+            results2.push({ emoji: emojis[i].emoji })
         }
         let results3 = []
-        for (let i = 150; i<200; i++){
-            results3.push({emoji:emojis[i].emoji})
+        for (let i = 150; i < 200; i++) {
+            results3.push({ emoji: emojis[i].emoji })
         }
         let results4 = []
-        for (let i = 200; i<250; i++){
-            results4.push({emoji:emojis[i].emoji})
+        for (let i = 200; i < 250; i++) {
+            results4.push({ emoji: emojis[i].emoji })
         }
-        
+
 
         setTimeout(() => {
             setEmojiData1(results)
@@ -249,6 +294,9 @@ const ToDo = (props) => {
 
     useEffect(() => {
         CheckFirstTime()
+    }, [])
+
+    useEffect(() => {
         GetData()
         GetEmojiData()
     }, [isFocused])
@@ -257,9 +305,9 @@ const ToDo = (props) => {
         <SafeAreaView style={[Styles.container, { justifyContent: 'space-around' }]}>
             <View style={{ width: screenWidth, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
                 <TouchableOpacity style={{ marginTop: 20, marginStart: 10 }} onPress={() => { props.navigation.navigate('Home') }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
-                        <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom:2}}>ToDo's</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom: 2 }}>ToDo's</Text>
                     </View>
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -287,10 +335,13 @@ const ToDo = (props) => {
             </View>
             {data ?
                 <View style={{ marginTop: 20, width: screenWidth, flex: 1, alignItems: 'center' }}>
-                    <Text style={{
-                        alignSelf: 'flex-start', marginTop: 20, marginBottom: 20, marginStart: 25, fontSize: 25,
-                        fontWeight: 'bold'
-                    }}>ToDo List</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: screenWidth }}>
+                        <Text style={{
+                            alignSelf: 'flex-start', marginTop: 20, marginBottom: 20, marginStart: 25, fontSize: 25,
+                            fontWeight: 'bold'
+                        }}>ToDo List</Text>
+                        <Text style={{ marginTop: 20, marginBottom: 20, marginEnd: 25, color: '#FFBC01' }}>Tasks {selected ? selected.length : 0}/{allCount}</Text>
+                    </View>
                     <FlatList
                         data={data}
                         style={{ flex: 1, marginBottom: 10 }}
@@ -305,10 +356,10 @@ const ToDo = (props) => {
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center', padding: 10 }}
                                                 onPress={() => { OpenEmojiModal(item.item.id) }}>
-                                                {item.item.emoji == ''?
-                                                <MaterialComIcons name="sticker-emoji" size={25} color={colorScheme === 'dark' ? 'white' : 'black'} />
-                                                :
-                                                <Text style={{fontSize:20}}>{item.item.emoji}</Text>}
+                                                {item.item.emoji == '' ?
+                                                    <MaterialComIcons name="sticker-emoji" size={25} color={colorScheme === 'dark' ? 'white' : 'black'} />
+                                                    :
+                                                    <Text style={{ fontSize: 20 }}>{item.item.emoji}</Text>}
                                             </TouchableOpacity>
                                             <Text style={{ marginStart: 20, fontSize: 18, width: 200, paddingVertical: 15, fontWeight: 'bold', textDecorationLine: item.item.selected === 'true' ? 'line-through' : 'none' }}
                                             >{item.item.task.slice(0, 150).trim()}</Text>
@@ -346,9 +397,23 @@ const ToDo = (props) => {
                     <MaterialIcons name="add" size={25} color="white" />
                 </TouchableOpacity>
                 <Portal>
-                    <Dialog visible={dialog} onDismiss={() => { 
+                    <Snackbar visible={snackbarVisible} onDismiss={() => { setSnackbarVisible(false) }}
+                        action={{
+                            label: snackbarMessage == 'Record successful, can be found in Directory'? 'Done' : 'Record',
+                            onPress: () => {
+                                snackbarMessage == 'Record successful, can be found in Directory'?
+                                setSnackbarVisible(false)
+                                :
+                                RecordTasks()
+                            },
+                        }}
+                        duration={5000}>{snackbarMessage}</Snackbar>
+                </Portal>
+                <Portal>
+                    <Dialog visible={dialog} onDismiss={() => {
                         setEmoji('')
-                        setDialog(false) }}>
+                        setDialog(false)
+                    }}>
                         <Dialog.Content><Text variant="bodyMedium">{dialogMessage}</Text></Dialog.Content>
                         <Dialog.Actions>
                             <Button onPress={() => { setDialog(false) }}>Cancel</Button>
@@ -364,81 +429,93 @@ const ToDo = (props) => {
                                 alignItems: 'flex-start', justifyContent: 'center', width: screenWidth - 50, height: 35, borderRadius: 20, backgroundColor: '#e3e3e3',
                                 alignSelf: 'flex-start', margin: 25
                             }}>
-                                <Text style={{alignSelf:'center', fontSize:17}}>{emoji? emoji : 'Selected Emoji'}</Text>
+                                <Text style={{ alignSelf: 'center', fontSize: 17 }}>{emoji ? emoji : 'Selected Emoji'}</Text>
                             </View>
-                            <ScrollView style={{width:screenWidth,flex:1}}
-                            showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{alignItems:'center',flexDirection:'row', justifyContent:'center', width:screenWidth, paddingHorizontal:0}}>
+                            <ScrollView style={{ width: screenWidth, flex: 1 }}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'center', width: screenWidth, paddingHorizontal: 0 }}>
                                 <FlatList
-                                data={emojiData1}
-                                style={{marginStart:30}}
-                                scrollEnabled={false}
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={item=>item.emoji}
-                                    renderItem={(item)=>{return(
-                                        <TouchableOpacity style={{marginTop:5}} onPress={()=>{
-                                            setEmoji(item.item.emoji)
-                                        }}>
-                                            <Text style={{fontSize:25}}>{item.item.emoji}</Text>
-                                        </TouchableOpacity>
-                                    )}}
+                                    data={emojiData1}
+                                    style={{ marginStart: 30 }}
+                                    scrollEnabled={false}
+                                    showsHorizontalScrollIndicator={false}
+                                    keyExtractor={item => item.emoji}
+                                    renderItem={(item) => {
+                                        return (
+                                            <TouchableOpacity style={{ marginTop: 5 }} onPress={() => {
+                                                setEmoji(item.item.emoji)
+                                            }}>
+                                                <Text style={{ fontSize: 25 }}>{item.item.emoji}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
                                 />
                                 <FlatList
-                                data={emojiData2}
-                                scrollEnabled={false}
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={item=>item.emoji}
-                                    renderItem={(item)=>{return(
-                                        <TouchableOpacity style={{marginTop:5}} onPress={()=>{
-                                            setEmoji(item.item.emoji)
-                                        }}>
-                                            <Text style={{fontSize:25}}>{item.item.emoji}</Text>
-                                        </TouchableOpacity>
-                                    )}}
+                                    data={emojiData2}
+                                    scrollEnabled={false}
+                                    showsHorizontalScrollIndicator={false}
+                                    keyExtractor={item => item.emoji}
+                                    renderItem={(item) => {
+                                        return (
+                                            <TouchableOpacity style={{ marginTop: 5 }} onPress={() => {
+                                                setEmoji(item.item.emoji)
+                                            }}>
+                                                <Text style={{ fontSize: 25 }}>{item.item.emoji}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
                                 />
                                 <FlatList
-                                data={emojiData3}
-                                scrollEnabled={false}
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={item=>item.emoji}
-                                    renderItem={(item)=>{return(
-                                        <TouchableOpacity style={{marginTop:5}} onPress={()=>{
-                                            setEmoji(item.item.emoji)
-                                        }}>
-                                            <Text style={{fontSize:25}}>{item.item.emoji}</Text>
-                                        </TouchableOpacity>
-                                    )}}
+                                    data={emojiData3}
+                                    scrollEnabled={false}
+                                    showsHorizontalScrollIndicator={false}
+                                    keyExtractor={item => item.emoji}
+                                    renderItem={(item) => {
+                                        return (
+                                            <TouchableOpacity style={{ marginTop: 5 }} onPress={() => {
+                                                setEmoji(item.item.emoji)
+                                            }}>
+                                                <Text style={{ fontSize: 25 }}>{item.item.emoji}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
                                 />
                                 <FlatList
-                                data={emojiData4}
-                                scrollEnabled={false}
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={item=>item.emoji}
-                                    renderItem={(item)=>{return(
-                                        <TouchableOpacity style={{marginTop:5}} onPress={()=>{
-                                            setEmoji(item.item.emoji)
-                                        }}>
-                                            <Text style={{fontSize:25}}>{item.item.emoji}</Text>
-                                        </TouchableOpacity>
-                                    )}}
+                                    data={emojiData4}
+                                    scrollEnabled={false}
+                                    showsHorizontalScrollIndicator={false}
+                                    keyExtractor={item => item.emoji}
+                                    renderItem={(item) => {
+                                        return (
+                                            <TouchableOpacity style={{ marginTop: 5 }} onPress={() => {
+                                                setEmoji(item.item.emoji)
+                                            }}>
+                                                <Text style={{ fontSize: 25 }}>{item.item.emoji}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
                                 />
                                 <FlatList
-                                data={emojiData5}
-                                scrollEnabled={false}
-                                showsHorizontalScrollIndicator={false}
-                                keyExtractor={item=>item.emoji}
-                                    renderItem={(item)=>{return(
-                                        <TouchableOpacity style={{marginTop:5}} onPress={()=>{
-                                            setEmoji(item.item.emoji)
-                                        }}>
-                                            <Text style={{fontSize:25}}>{item.item.emoji}</Text>
-                                        </TouchableOpacity>
-                                    )}}
+                                    data={emojiData5}
+                                    scrollEnabled={false}
+                                    showsHorizontalScrollIndicator={false}
+                                    keyExtractor={item => item.emoji}
+                                    renderItem={(item) => {
+                                        return (
+                                            <TouchableOpacity style={{ marginTop: 5 }} onPress={() => {
+                                                setEmoji(item.item.emoji)
+                                            }}>
+                                                <Text style={{ fontSize: 25 }}>{item.item.emoji}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
                                 />
                             </ScrollView>
-                            <TouchableOpacity style={{width:screenWidth, height:50, backgroundColor:'white', borderTopColor:'gray', borderTopWidth:0.7,
-                            alignItems:'center', justifyContent:'center'}} activeOpacity={0.6} onPress={()=>{setEmojiInDatabase()}}>
-                                <Text style={{fontSize:17, fontWeight:'bold', color:'#505050'}}>Select</Text>
+                            <TouchableOpacity style={{
+                                width: screenWidth, height: 50, backgroundColor: 'white', borderTopColor: 'gray', borderTopWidth: 0.7,
+                                alignItems: 'center', justifyContent: 'center'
+                            }} activeOpacity={0.6} onPress={() => { setEmojiInDatabase() }}>
+                                <Text style={{ fontSize: 17, fontWeight: 'bold', color: '#505050' }}>Select</Text>
                             </TouchableOpacity>
                         </View>
                     </Modal>

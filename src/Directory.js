@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View, Image, ToastAndroid } from "react-native";
 import Styles from "./Styles";
-import { Button, Card, Divider, Text } from "react-native-paper";
+import { Button, Card, DataTable, Divider, Text } from "react-native-paper";
 
 import Ionicons from '@expo/vector-icons/Ionicons'
 
@@ -62,6 +62,13 @@ const Directory = (props) => {
     const [initializing, setInitializing] = useState(true);
     const [archiveEnabled, setArchiveEnabled] = useState(false)
     const [starredEnabled, setStarredEnabled] = useState(false)
+    const [todoEnabled, setTodoEnabled] = useState(false)
+    const [taskData, setTaskData] = useState(null)
+    const [page, setPage] = useState(0);
+    const [numberOfItemsPerPageList] = useState([2, 3, 4]);
+    const [itemsPerPage, onItemsPerPageChange] = useState(
+        numberOfItemsPerPageList[0]
+    );
 
     const animatedSearchWidth = useRef(new Animated.Value(0)).current
 
@@ -163,6 +170,41 @@ const Directory = (props) => {
         })
     }
 
+    const GetTaskData = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM recordTasks", [],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let results = []
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            let id = rs.rows._array[i].id
+                            let title = rs.rows._array[i].title
+                            let date = rs.rows._array[i].date
+                            let time = rs.rows._array[i].time
+                            let tasknum = rs.rows._array[i].tasknum
+
+                            results.push({ id: id, title: title, date: date, time: time, tasknum: tasknum })
+                        }
+
+                        setTaskData(results)
+
+
+                    } else {
+                        setTaskData(null)
+                    }
+                }, error => {
+                    console.log("Error");
+                })
+        })
+    }
+
+    const from = page * itemsPerPage;
+    const to = Math.min((page + 1) * itemsPerPage, taskData ? taskData.length : 0);
+
+    useEffect(() => {
+        setPage(0);
+    }, [itemsPerPage])
+
     const StarredNotesCheck = () => {
         db.transaction((tx) => {
             tx.executeSql("SELECT firsttime from starredsplash", [],
@@ -224,6 +266,7 @@ const Directory = (props) => {
 
                                 setArchiveEnabled(archive)
                                 setStarredEnabled(starred)
+                                setTodoEnabled(todo)
 
 
                             }
@@ -239,6 +282,7 @@ const Directory = (props) => {
     useEffect(() => {
         GetFeatures()
         GetCount()
+        GetTaskData()
     }, [isFocused])
 
     useEffect(() => {
@@ -256,10 +300,21 @@ const Directory = (props) => {
         if (initializing) setInitializing(false);
     }
 
+    const ClearTaskRecord = () =>{
+        db.transaction((tx)=>{
+            tx.executeSql("DELETE FROM recordTasks",[],
+            (sql,rs)=>{
+                GetTaskData()
+            }, error =>{
+                console.log("Error");
+            })
+        })
+    }
+
     useEffect(() => {
         const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
         return subscriber;
-    })
+    }, [])
 
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {
@@ -643,7 +698,7 @@ const Directory = (props) => {
                             null}
                     </ScrollView>
                     :
-                    <View>
+                    <ScrollView style={{ width: screenWidth }} contentContainerStyle={{ alignItems: 'center' }} showsVerticalScrollIndicator={false}>
                         <View style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 30 }}>
                             <Text style={{ fontSize: 18, fontFamily: 'mulish' }}>Offline Drive</Text>
                         </View>
@@ -695,7 +750,7 @@ const Directory = (props) => {
                             </View>
                             :
                             null}
-                        <TouchableOpacity style={{ borderRadius: 10, marginTop: 30 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('TrashPage') }}>
+                        <TouchableOpacity style={{ borderRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('TrashPage') }}>
                             <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Ionicons name="trash-outline" size={26} style={{ alignSelf: 'center', marginStart: 22 }} color="#FFBC01" />
@@ -743,7 +798,49 @@ const Directory = (props) => {
                                 </View>
                             </View>
                         </TouchableOpacity>
-                    </View>}
+
+                        {taskData && todoEnabled ?
+                            <View style={{ width: screenWidth, alignItems: 'center', alignSelf: 'center', marginTop: 30, marginBottom: 30 }}>
+                                <View style={{ alignItems: 'center', width: '90%', flexDirection: 'row', justifyContent: 'space-between', marginStart: 20, marginBottom: 20, marginEnd: 20 }}>
+                                    <Text style={{ fontSize: 17, fontFamily: 'mulish' }}>Task Records</Text>
+                                    <TouchableOpacity onPress={()=>{ClearTaskRecord()}}>
+                                        <Text style={{ fontSize: 13, color: '#FFBC01', fontWeight: 'bold' }}>Clear</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <DataTable style={{ width: '90%', backgroundColor: 'white', borderRadius: 10 }}>
+                                    <DataTable.Header>
+                                        <DataTable.Title>Title</DataTable.Title>
+                                        <DataTable.Title numeric>Date</DataTable.Title>
+                                        <DataTable.Title numeric>Time</DataTable.Title>
+                                        <DataTable.Title numeric>Tasks</DataTable.Title>
+                                    </DataTable.Header>
+                                    {taskData.slice(from, to).map((item, index) => {
+                                        return (
+                                            <DataTable.Row key={item.id}>
+                                                <DataTable.Cell>{item.title + " " + index}</DataTable.Cell>
+                                                <DataTable.Cell numeric>{item.date}</DataTable.Cell>
+                                                <DataTable.Cell numeric>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</DataTable.Cell>
+                                                <DataTable.Cell numeric>{item.tasknum}</DataTable.Cell>
+                                            </DataTable.Row>
+                                        )
+                                    })}
+
+                                    <DataTable.Pagination
+                                        page={page}
+                                        numberOfPages={Math.ceil(taskData.length / itemsPerPage)}
+                                        onPageChange={(page) => setPage(page)}
+                                        label={`${from + 1}-${to} of ${taskData.length}`}
+                                        numberOfItemsPerPageList={numberOfItemsPerPageList}
+                                        numberOfItemsPerPage={itemsPerPage}
+                                        onItemsPerPageChange={onItemsPerPageChange}
+                                        showFastPaginationControls
+                                        selectPageDropdownLabel={'Rows per page'}
+                                    />
+                                </DataTable>
+                            </View>
+                            :
+                            null}
+                    </ScrollView>}
             </ScrollView>
         </SafeAreaView>
     )

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-import { Appearance, Dimensions, FlatList, Image, ScrollView, TouchableOpacity, View } from "react-native";
-import { ActivityIndicator, Card, FAB, Modal, Portal, ProgressBar, Surface, Text, TouchableRipple } from "react-native-paper";
+import { Appearance, Dimensions, FlatList, Image, ScrollView, TouchableOpacity, View, Modal } from "react-native";
+import { ActivityIndicator, Card, FAB, Portal, ProgressBar, Surface, Text, TouchableRipple, Modal as LoadModal } from "react-native-paper";
 
 import * as SQLite from 'expo-sqlite'
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -101,6 +101,7 @@ const Marketplace = (props) => {
             icon: <FontAwesome5 name="tasks" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'todo',
+            page: 'ToDo',
             images: [
                 {
                     image: require('../assets/marketplaceimages/todoimage.png')
@@ -115,6 +116,7 @@ const Marketplace = (props) => {
             icon: <MaterialIcons name="notifications-active" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'reminder',
+            page: 'Reminders',
             images: [
                 {
                     image: require('../assets/marketplaceimages/reminderimage1.png')
@@ -133,6 +135,7 @@ const Marketplace = (props) => {
             icon: <MaterialCommIcons name="star-outline" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'starred',
+            page: 'StarredNotes',
             images: [
                 {
                     image: require('../assets/marketplaceimages/starredimage1.png')
@@ -150,6 +153,7 @@ const Marketplace = (props) => {
             icon: <MaterialIcons name="mood" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'moodify',
+            page: 'Moodify',
             images: [
                 {
                     image: require('../assets/marketplaceimages/moodifyempty.png')
@@ -164,6 +168,7 @@ const Marketplace = (props) => {
             icon: <MaterialCommIcons name="format-color-fill" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'notebackground',
+            page: 'Home',
             images: [
                 {
                     image: require('../assets/marketplaceimages/notebackgroundimage.png')
@@ -178,6 +183,7 @@ const Marketplace = (props) => {
             icon: <MaterialCommIcons name="view-grid-plus-outline" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'gridlist',
+            page: 'Home',
             images: [
                 {
                     image: require('../assets/marketplaceimages/moodifyempty.png')
@@ -193,6 +199,7 @@ const Marketplace = (props) => {
             icon: <MaterialCommIcons name="archive-lock-outline" size={25} color="#FFBC01" />,
             last: 0,
             tablename: 'archive',
+            page: 'ArchivePage',
             images: [
                 {
                     image: require('../assets/marketplaceimages/archiveimage1.png')
@@ -215,6 +222,7 @@ const Marketplace = (props) => {
             icon: <FontAwesome5 name="book-reader" color="#FFBC01" size={25} />,
             last: 50,
             tablename: 'readingmode',
+            page: 'Home',
             images: [
                 {
                     image: require('../assets/marketplaceimages/readingmodeimage1.png')
@@ -241,6 +249,12 @@ const Marketplace = (props) => {
     const [fontsLoaded] = useFonts({
         'mulish': require("../assets/fonts/mulish.ttf")
     })
+
+    const OpenPackage = (page) =>{
+        props.navigation.navigate(page)
+        setFabVisible(false)
+        setModalMore(false)
+    }
 
     const GetData = () => {
         db.transaction((tx) => {
@@ -302,13 +316,10 @@ const Marketplace = (props) => {
                     <MaterialIcons name="arrow-back-ios" size={27} color="#FFBC01" />
                     <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>Marketplace</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ marginEnd: 20 }}>
-                    <MaterialCommIcons name="dots-horizontal-circle-outline" size={25} color="#FFBC01" />
-                </TouchableOpacity>
             </View>
 
             <View style={{ width: screenWidth, flex: 1, alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'mulish', fontSize: 18, alignSelf: 'flex-start', marginTop: 30, marginStart: 25 }}>All available extensions</Text>
+                <Text style={{ fontFamily: 'mulish', fontSize: 18, alignSelf: 'flex-start', marginTop: 30, marginStart: 25 }}>All available packages</Text>
                 <FlatList
                     data={listData} scrollEnabled={true}
                     showsVerticalScrollIndicator={false}
@@ -318,7 +329,7 @@ const Marketplace = (props) => {
                             <TouchableRipple onPress={() => { ShowModalMore(item.item.index) }}
                                 borderless style={{ width: screenWidth - 40, marginTop: 15, paddingVertical: 20, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: item.item.last }}>
 
-                                <View style={{ width: '100%', height: '100%', flexDirection: "row", alignItems: 'center', justifyContent:'space-between' }}>
+                                <View style={{ width: '100%', height: '100%', flexDirection: "row", alignItems: 'center', justifyContent: 'space-between' }}>
                                     <View style={{ alignItems: 'flex-start', marginStart: 20, }}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
 
@@ -335,7 +346,7 @@ const Marketplace = (props) => {
                                         <TouchableOpacity style={{ paddingHorizontal: 10, paddingVertical: 3, backgroundColor: '#FFBC01', borderRadius: 20 }} activeOpacity={0.6}
                                             onPress={() => {
                                                 item.item.enabled == 1 ?
-                                                    null
+                                                    OpenPackage(item.item.page)
                                                     :
                                                     EnablePackage(item.item.tablename)
                                             }}>
@@ -371,17 +382,14 @@ const Marketplace = (props) => {
             </Portal>
             <Fader visible position={Fader.position.BOTTOM} tintColor={colorScheme === 'dark' ? "#1c1c1c" : '#f4f4f4'} size={150} />
 
-            <Modal visible={progress} dismissable={false} style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <LoadModal visible={progress} dismissable={false} style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <Card style={{ width: 220, height: 220, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size={50} />
                     <Text style={{ textAlign: 'center', marginTop: 30, paddingHorizontal: 20 }}>{message}</Text>
                 </Card>
-            </Modal>
+            </LoadModal>
 
-            <Modal visible={modalMore} dismissable={true} onDismiss={() => {
-                setFabVisible(true)
-                setModalMore(false)
-            }} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={false}>
+            <Modal animationType="slide"  visible={modalMore} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={true}>
                 <View style={{ width: screenWidth, height: screenHeight - 20, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4', borderTopStartRadius: 20, borderTopEndRadius: 20, justifyContent: 'center', alignItems: 'center' }}>
                     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginStart: 10, marginTop: 25, marginBottom: 25 }}
                         onPress={() => {
@@ -403,7 +411,7 @@ const Marketplace = (props) => {
                             <TouchableOpacity style={{ paddingHorizontal: 15, justifyContent: 'center', alignItems: 'center', paddingVertical: 5, backgroundColor: '#FFBC01', borderRadius: 20, marginTop: 20, marginEnd: 20 }} activeOpacity={0.6}
                                 onPress={() => {
                                     listData[modalMoreIndex].enabled == 1 ?
-                                        null
+                                        OpenPackage(listData[modalMoreIndex].page)
                                         :
                                         EnablePackage(listData[modalMoreIndex].tablename)
                                 }}>
@@ -434,7 +442,7 @@ const Marketplace = (props) => {
                             <TouchableOpacity style={{ width: 200, height: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFBC01', borderRadius: 50, marginTop: 10, }} activeOpacity={0.6}
                                 onPress={() => {
                                     listData[modalMoreIndex].enabled == 1 ?
-                                        null
+                                        OpenPackage(listData[modalMoreIndex].page)
                                         :
                                         EnablePackage(listData[modalMoreIndex].tablename)
                                 }}>

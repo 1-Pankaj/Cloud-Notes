@@ -33,22 +33,40 @@ const Browser = (props) => {
 
     const [open, setOpen] = useState(false)
     const [bookmarked, setBookmarked] = useState(false)
-    const animatedTranslate = new Animated.Value(600)
+    const animatedTranslate = new Animated.Value(0)
+    const animatedHeight = new Animated.Value(600)
+    const [lastValue, setLastValue] = useState(null)
 
     const HandleScroll = (y) => {
-        if (y.toFixed() > 1000) {
-            Animated.timing(animatedTranslate, {
-                toValue: 0,
-                duration: 200,
-                useNativeDriver: false
-            }).start()
-        } else {
-            Animated.timing(animatedTranslate, {
-                toValue: 600,
-                duration: 200,
-                useNativeDriver: false
-            }).start()
+        if (y > 5) {
+            Animated.timing(animatedHeight, {
+                toValue:0,
+                duration:200,
+                useNativeDriver:false
+            }).start(()=>{
+                Animated.timing(animatedTranslate,{
+                    toValue:bottom? 350 : -350,
+                    duration:250,
+                    useNativeDriver:false
+                }).start()
+            })
+            
         }
+        if(y<-5){
+            Animated.timing(animatedHeight, {
+                toValue:600,
+                duration:200,
+                useNativeDriver:false
+            }).start(()=>{
+                Animated.timing(animatedTranslate,{
+                    toValue:0,
+                    duration:250,
+                    useNativeDriver:false
+                }).start()
+            })
+        }
+
+        
     }
 
     const GetUrlFromDatabase = () => {
@@ -205,7 +223,9 @@ const Browser = (props) => {
                 {bottom ?
                     null
                     :
-                    <Animated.View style={{ maxHeight: animatedTranslate }}>
+                    <Animated.View style={{ maxHeight:animatedHeight,transform:[{
+                        translateY:animatedTranslate
+                    }] }}>
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <TouchableOpacity onPress={() => {
@@ -275,7 +295,7 @@ const Browser = (props) => {
 
                             </View>
                         </ExpandableSection>
-                        <Animated.View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', maxHeight:animatedTranslate }}>
+                        <Animated.View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', }}>
                             <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 10 }} onPress={() => { setBottom(true) }}>
                                 <MaterialIcons name="arrow-drop-down" size={20} color="#FFBC01" />
                             </TouchableOpacity>
@@ -315,14 +335,13 @@ const Browser = (props) => {
                     style={{ flex: 1, width: screenWidth, alignItems: 'center', justifyContent: 'center' }}
                     source={{ uri: uriWeb }}
                     javaScriptEnabled
-                    useWebView2
                     pullToRefreshEnabled
                     showsVerticalScrollIndicator={false}
                     ref={webviewRef}
                     forceDarkOn={colorScheme === 'dark' ? true : false}
                     allowFileAccess
                     onScroll={(e) => {
-                        HandleScroll(e.nativeEvent.contentOffset.y)
+                        HandleScroll(e.nativeEvent.velocity.y.toFixed())
                     }}
                     sharedCookiesEnabled
                     thirdPartyCookiesEnabled
@@ -342,7 +361,9 @@ const Browser = (props) => {
                 />
                 {bottom ?
                     <Animated.View style={{
-                        width: screenWidth, alignItems: 'center', maxHeight: animatedTranslate
+                        width: screenWidth, alignItems: 'center',maxHeight:animatedHeight,transform:[{
+                            translateY:animatedTranslate
+                        }]
                     }}>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
                         <View style={{

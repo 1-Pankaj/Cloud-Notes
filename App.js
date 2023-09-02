@@ -4,7 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import HomeScreen from './src/HomeScreen';
 import {
   Provider as PaperProvider, MD3LightTheme as LightTheme,
-  MD3DarkTheme as DarkTheme} from 'react-native-paper'
+  MD3DarkTheme as DarkTheme
+} from 'react-native-paper'
 import SplashScreenPage from './src/SplashScreen'
 import { StatusBar } from 'expo-status-bar';
 import Loading from './src/Loading';
@@ -32,14 +33,47 @@ import ReadingMode from './src/ReadingMode';
 import MarketplaceSplash from './src/splashscreens/MarketplaceSplash';
 import Marketplace from './src/Marketplace';
 
+import * as SQLite from 'expo-sqlite'
+
 const Stack = createStackNavigator()
 
+const db = SQLite.openDatabase('CloudNotes.db')
 
 function App() {
 
+  const [splashScreen, setSplashScreen] = useState(true)
+  const [homeSplash, setHomeSplash] = useState(true)
+  const [archiveSplash, setArchiveSplash] = useState(true)
+  const [deleteSplash, setDeleteSplash] = useState(true)
+
+
+  const GetSplashData = () => {
+    db.transaction((tx) => {
+      tx.executeSql("SELECT * FROM splash", [],
+        (sql, rs) => {
+          if (rs.rows.length > 0) {
+            setSplashScreen(false)
+            if (rs.rows._array[0].homepage == 'true') {
+              setHomeSplash(false)
+            }
+            if (rs.rows._array[0].archivebtn == 'true') {
+              setArchiveSplash(false)
+            }
+            if (rs.rows._array[0].deletebtn == 'true') {
+              setDeleteSplash(false)
+            }
+          }
+        }, error => {
+          console.log("Error");
+        })
+    })
+  }
 
   const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme)
 
+  useEffect(() => {
+    GetSplashData()
+  }, [])
 
   const [themeState, setThemeState] = useState({
     ...LightTheme, colors: {
@@ -54,6 +88,10 @@ function App() {
   })
 
   useEffect(() => {
+
+  })
+
+  useEffect(() => {
     if (colorScheme == "dark") {
       setThemeState({
         ...DarkTheme,
@@ -61,7 +99,7 @@ function App() {
           ...DarkTheme.colors,
           primary: "#FFBC01",
           secondary: 'white',
-          background:'#1c1c1c'
+          background: '#1c1c1c'
         }
       })
     } else {
@@ -88,34 +126,46 @@ function App() {
             headerShown: false
           }} >
           <Stack.Screen name='Loading' component={Loading} />
-          <Stack.Screen name='SplashScreen' component={SplashScreenPage} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
-          <Stack.Screen name='HomeSplash' component={HomeSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
-          <Stack.Screen name='ArchiveSplash' component={ArchiveSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
-          <Stack.Screen name='DeleteSplash' component={DeleteSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
+          {splashScreen ?
+            <Stack.Screen name='SplashScreen' component={SplashScreenPage} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
+          {homeSplash ?
+            <Stack.Screen name='HomeSplash' component={HomeSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
+          {archiveSplash ?
+            <Stack.Screen name='ArchiveSplash' component={ArchiveSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
+          {deleteSplash ?
+            <Stack.Screen name='DeleteSplash' component={DeleteSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
           <Stack.Screen name='ArchivePage' component={ArchivePage} options={{
             gestureEnabled: true,
             presentation: 'modal',

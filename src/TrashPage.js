@@ -29,6 +29,9 @@ const TrashPage = (props) => {
     const [deleteNoteId, setDeleteNoteId] = useState('')
     const [deleteId, setDeleteId] = useState('')
     const [notebackgroundEnabled, setNotebackgroundEnabled] = useState(false)
+    const [selectionMode, setSelectionMode] = useState(false)
+    const [selectionData, setSelectionData] = useState(null)
+    const [selectAll, setSelectAll] = useState(false)
 
     const GetFeatures = () => {
         db.transaction((tx) => {
@@ -307,7 +310,7 @@ const TrashPage = (props) => {
                                             <Text style={{ fontFamily: 'mulish', fontSize: 10, marginStart: -15 }}>{item.item.time.length === 10 ? item.item.time.slice(0, 4) + item.item.time.slice(7, 10) : item.item.time.slice(0, 5) + item.item.time.slice(8, 11)}</Text>
                                         </View>
                                         <TouchableOpacity onPress={() => { RestoreNote(item.item.id) }}>
-                                            <MaterialIcons name="restore-from-trash" size={25} color={notebackgroundEnabled? item.item.pageColor === 'default'? '#FFBC01' : 'white' : "#FFBC01"} style={{ marginEnd: 20 }} />
+                                            <MaterialIcons name="restore-from-trash" size={25} color={notebackgroundEnabled ? item.item.pageColor === 'default' ? '#FFBC01' : 'white' : "#FFBC01"} style={{ marginEnd: 20 }} />
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => {
                                             DeleteTrashedNote(item.item.id)
