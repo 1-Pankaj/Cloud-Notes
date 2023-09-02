@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     Appearance, Dimensions, FlatList,
     RefreshControl, ScrollView, TextInput, ToastAndroid,
-    TouchableOpacity, View, Image, LayoutAnimation, Animated, BackHandler, TouchableHighlight
+    TouchableOpacity, View, Image, BackHandler, TouchableHighlight
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
@@ -19,8 +19,7 @@ import AnimatedLottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import { Card, Colors, Drawer, ExpandableSection, Fader, GridList, StackAggregator } from "react-native-ui-lib";
-import { Easing } from "react-native-reanimated";
+import { Drawer, ExpandableSection, Fader, GridList, StackAggregator } from "react-native-ui-lib";
 
 
 const screenWidth = Dimensions.get("screen").width
@@ -82,7 +81,6 @@ const HomeScreen = (props) => {
     const [menuSort, setMenuSort] = useState(false)
     const [sortFun, setSortFun] = useState('id')
     const [ascDesc, setAscDesc] = useState('DESC')
-    const animatedHeight = new Animated.Value(75)
 
 
 
@@ -406,19 +404,11 @@ const HomeScreen = (props) => {
                                                 (sql, rs) => {
                                                     sql.executeSql("DELETE FROM notes WHERE id = (?)", [id],
                                                         (sql, rs) => {
-                                                            Animated.timing(animatedHeight, {
-                                                                toValue: 0,
-                                                                duration: 200,
-                                                                useNativeDriver: false
-                                                            }).start(() => {
-                                                                setRefreshing(true)
-                                                                setPreviousData(null)
-                                                                setTodayData(null)
-                                                                SelectData()
-                                                            })
                                                             sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [id],
                                                                 (sql, rs) => {
-
+                                                                    setRefreshing(true)
+                                                                    setPreviousData(null)
+                                                                    setTodayData(null)
                                                                     SelectData()
                                                                     ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                                                                 }, error => {
@@ -474,7 +464,7 @@ const HomeScreen = (props) => {
                                                     console.log("error");
                                                 })
                                         } else {
-                                            ToastAndroid.show(title+" note is already Starred", ToastAndroid.SHORT)
+                                            ToastAndroid.show(title + " note is already Starred", ToastAndroid.SHORT)
                                         }
                                     }, error => {
                                         console.log("Error");
@@ -1008,11 +998,36 @@ const HomeScreen = (props) => {
                     if (rs.rows.length > 0) {
                         for (let i = 0; i < rs.rows.length; i++) {
                             let noteid = rs.rows._array[i].noteid
-                            PinNote(noteid)
-                            setSelectionData([])
-                            SelectData()
-                            setSelectionMode(false)
+
+                            sql.executeSql("SELECT * FROM notes WHERE id = (?)", [noteid],
+                                (sql, rs) => {
+                                    if (rs.rows.length > 0) {
+                                        let title = rs.rows._array[0].title
+                                        let note = rs.rows._array[0].note
+                                        sql.executeSql("SELECT * FROM pinnednote WHERE title = (?) and note = (?)", [title, note],
+                                            (sql, rs) => {
+                                                if (rs.rows.length > 0) {
+                                                    ToastAndroid.show("Already Pinned notes not pinned", ToastAndroid.SHORT)
+                                                } else {
+                                                    sql.executeSql("INSERT INTO pinnednote (noteid, title, note) values (?,?,?)", [noteid, title, note],
+                                                        (sql, rs) => {
+                                                        }, error => {
+                                                            console.log("Error");
+                                                        })
+                                                }
+                                            }, error => {
+                                                console.log('Error');
+                                            })
+                                    }
+                                }, error => {
+                                    console.log("Error");
+                                })
                         }
+
+                        ToastAndroid.show("Pinned Selected Notes", ToastAndroid.SHORT)
+                        setSelectionData(null)
+                        setSelectionMode(false)
+                        SelectData()
                     }
                 }, error => {
                     console.log("Error");
@@ -1026,11 +1041,51 @@ const HomeScreen = (props) => {
                     if (rs.rows.length > 0) {
                         for (let i = 0; i < rs.rows.length; i++) {
                             let noteid = rs.rows._array[i].noteid
-                            StarNote(noteid)
-                            setSelectionData([])
-                            SelectData()
-                            setSelectionMode(false)
+
+                            sql.executeSql("CREATE TABLE IF NOT EXISTS starrednotes(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
+                                (sql, rs) => {
+                                    sql.executeSql("SELECT * FROM notes WHERE id = (?)", [noteid],
+                                        (sql, rs) => {
+                                            if (rs.rows.length == 0) {
+
+                                            } else {
+                                                let title = rs.rows._array[0].title
+                                                let note = rs.rows._array[0].note
+                                                let date = rs.rows._array[0].date
+                                                let time = rs.rows._array[0].time
+                                                let pageColor = rs.rows._array[0].pageColor
+                                                let fontColor = rs.rows._array[0].fontColor
+                                                let fontStyle = rs.rows._array[0].fontStyle
+                                                let fontSize = rs.rows._array[0].fontSize
+
+
+
+                                                sql.executeSql('SELECT * FROM starrednotes WHERE title = (?) and note = (?)', [title, note],
+                                                    (sql, rs) => {
+                                                        if (rs.rows.length == 0) {
+                                                            sql.executeSql("INSERT INTO starrednotes(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                                (sql, rs) => {
+                                                                }, error => {
+                                                                    console.log("error");
+                                                                })
+                                                        } else {
+                                                            ToastAndroid.show(title + " note is already Starred", ToastAndroid.SHORT)
+                                                        }
+                                                    }, error => {
+                                                        console.log("Error");
+                                                    })
+                                            }
+                                        }, error => {
+                                            console.log("error");
+                                        })
+                                }, error => {
+                                    console.log("Error");
+                                })
                         }
+                        ToastAndroid.show("Selected notes added to starred notes", ToastAndroid.SHORT)
+                        setSelectionData(null)
+                        SelectData()
+                        setSelectionMode(false)
                     }
                 }, error => {
                     console.log("Error");
@@ -1273,7 +1328,7 @@ const HomeScreen = (props) => {
                 </ExpandableSection>
                 {pinnedData && !selectionMode ?
                     <View style={{ width: screenWidth, alignItems: 'center', marginBottom: 20 }}>
-                        <Text style={{ alignSelf: 'flex-start', marginStart: 10, marginTop: 20, fontSize: 25, marginBottom: 5, fontWeight: 'bold' }}>Pinned Notes</Text>
+                        <Text style={{ alignSelf: 'flex-start', marginStart: 15, marginTop: 20, fontSize: 25, marginBottom: 5, fontWeight: 'bold' }}>Pinned Notes</Text>
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center' }}>
                             <FlatList data={pinnedData} style={{ alignSelf: 'flex-start', marginStart: 10, marginTop: 10 }}
                                 horizontal scrollEnabled={true} showsHorizontalScrollIndicator={false}
@@ -1442,7 +1497,7 @@ const HomeScreen = (props) => {
                                                                         }} >
 
 
-                                                                        <Animated.View style={{ width: screenWidth - 10, maxHeight: animatedHeight, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                                                                             {notebackgroundEnabled ?
                                                                                 <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                                                 :
@@ -1472,7 +1527,7 @@ const HomeScreen = (props) => {
                                                                                     <MaterialComIcon name="arrow-forward-ios" size={22} color={notebackgroundEnabled ? item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
                                                                                 </View>
                                                                             </View>
-                                                                        </Animated.View>
+                                                                        </View>
                                                                     </TouchableHighlight>
                                                                 </Drawer>
                                                             )
@@ -1552,7 +1607,7 @@ const HomeScreen = (props) => {
                                                                             })
                                                                         }} >
 
-                                                                        <Animated.View style={{ width: screenWidth - 10, maxHeight: animatedHeight, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                                                                             {notebackgroundEnabled ?
                                                                                 <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                                                 :
@@ -1583,7 +1638,7 @@ const HomeScreen = (props) => {
                                                                                 </View>
                                                                             </View>
 
-                                                                        </Animated.View>
+                                                                        </View>
 
                                                                     </TouchableHighlight>
 
@@ -1780,7 +1835,7 @@ const HomeScreen = (props) => {
                                                                             })
                                                                         }} >
 
-                                                                        <Animated.View style={{ width: screenWidth - 10, maxHeight: animatedHeight, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                                                                             {notebackgroundEnabled ?
                                                                                 <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                                                 :
@@ -1811,7 +1866,7 @@ const HomeScreen = (props) => {
                                                                                 </View>
                                                                             </View>
 
-                                                                        </Animated.View>
+                                                                        </View>
 
                                                                     </TouchableHighlight>
 

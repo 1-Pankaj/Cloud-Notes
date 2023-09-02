@@ -40,33 +40,33 @@ const Browser = (props) => {
     const HandleScroll = (y) => {
         if (y > 5) {
             Animated.timing(animatedHeight, {
-                toValue:0,
-                duration:200,
-                useNativeDriver:false
-            }).start(()=>{
-                Animated.timing(animatedTranslate,{
-                    toValue:bottom? 350 : -350,
-                    duration:250,
-                    useNativeDriver:false
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: false
+            }).start(() => {
+                Animated.timing(animatedTranslate, {
+                    toValue: bottom ? 350 : -350,
+                    duration: 250,
+                    useNativeDriver: false
                 }).start()
             })
-            
+
         }
-        if(y<-5){
+        if (y < -5) {
             Animated.timing(animatedHeight, {
-                toValue:600,
-                duration:200,
-                useNativeDriver:false
-            }).start(()=>{
-                Animated.timing(animatedTranslate,{
-                    toValue:0,
-                    duration:250,
-                    useNativeDriver:false
+                toValue: 600,
+                duration: 200,
+                useNativeDriver: false
+            }).start(() => {
+                Animated.timing(animatedTranslate, {
+                    toValue: 0,
+                    duration: 250,
+                    useNativeDriver: false
                 }).start()
             })
         }
 
-        
+
     }
 
     const GetUrlFromDatabase = () => {
@@ -172,22 +172,35 @@ const Browser = (props) => {
     })
 
 
-    const isFocused = useIsFocused()
     useEffect(() => {
+        console.log('run');
         if (props.route.params === undefined) {
 
         } else {
             if (props.route.params.page == 'Bookmark') {
                 setTimeout(() => {
                     setUriWeb(props.route.params.url.trim())
-                }, 200);
+                }, 1000);
             }
             else if (props.route.params.page == 'History') {
                 setTimeout(() => {
                     setUriWeb(props.route.params.url.trim())
-                }, 200);
+                }, 1000);
+            }
+            else if (props.route.params.page == 'GlobalSearch') {
+                setTimeout(() => {
+                    if (props.route.params.url.trim().includes('http' || 'https')) {
+                        setUriWeb(props.route.params.url.trim())
+                    } else {
+                        setUriWeb("https://www.google.com/search?q=" + props.route.params.url.trim())
+                    }
+                }, 1000);
             }
         }
+    }, [])
+
+    const isFocused = useIsFocused()
+    useEffect(() => {
         CreateTable()
         GetUrlFromDatabase()
     }, [isFocused])
@@ -223,9 +236,11 @@ const Browser = (props) => {
                 {bottom ?
                     null
                     :
-                    <Animated.View style={{ maxHeight:animatedHeight,transform:[{
-                        translateY:animatedTranslate
-                    }] }}>
+                    <Animated.View style={{
+                        maxHeight: animatedHeight, transform: [{
+                            translateY: animatedTranslate
+                        }]
+                    }}>
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <TouchableOpacity onPress={() => {
@@ -361,8 +376,8 @@ const Browser = (props) => {
                 />
                 {bottom ?
                     <Animated.View style={{
-                        width: screenWidth, alignItems: 'center',maxHeight:animatedHeight,transform:[{
-                            translateY:animatedTranslate
+                        width: screenWidth, alignItems: 'center', maxHeight: animatedHeight, transform: [{
+                            translateY: animatedTranslate
                         }]
                     }}>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />

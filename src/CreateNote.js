@@ -18,7 +18,7 @@ import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice'
-import { ExpandableSection } from "react-native-ui-lib";
+import { ColorPicker, Colors, ExpandableSection } from "react-native-ui-lib";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -406,6 +406,13 @@ const CreateNote = (props) => {
     }
 
 
+    const UpdateColor = (color) =>{
+        if(color == Colors.white || color == Colors.black){
+            setPageColor('default')
+        }else{
+            setPageColor(color)
+        }
+    }
 
     const AutoSaveNote = (text) => {
         setNoteText(text)
@@ -472,53 +479,34 @@ const CreateNote = (props) => {
                             top={false}
                             expanded={open}>
                             <View style={{ width: screenWidth }}>
+                           
                                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Page Colour</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
-                                    <TouchableOpacity onPress={() => { setPageColor('default') }}
-                                    >
-                                        <View style={{ backgroundColor: '#fff', borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setPageColor('default') }}
-                                    >
-                                        <View style={{ backgroundColor: black, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setPageColor(pinkish) }}>
-                                        <View style={{ backgroundColor: pinkish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setPageColor(yellowish) }}>
-                                        <View style={{ backgroundColor: yellowish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setPageColor(blueish) }}>
-                                        <View style={{ backgroundColor: blueish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setPageColor(greenish) }}>
-                                        <View style={{ backgroundColor: greenish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
+                                    <ColorPicker
+                                        colors={[Colors.blue10, Colors.yellow10, Colors.green30, Colors.purple20, Colors.white, Colors.black]}
+                                        initialColor={Colors.green10}
+                                        value={'#FFBC01'}
+                                        center doneButtonColor="#FFBC01" visible
+                                        backgroundColor="transparent"
+                                        onDismiss={() => {}} 
+                                        onSubmit={(color) => UpdateColor(color)}
+                                        onValueChange={(color) => UpdateColor(color)}
+                                    />
                                 </View>
                             </View>
                             <View style={{ width: screenWidth }}>
                                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Colour</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
-                                    <TouchableOpacity onPress={() => { setFontColor(greenish) }}>
-                                        <View style={{ backgroundColor: greenish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setFontColor(blueish) }}>
-                                        <View style={{ backgroundColor: blueish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setFontColor(yellowish) }}>
-                                        <View style={{ backgroundColor: yellowish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setFontColor(pinkish) }}>
-                                        <View style={{ backgroundColor: pinkish, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setFontColor(black) }}
-                                    >
-                                        <View style={{ backgroundColor: black, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => { setFontColor(white) }}
-                                    >
-                                        <View style={{ backgroundColor: white, borderWidth: 2, borderColor: 'lightgray', borderRadius: 20 }}><View style={{ padding: 10 }}></View></View>
-                                    </TouchableOpacity>
+                                <ColorPicker
+                                        colors={[Colors.blue10, Colors.yellow10, Colors.green30, Colors.purple20, Colors.white, Colors.black]}
+                                        initialColor={Colors.green10}
+                                        value={'#FFBC01'}
+                                        center doneButtonColor="#FFBC01" visible
+                                        backgroundColor="transparent"
+                                        onDismiss={() => {}} 
+                                        onSubmit={(color) => setFontColor(color)}
+                                        onValueChange={(color) => setFontColor(color)}
+                                    />
                                 </View>
                             </View>
                             <View style={{ width: screenWidth, marginBottom: 5 }}>

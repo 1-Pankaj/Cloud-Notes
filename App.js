@@ -45,6 +45,11 @@ function App() {
   const [homeSplash, setHomeSplash] = useState(true)
   const [archiveSplash, setArchiveSplash] = useState(true)
   const [deleteSplash, setDeleteSplash] = useState(true)
+  const [marketplaceSplash, setMarketplaceSplash] = useState(true)
+  const [todoSplash, setTodoSplash] = useState(true)
+  const [reminderSplash, setReminderSplash] = useState(true)
+  const [starredNotesSplash, setStarredNotesSplash] = useState(true)
+  const [readingModeSplash, setReadingModeSplash] = useState(true)
 
 
   const GetSplashData = () => {
@@ -67,6 +72,87 @@ function App() {
           console.log("Error");
         })
     })
+
+    db.transaction((tx) => {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS marketplacesplash(firsttime Boolean)', [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM marketplacesplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setMarketplaceSplash(false)
+              }
+            }, error => {
+              console.log("Error");
+            })
+        }, error => {
+          console.log("Error");
+        })
+    })
+
+    db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS todosplash (firsttime VARCHAR(20))", [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM todosplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setTodoSplash(false)
+              }
+            }, error => {
+              console.log("Error");
+            })
+        }, error => {
+          console.log("error");
+        })
+    })
+
+    db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS remindersplash (firsttime Boolean)", [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM remindersplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setReminderSplash(false)
+              }
+            }, error => {
+              console.log("error");
+            })
+        }, error => {
+          console.log("Error");
+        })
+    })
+
+    db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS starredsplash (firsttime Boolean)", [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM starredsplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setStarredNotesSplash(false)
+              }
+            }, error => {
+              console.log("Error");
+            })
+        }, error => {
+          console.log("Error");
+        })
+    })
+
+    db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS readingsplash(firsttime Boolean)", [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM readingsplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setReadingModeSplash(false)
+              }
+            }, error => {
+              console.log("Error");
+            })
+        }, error => {
+          console.log("Error");
+        })
+    })
+
   }
 
   const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme)
@@ -173,13 +259,16 @@ function App() {
             ...(isAndroid && TransitionPresets.ModalPresentationIOS),
             headerShown: false
           }} />
-          <Stack.Screen name='MarketplaceSplash' component={MarketplaceSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
+          {marketplaceSplash ?
+            <Stack.Screen name='MarketplaceSplash' component={MarketplaceSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
           <Stack.Screen name='Marketplace' component={Marketplace} options={{
             gestureEnabled: true,
             presentation: 'modal',
@@ -215,13 +304,16 @@ function App() {
             ...(isAndroid && TransitionPresets.ModalPresentationIOS),
             headerShown: false
           }} />
-          <Stack.Screen name='ToDoSplash' component={ToDoSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
+          {todoSplash ?
+            <Stack.Screen name='ToDoSplash' component={ToDoSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
           <Stack.Screen name='Reminders' component={Reminders} options={{
             gestureEnabled: true,
             presentation: 'modal',
@@ -229,20 +321,26 @@ function App() {
             ...(isAndroid && TransitionPresets.ModalPresentationIOS),
             headerShown: false
           }} />
-          <Stack.Screen name='ReminderSplash' component={ReminderSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
-          <Stack.Screen name='StarredNotesSplash' component={StarredNotesSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
+          {reminderSplash ?
+            <Stack.Screen name='ReminderSplash' component={ReminderSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
+          {starredNotesSplash ?
+            <Stack.Screen name='StarredNotesSplash' component={StarredNotesSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
           <Stack.Screen name='StarredNotes' component={StarredNotes} options={{
             gestureEnabled: true,
             presentation: 'modal',
@@ -250,13 +348,16 @@ function App() {
             ...(isAndroid && TransitionPresets.ModalPresentationIOS),
             headerShown: false
           }} />
-          <Stack.Screen name='ReadingModeSplash' component={ReadingModeSplash} options={{
-            gestureEnabled: true,
-            presentation: 'modal',
-            animation: "slide_from_bottom",
-            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
-            headerShown: false
-          }} />
+          {readingModeSplash ?
+            <Stack.Screen name='ReadingModeSplash' component={ReadingModeSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
           <Stack.Screen name='ReadingMode' component={ReadingMode} options={{
             gestureEnabled: true,
             presentation: 'modal',

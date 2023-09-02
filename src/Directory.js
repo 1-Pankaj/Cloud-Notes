@@ -65,7 +65,7 @@ const Directory = (props) => {
     const [todoEnabled, setTodoEnabled] = useState(false)
     const [taskData, setTaskData] = useState(null)
     const [page, setPage] = useState(0);
-    const [numberOfItemsPerPageList] = useState([2, 3, 4]);
+    const [numberOfItemsPerPageList] = useState([2, 3, 4, 8, 12, 20]);
     const [itemsPerPage, onItemsPerPageChange] = useState(
         numberOfItemsPerPageList[0]
     );
@@ -99,7 +99,7 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setArchivedNoteCount(rs.rows.length)
                 }, error => {
-                    console.log("Error");
+                    console.log("error");
                 })
         })
 
@@ -182,6 +182,8 @@ const Directory = (props) => {
                             let date = rs.rows._array[i].date
                             let time = rs.rows._array[i].time
                             let tasknum = rs.rows._array[i].tasknum
+                            let lastindex = tasknum.lastIndexOf('.')
+                            tasknum = tasknum.slice(0, lastindex)
 
                             results.push({ id: id, title: title, date: date, time: time, tasknum: tasknum })
                         }
@@ -300,14 +302,15 @@ const Directory = (props) => {
         if (initializing) setInitializing(false);
     }
 
-    const ClearTaskRecord = () =>{
-        db.transaction((tx)=>{
-            tx.executeSql("DELETE FROM recordTasks",[],
-            (sql,rs)=>{
-                GetTaskData()
-            }, error =>{
-                console.log("Error");
-            })
+    const ClearTaskRecord = () => {
+        db.transaction((tx) => {
+            tx.executeSql("DELETE FROM recordTasks", [],
+                (sql, rs) => {
+                    GetTaskData()
+                    ToastAndroid.show("Task Records cleared", ToastAndroid.SHORT)
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
@@ -479,6 +482,17 @@ const Directory = (props) => {
                     <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010' }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}
                         cursorColor="#FFBC01" selectionColor="#FFBC01" maxLength={25} numberOfLines={1}
                         multiline={false} value={searchText} onChangeText={(text) => { SearchTextInDatabase(text) }} />
+                    {searchText ?
+                        <TouchableOpacity style={{ marginEnd: 20 }} onPress={() => {
+                            props.navigation.navigate('Browser', {
+                                page: 'GlobalSearch',
+                                url: searchText
+                            })
+                        }}>
+                            <Ionicons name="globe-outline" size={26} color='#FFBC01' />
+                        </TouchableOpacity>
+                        :
+                        null}
                 </Animated.View>
                 {!searchText == '' ?
                     <ScrollView style={{ width: screenWidth - 40, }} contentContainerStyle={{ alignItems: 'center' }} showsVerticalScrollIndicator={false}>
@@ -803,11 +817,11 @@ const Directory = (props) => {
                             <View style={{ width: screenWidth, alignItems: 'center', alignSelf: 'center', marginTop: 30, marginBottom: 30 }}>
                                 <View style={{ alignItems: 'center', width: '90%', flexDirection: 'row', justifyContent: 'space-between', marginStart: 20, marginBottom: 20, marginEnd: 20 }}>
                                     <Text style={{ fontSize: 17, fontFamily: 'mulish' }}>Task Records</Text>
-                                    <TouchableOpacity onPress={()=>{ClearTaskRecord()}}>
+                                    <TouchableOpacity onPress={() => { ClearTaskRecord() }}>
                                         <Text style={{ fontSize: 13, color: '#FFBC01', fontWeight: 'bold' }}>Clear</Text>
                                     </TouchableOpacity>
                                 </View>
-                                <DataTable style={{ width: '90%', backgroundColor: 'white', borderRadius: 10 }}>
+                                <DataTable style={{ width: '90%',backgroundColor:colorScheme === 'dark'? '#303030' : 'white', borderRadius: 10 }}>
                                     <DataTable.Header>
                                         <DataTable.Title>Title</DataTable.Title>
                                         <DataTable.Title numeric>Date</DataTable.Title>
