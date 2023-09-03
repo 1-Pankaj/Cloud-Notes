@@ -65,6 +65,7 @@ const Directory = (props) => {
     const [todoEnabled, setTodoEnabled] = useState(false)
     const [taskData, setTaskData] = useState(null)
     const [page, setPage] = useState(0);
+    const [folderCount, setFolderCount] = useState(0)
     const [numberOfItemsPerPageList] = useState([2, 3, 4, 8, 12, 20]);
     const [itemsPerPage, onItemsPerPageChange] = useState(
         numberOfItemsPerPageList[0]
@@ -131,7 +132,7 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setDeletedNotesCount(rs.rows.length)
                 }, error => {
-                    console.log("Error");
+                    console.log("error");
                 })
         })
         db.transaction((tx) => {
@@ -148,6 +149,15 @@ const Directory = (props) => {
                     setHistoryCount(rs.rows.length)
                 }, error => {
                     console.log("Error");
+                })
+        })
+
+        db.transaction((tx) => {
+            tx.executeSql("SELECT id FROM allfolders", [],
+                (sql, rs) => {
+                    setFolderCount(rs.rows.length)
+                }, error => {
+                    console.log('ErrorAll');
                 })
         })
 
@@ -195,7 +205,7 @@ const Directory = (props) => {
                         setTaskData(null)
                     }
                 }, error => {
-                    console.log("Error");
+                    console.log("Error11");
                 })
         })
     }
@@ -282,22 +292,22 @@ const Directory = (props) => {
     }
 
     const FolderFirstTimeCheck = () => {
-        db.transaction((tx)=>{
-            tx.executeSql("CREATE TABLE IF NOT EXISTS foldersplash(firsttime Boolean)",[],
-            (sql,rs)=>{
-                sql.executeSql("SELECT firsttime FROM foldersplash",[],
-                (sql,rs)=>{
-                    if(rs.rows.length > 0){
-                        props.navigation.navigate('Folder')
-                    }else{
-                        props.navigation.navigate('FolderSplash')
-                    }
-                }, error =>{
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS foldersplash(firsttime Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT firsttime FROM foldersplash", [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                props.navigation.navigate('Folder')
+                            } else {
+                                props.navigation.navigate('FolderSplash')
+                            }
+                        }, error => {
+                            console.log("Error");
+                        })
+                }, error => {
                     console.log("Error");
                 })
-            }, error =>{
-                console.log("Error");
-            })
         })
     }
 
@@ -480,7 +490,7 @@ const Directory = (props) => {
                             </Button>
                             :
                             null}
-                        <TouchableOpacity style={{ marginEnd: 25, marginTop: 5 }} onPress={() => {
+                        <TouchableOpacity style={{ marginEnd: 25, marginTop: 5 }} activeOpacity={0.6} onPress={() => {
                             user ?
                                 null
                                 :
@@ -492,9 +502,9 @@ const Directory = (props) => {
                                 </Card>
                                 :
 
-                                <Card mode="elevated" style={{ borderRadius: 30 }}>
-                                    <MaterialCommIcons name="account-circle" size={35} color="#FFBC01" />
-                                </Card>}
+
+                                <MaterialCommIcons name="account-circle" size={30} color="#FFBC01" />
+                            }
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -805,7 +815,7 @@ const Directory = (props) => {
                                     <Text style={{ fontSize: 16.2, marginStart: 15 }}>My Folders</Text>
                                 </View>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{deletedNotesCount}</Text>
+                                    <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{folderCount}</Text>
                                     <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
                                 </View>
                             </View>

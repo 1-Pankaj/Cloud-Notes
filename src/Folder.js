@@ -29,6 +29,10 @@ const Folder = (props) => {
     const [visible, setVisible] = React.useState(false);
     const [dialogMessage, setDialogMessage] = useState('')
     const [deleteFolderId, setDeleteFolderId] = useState('')
+    const [page, setPage] = useState('')
+    const [moveId, setMoveId] = useState('')
+    const [moveFolder, setMoveFolder] = useState('')
+    const [extraName, setExtraName] = useState('')
 
     const showDialog = () => setVisible(true);
 
@@ -53,7 +57,7 @@ const Folder = (props) => {
             Animated.timing(spinValue,
                 {
                     toValue: 0,
-                    duration: 500,
+                    duration: 200,
                     useNativeDriver: false
                 }
             ).start(() => {
@@ -63,7 +67,7 @@ const Folder = (props) => {
             Animated.timing(spinValue,
                 {
                     toValue: 1,
-                    duration: 500,
+                    duration: 200,
                     useNativeDriver: false
                 }
             ).start(() => {
@@ -74,10 +78,10 @@ const Folder = (props) => {
 
     const CreateTable = () => {
         db.transaction((tx) => {
-            tx.executeSql('CREATE TABLE IF NOT EXISTS allfolders(id INTEGER PRIMARY KEY AUTOINCREMENT, folderName VARCHAR(20) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL)', [],
+            tx.executeSql('CREATE TABLE IF NOT EXISTS allfolders(id INTEGER PRIMARY KEY AUTOINCREMENT, folderName VARCHAR(20) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, expanded Boolean NOT NULL, extraName VARCHAR(20) NOT NULL)', [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
+                    console.log("Eeeerror");
                 })
         })
     }
@@ -94,13 +98,15 @@ const Folder = (props) => {
                             let date = rs.rows._array[i].date
                             let time = rs.rows._array[i].time
                             let count = 0
+                            let expanded = rs.rows._array[i].expanded
+                            let extraName = rs.rows._array[i].extraName
 
                             sql.executeSql(`SELECT * FROM ${folderName}`, [],
                                 (sql, rs) => {
                                     count = rs.rows.length
-                                    results.push({ id: id, folderName: folderName, date: date, time: time, count: count })
+                                    results.push({ id: id, folderName: folderName, date: date, time: time, count: count, expanded: expanded, extraName: extraName })
                                 }, error => {
-                                    console.log("Error");
+                                    console.log("ErrorFolderName");
                                 })
 
                         }
@@ -110,9 +116,24 @@ const Folder = (props) => {
                         setData(null)
                     }
                 }, error => {
-                    console.log("Error");
+                    console.log("Eerror");
                 })
         })
+    }
+
+    const RenameFolder = (id) => {
+        if (newFoldername.trim()) {
+            db.transaction((tx) => {
+                tx.executeSql(`UPDATE allfolders SET extraName = (?) where id = (?)`, [newFoldername.trim(), id],
+                    (sql, rs) => {
+                        GetData()
+                    }, error => {
+                        console.log("Error");
+                    })
+            })
+        } else {
+            GetData()
+        }
     }
 
     const CreateNewFolder = () => {
@@ -130,7 +151,7 @@ const Folder = (props) => {
                                 if (folderName == foldername) {
                                     ToastAndroid.show('Folder with this name already exists', ToastAndroid.SHORT)
                                 } else {
-                                    sql.executeSql("INSERT INTO allfolders(folderName, date, time) values (?,?,?)", [folderName.trim(), new Date().toLocaleDateString(), new Date().toLocaleTimeString()],
+                                    sql.executeSql("INSERT INTO allfolders(folderName, date, time, expanded, extraName) values (?,?,?,?,?)", [folderName.trim(), new Date().toLocaleDateString(), new Date().toLocaleTimeString(), false, folderName.trim()],
                                         (sql, rs) => {
                                             sql.executeSql(`CREATE TABLE ${folderName}(id INTEGER PRIMARY KEY AUTOINCREMENT,title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)`, [],
                                                 (sql, rs) => {
@@ -141,12 +162,12 @@ const Folder = (props) => {
                                                     console.log("error");
                                                 })
                                         }, error => {
-                                            console.log("Error");
+                                            console.log("E11rror");
                                         })
                                 }
                             }
                         } else {
-                            sql.executeSql("INSERT INTO allfolders(folderName, date, time) values (?,?,?)", [folderName.trim(), new Date().toLocaleDateString(), new Date().toLocaleTimeString()],
+                            sql.executeSql("INSERT INTO allfolders(folderName, date, time, expanded, extraName) values (?,?,?,?,?)", [folderName.trim(), new Date().toLocaleDateString(), new Date().toLocaleTimeString(), false, folderName.trim()],
                                 (sql, rs) => {
                                     sql.executeSql(`CREATE TABLE ${folderName}(id INTEGER PRIMARY KEY AUTOINCREMENT,title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)`, [],
                                         (sql, rs) => {
@@ -157,7 +178,7 @@ const Folder = (props) => {
                                             console.log("error");
                                         })
                                 }, error => {
-                                    console.log("Error");
+                                    console.log("E11rror");
                                 })
                         }
                     }, error => {
@@ -167,36 +188,170 @@ const Folder = (props) => {
         }
     }
 
+    const MoveToThisFolder = (id) => {
+        if (page == 'Home') {
+            db.transaction((tx) => {
+                tx.executeSql('SELECT * FROM notes WHERE id = (?)', [moveId],
+                    (sql, rs) => {
+                        if (rs.rows.length > 0) {
+                            let title = rs.rows._array[0].title
+                            let note = rs.rows._array[0].note
+                            let date = rs.rows._array[0].date
+                            let time = rs.rows._array[0].time
+                            let pageColor = rs.rows._array[0].pageColor
+                            let fontColor = rs.rows._array[0].fontColor
+                            let fontStyle = rs.rows._array[0].fontStyle
+                            let fontSize = rs.rows._array[0].fontSize
+                            sql.executeSql("SELECT * FROM allfolders where id = (?)", [id],
+                                (sql, rs) => {
+                                    let foldername = rs.rows._array[0].folderName
+                                    let extraName = rs.rows._array[0].extraName
+                                    sql.executeSql(`INSERT INTO ${foldername}(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                        (sql, rs) => {
+                                            sql.executeSql("DELETE FROM notes WHERE id = (?)", [moveId],
+                                                (sql, rs) => {
+                                                    ToastAndroid.show('Moved', ToastAndroid.SHORT)
+                                                    props.navigation.replace('OpenFolder', {
+                                                        foldername: foldername,
+                                                        extraname: extraName
+                                                    })
+                                                }, error => {
+                                                    console.log("Error");
+                                                })
+                                        }, error => {
+                                            console.log("Error");
+                                        })
+                                }, error => {
+                                    console.log("Error");
+                                })
+                        }
+                    }, error => {
+                        console.log("Error");
+                    })
+            })
+        } else {
+            db.transaction((tx) => {
+                tx.executeSql("SELECT * FROM allfolders WHERE id = (?)", [id],
+                    (sql, rs) => {
+                        if (rs.rows.length > 0) {
+                            let foldername = rs.rows._array[0].folderName
+                            sql.executeSql(`SELECT * FROM ${foldername}`, [],
+                                (sql, rs) => {
+                                    if (rs.rows.length > 0) {
+                                        sql.executeSql(`SELECT * FROM ${moveFolder} WHERE id = (?)`, [moveId],
+                                            (sql, rs) => {
+                                                let title = rs.rows._array[0].title
+                                                let note = rs.rows._array[0].note
+                                                let date = rs.rows._array[0].date
+                                                let time = rs.rows._array[0].time
+                                                let pageColor = rs.rows._array[0].pageColor
+                                                let fontColor = rs.rows._array[0].fontColor
+                                                let fontStyle = rs.rows._array[0].fontStyle
+                                                let fontSize = rs.rows._array[0].fontSize
+
+                                                sql.executeSql(`SELECT * FROM ${foldername} WHERE title = (?) and note = (?)`, [title, note],
+                                                    (sql, rs) => {
+                                                        if (rs.rows.length > 0) {
+                                                            ToastAndroid.show("Note already exists in selected folder", ToastAndroid.SHORT)
+                                                        } else {
+                                                            sql.executeSql(`INSERT INTO ${foldername}(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                                (sql, rs) => {
+                                                                    sql.executeSql(`DELETE FROM ${moveFolder} WHERE id = (?)`, [moveId],
+                                                                        (sql, rs) => {
+                                                                            ToastAndroid.show('Moved', ToastAndroid.SHORT)
+                                                                            props.navigation.replace('OpenFolder', {
+                                                                                foldername: moveFolder,
+                                                                                extraname: extraName
+                                                                            })
+                                                                        }, error => {
+                                                                            console.log("error");
+                                                                        })
+                                                                }, error => {
+                                                                    console.log("Error");
+                                                                })
+                                                        }
+                                                    }, error => {
+                                                        console.log("Error");
+                                                    })
+                                            }, error => {
+                                                console.log("Error");
+                                            })
+                                    } else {
+                                        sql.executeSql(`SELECT * FROM ${moveFolder} WHERE id = (?)`, [moveId],
+                                            (sql, rs) => {
+                                                if (rs.rows.length > 0) {
+                                                    let title = rs.rows._array[0].title
+                                                    let note = rs.rows._array[0].note
+                                                    let date = rs.rows._array[0].date
+                                                    let time = rs.rows._array[0].time
+                                                    let pageColor = rs.rows._array[0].pageColor
+                                                    let fontColor = rs.rows._array[0].fontColor
+                                                    let fontStyle = rs.rows._array[0].fontStyle
+                                                    let fontSize = rs.rows._array[0].fontSize
+                                                    sql.executeSql(`INSERT INTO ${foldername}(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                                        (sql, rs) => {
+                                                            sql.executeSql(`DELETE FROM ${moveFolder} WHERE id = (?)`, [moveId],
+                                                                (sql, rs) => {
+                                                                    ToastAndroid.show('Moved', ToastAndroid.SHORT)
+                                                                    props.navigation.replace('OpenFolder', {
+                                                                        foldername: moveFolder,
+                                                                        extraname: extraName
+                                                                    })
+                                                                }, error => {
+                                                                    console.log("error");
+                                                                })
+                                                        }, error => {
+                                                            console.log("Error");
+                                                        })
+
+                                                }
+                                            }, error => {
+                                                console.log("error");
+                                            })
+
+                                    }
+                                }, error => {
+                                    console.log("Error");
+                                })
+                        }
+                    }, error => {
+                        console.log("Error");
+                    })
+            })
+        }
+    }
+
+
     const DeleteFolder = (id) => {
         setDeleteFolderId(id)
         showDialog()
         setDialogMessage("Once deleted folder can't be recovered! Are you sure?")
     }
 
-    const FinallyDelete = () =>{
-        db.transaction((tx)=>{
-            tx.executeSql("SELECT * FROM allfolders WHERE id = (?)",[deleteFolderId],
-            (sql,rs)=>{
-                if(rs.rows.length > 0){
-                    let foldernm = rs.rows._array[0].folderName
-                    sql.executeSql(`DROP TABLE ${foldernm}`,[],
-                    (sql,rs)=>{
-                        sql.executeSql("DELETE FROM allfolders WHERE id = (?)",[deleteFolderId],
-                        (sql,rs)=>{
-                            hideDialog()
-                            ToastAndroid.show("Deleted folder "+foldernm, ToastAndroid.SHORT)
-                            GetData()
-                            setExpanded(false)
-                        }, error =>{
-                            console.log("Error");
-                        })
-                    }, error =>{
-                        console.log("Error");
-                    })
-                }
-            }, error =>{
-                console.log("Error");
-            })
+    const FinallyDelete = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM allfolders WHERE id = (?)", [deleteFolderId],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let foldernm = rs.rows._array[0].folderName
+                        sql.executeSql(`DROP TABLE ${foldernm}`, [],
+                            (sql, rs) => {
+                                sql.executeSql("DELETE FROM allfolders WHERE id = (?)", [deleteFolderId],
+                                    (sql, rs) => {
+                                        hideDialog()
+                                        ToastAndroid.show("Deleted folder " + foldernm, ToastAndroid.SHORT)
+                                        GetData()
+                                        setExpanded(false)
+                                    }, error => {
+                                        console.log("Error");
+                                    })
+                            }, error => {
+                                console.log("Error");
+                            })
+                    }
+                }, error => {
+                    console.log("Error");
+                })
         })
     }
 
@@ -216,6 +371,15 @@ const Folder = (props) => {
     useEffect(() => {
         CreateTable()
         GetData()
+
+        if (props.route.params == undefined) {
+
+        } else {
+            setMoveFolder(props.route.params.folderName)
+            setPage(props.route.params.page)
+            setMoveId(props.route.params.id)
+            setExtraName(props.route.params.extraName)
+        }
         // DeleteData()
     }, [isFocused])
 
@@ -237,9 +401,25 @@ const Folder = (props) => {
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10 }}
-                    onPress={() => { props.navigation.navigate('Directory') }}>
-                    <MaterialIcons name="arrow-back-ios" size={27} color="#FFBC01" />
-                    <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>My Folders</Text>
+                    onPress={() => {
+                        moveFolder ?
+                            props.navigation.replace('OpenFolder', {
+                                foldername: moveFolder,
+                                extraname: extraName
+                            })
+                            :
+                            props.navigation.navigate('Directory')
+                    }}>
+                    {moveFolder ?
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialIcons name="close" size={27} color="#FFBC01" />
+                            <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold', marginStart: 10, marginBottom: 2 }}>Move To</Text>
+                        </View>
+                        :
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialIcons name="arrow-back-ios" size={27} color="#FFBC01" />
+                            <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>My Folders</Text>
+                        </View>}
                 </TouchableOpacity>
             </View>
             {data ?
@@ -249,22 +429,26 @@ const Folder = (props) => {
                         data={data}
                         style={{ marginTop: 20 }}
                         key={item => item.id}
+                        showsVerticalScrollIndicator={false}
                         renderItem={(item) => {
                             return (
                                 <TouchableOpacity style={{ marginTop: 15 }} activeOpacity={0.6} onPress={() => {
-                                    AnimateExpansion()
+                                    moveFolder ?
+                                        MoveToThisFolder(item.item.id)
+                                        :
+                                        AnimateExpansion()
                                 }}>
                                     <View style={{ width: screenWidth - 30, backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10, alignItems: 'center' }}>
                                         <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', height: 45, justifyContent: 'space-between' }}>
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                <MaterialIcons name="folder" size={28} color="#FFBC01" />
+                                                <MaterialIcons name={expanded ? 'folder-open' : "folder"} size={28} color="#FFBC01" />
                                                 <TouchableOpacity>
-                                                    <TextInput placeholder={item.item.folderName} numberOfLines={1} autoFocus={false} blurOnSubmit onChangeText={(text) => {
+                                                    <TextInput placeholder={item.item.extraName} numberOfLines={1} autoFocus={false} maxLength={20} blurOnSubmit onChangeText={(text) => {
                                                         setNewFoldername(text)
-                                                    }}
+                                                    }} editable={moveFolder ? false : true}
                                                         placeholderTextColor={colorScheme === 'dark' ? 'white' : '#303030'}
-                                                        cursorColor="#FFBC01" style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, fontWeight: 'bold', marginStart: 20, width: '100%' }} selectTextOnFocus
-                                                        selectionColor="#FFBC01" onFocus={() => { }} onBlur={() => { }} />
+                                                        cursorColor="#FFBC01" style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20, width: '100%' }} selectTextOnFocus
+                                                        selectionColor="#FFBC01" onFocus={() => { }} onBlur={() => { RenameFolder(item.item.id) }} />
                                                 </TouchableOpacity>
                                             </View>
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -289,7 +473,15 @@ const Folder = (props) => {
                                                         onPress={() => { DeleteFolder(item.item.id) }}>
                                                         <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}>Delete Folder</Text>
                                                     </TouchableOpacity>
-                                                    <TouchableOpacity style={{ backgroundColor: '#FFBC01', width: '50%', alignItems: 'center', padding: 10, justifyContent: 'center', borderBottomEndRadius: 11 }}>
+                                                    <TouchableOpacity style={{ backgroundColor: '#FFBC01', width: '50%', alignItems: 'center', padding: 10, justifyContent: 'center', borderBottomEndRadius: 11 }}
+                                                        onPress={() => {
+                                                            props.navigation.navigate('OpenFolder', {
+                                                                id: item.item.id,
+                                                                foldername: item.item.folderName,
+                                                                extraname: item.item.extraName
+                                                            })
+                                                            AnimateExpansion()
+                                                        }}>
                                                         <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}>Open Folder</Text>
                                                     </TouchableOpacity>
                                                 </View>
@@ -308,22 +500,25 @@ const Folder = (props) => {
                     />
                     <Text style={{ fontSize: 18 }}>No folders found, try creating one!</Text>
                 </View>}
-            <View style={{ width: screenWidth, marginVertical: 10 }}>
-                <Surface style={{ alignSelf: 'flex-end', marginEnd: 20, borderRadius: 50 }}>
-                    <TouchableRipple borderless style={{
-                        width: 60, height: 60, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
-                        borderRadius: 50
-                    }}
-                        onPress={() => { OpenCreateFolderModal() }} rippleColor='#F0CA5E'>
-                        <View style={{
+            {moveFolder ?
+                null
+                :
+                <View style={{ width: screenWidth, marginVertical: 10 }}>
+                    <Surface style={{ alignSelf: 'flex-end', marginEnd: 20, borderRadius: 50 }}>
+                        <TouchableRipple borderless style={{
                             width: 60, height: 60, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
                             borderRadius: 50
-                        }}>
-                            <MaterialIcons name="add" size={35} color="white" />
-                        </View>
-                    </TouchableRipple>
-                </Surface>
-            </View>
+                        }}
+                            onPress={() => { OpenCreateFolderModal() }} rippleColor='#F0CA5E'>
+                            <View style={{
+                                width: 60, height: 60, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
+                                borderRadius: 50
+                            }}>
+                                <MaterialIcons name="add" size={35} color="white" />
+                            </View>
+                        </TouchableRipple>
+                    </Surface>
+                </View>}
             <Modal visible={openModal} dismissableBackButton onDismiss={() => {
                 setOpenModal(false)
                 setFolderName('')
@@ -369,7 +564,7 @@ const Folder = (props) => {
                     </Dialog.Content>
                     <Dialog.Actions>
                         <Button onPress={hideDialog}>Cancel</Button>
-                        <Button onPress={FinallyDelete} labelStyle={{color:'red'}} mode="text">Delete</Button>
+                        <Button onPress={FinallyDelete} labelStyle={{ color: 'red' }} mode="text">Delete</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>

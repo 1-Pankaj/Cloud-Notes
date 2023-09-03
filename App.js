@@ -36,6 +36,7 @@ import Marketplace from './src/Marketplace';
 import * as SQLite from 'expo-sqlite'
 import FolderSplash from './src/splashscreens/FolderSplash';
 import Folder from './src/Folder';
+import OpenFolder from './src/OpenFolder';
 
 const Stack = createStackNavigator()
 
@@ -321,6 +322,13 @@ function App() {
             :
             null}
           <Stack.Screen name='Folder' component={Folder} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='OpenFolder' component={OpenFolder} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

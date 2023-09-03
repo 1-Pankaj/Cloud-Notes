@@ -44,6 +44,10 @@ const CreateNote = (props) => {
     const [recording, setRecording] = useState(false)
     const [results, setResults] = useState([])
     const [starVisible, setStarVisible] = useState(false)
+    const [folderName, setFolderName] = useState('')
+    const [extraName, setExtraName] = useState('')
+    const [editing, setEditing] = useState(false)
+    const [editingId, setEditingId] = useState('')
 
 
     const colorSection = new Animated.Value(0)
@@ -178,6 +182,30 @@ const CreateNote = (props) => {
                             console.log("Error");
                         })
                 })
+            } else if (props.route.params.page == 'Folders') {
+                setFolderName(props.route.params.folderName)
+                setExtraName(props.route.params.folderName)
+                setSaveButton('Save to Folder')
+                if (props.route.params.editing == true) {
+                    setEditing(true)
+                    db.transaction((tx) => {
+                        tx.executeSql(`SELECT * FROM ${props.route.params.folderName}`, [],
+                            (sql, rs) => {
+                                setTitleText(rs.rows.item(0).title)
+                                setNoteText(rs.rows.item(0).note)
+                                setPageColor(rs.rows.item(0).pageColor.toString())
+                                setFontColor(rs.rows.item(0).fontColor)
+                                setFontStyle(rs.rows.item(0).fontStyle)
+                                setFontSize(Math.floor(rs.rows.item(0).fontSize))
+                                setSaveButton("Save to Folder")
+                            }, error => {
+                                console.log("error");
+                            })
+                    })
+                    setEditingId(props.route.params.id)
+                } else {
+                    setEditing(false)
+                }
             }
         }
     }, [])
@@ -310,6 +338,51 @@ const CreateNote = (props) => {
         }
 
     }
+
+
+    const SaveToFolder = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
+        if (refTitle.current.isFocused() == true) {
+            refTitle.current.blur()
+        }
+        if (refInput.current.isFocused() == true) {
+            refInput.current.blur()
+        }
+        if (titleText || noteText) {
+            if (editing) {
+                db.transaction(tx => {
+                    tx.executeSql(`UPDATE ${folderName} set title = (?),note = (?),date =(?),time = (?),pageColor = (?),fontColor =(?),fontStyle = (?),fontSize = (?) WHERE id = ${editingId}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                        (sql, rs) => {
+                            console.log("Done");
+                            props.navigation.navigate('OpenFolder', {
+                                foldername: folderName,
+                                extraname: extraName
+                            })
+                        },
+                        error => {
+                            console.log("Error");
+                        })
+                })
+            } else {
+                db.transaction(tx => {
+                    tx.executeSql(`INSERT INTO ${folderName}(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                        (sql, rs) => {
+                            console.log("Done");
+                            props.navigation.navigate('OpenFolder', {
+                                foldername: folderName,
+                                extraname: extraName
+                            })
+                        },
+                        error => {
+                            console.log("Error");
+                        })
+                })
+            }
+        }
+
+    }
+
+
+
     const UpdateArchive = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
         if (refTitle.current.isFocused() == true) {
             refTitle.current.blur()
@@ -406,10 +479,10 @@ const CreateNote = (props) => {
     }
 
 
-    const UpdateColor = (color) =>{
-        if(color == Colors.white || color == Colors.black){
+    const UpdateColor = (color) => {
+        if (color == Colors.white || color == Colors.black) {
             setPageColor('default')
-        }else{
+        } else {
             setPageColor(color)
         }
     }
@@ -449,7 +522,15 @@ const CreateNote = (props) => {
                     <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
                         <View style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
                         <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <TouchableOpacity onPress={() => { props.navigation.navigate("Home") }} style={{ margin: 20 }}>
+                            <TouchableOpacity onPress={() => {
+                                saveButton == 'Save to Folder' ?
+                                    props.navigation.navigate('OpenFolder', {
+                                        foldername: folderName,
+                                        extraname: extraName
+                                    })
+                                    :
+                                    props.navigation.navigate("Home")
+                            }} style={{ margin: 20 }}>
                                 <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
                             </TouchableOpacity>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -466,7 +547,10 @@ const CreateNote = (props) => {
                                             saveButton == 'Update Star' ?
                                                 UpdateStarred(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
                                                 :
-                                                SaveToDatabase()
+                                                saveButton == 'Save to Folder' ?
+                                                    SaveToFolder(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                                    :
+                                                    SaveToDatabase()
                                 }}>
                                     <Text style={{
                                         color: pageColor === 'default' ? "#FFBC01" : 'black', fontSize: 19,
@@ -479,7 +563,7 @@ const CreateNote = (props) => {
                             top={false}
                             expanded={open}>
                             <View style={{ width: screenWidth }}>
-                           
+
                                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Page Colour</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
                                     <ColorPicker
@@ -488,7 +572,7 @@ const CreateNote = (props) => {
                                         value={'#FFBC01'}
                                         center doneButtonColor="#FFBC01" visible
                                         backgroundColor="transparent"
-                                        onDismiss={() => {}} 
+                                        onDismiss={() => { }}
                                         onSubmit={(color) => UpdateColor(color)}
                                         onValueChange={(color) => UpdateColor(color)}
                                     />
@@ -497,13 +581,13 @@ const CreateNote = (props) => {
                             <View style={{ width: screenWidth }}>
                                 <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Colour</Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
-                                <ColorPicker
+                                    <ColorPicker
                                         colors={[Colors.blue10, Colors.yellow10, Colors.green30, Colors.purple20, Colors.white, Colors.black]}
                                         initialColor={Colors.green10}
                                         value={'#FFBC01'}
                                         center doneButtonColor="#FFBC01" visible
                                         backgroundColor="transparent"
-                                        onDismiss={() => {}} 
+                                        onDismiss={() => { }}
                                         onSubmit={(color) => setFontColor(color)}
                                         onValueChange={(color) => setFontColor(color)}
                                     />
@@ -544,8 +628,8 @@ const CreateNote = (props) => {
                                 fontFamily: fontStyle === 'default' ? 'mulish' : fontStyle, fontSize: fontStyle === 'default' ? fontSize + 6 : fontSize + 14, fontWeight: fontStyle === 'default' ? 'bold' : 'normal', marginStart: 20, marginTop: 20
                                 , color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#101010' : fontColor
                             }}
-                                multiline value={titleText} onChangeText={(text) => { setTitleText(text) }}
-                                ref={refTitle}
+                                value={titleText} onChangeText={(text) => { setTitleText(text) }}
+                                ref={refTitle} onBlur={() => { refInput.current.focus() }}
                                 maxLength={100} activeOutlineColor="transparent" outlineColor="transparent"
                                 underlineColor="transparent" underlineColorAndroid="transparent"
                                 selectionColor="#FFBC01" activeUnderlineColor="transparent"

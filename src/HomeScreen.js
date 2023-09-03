@@ -744,6 +744,15 @@ const HomeScreen = (props) => {
         })
     }
 
+    const MoveToFolder = (id) => {
+        props.navigation.navigate('Folder', {
+            id: id,
+            folderName: 'Home',
+            page: 'Home',
+            extraName: ''
+        })
+    }
+
     const GetFeatures = () => {
         db.transaction((tx) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS features (todo Boolean, reminder Boolean, starred Boolean, moodify Boolean, notebackground Boolean, gridlist Boolean, archive Boolean, readingmode Boolean)", [],
@@ -2009,6 +2018,19 @@ const HomeScreen = (props) => {
                                     </View>
                                     :
                                     null}
+                                <View style={{ width: '100%' }}>
+                                    <Divider style={{ width: '100%', height: 1 }} />
+                                    <TouchableOpacity style={{
+                                        width: '100%', height: 50, alignItems: 'center',
+                                        flexDirection: 'row', justifyContent: 'center', backgroundColor: '#5a48f5'
+                                    }} activeOpacity={0.7} onPress={() => {
+                                        setModalLongPress(false)
+                                        MoveToFolder(lognPressId)
+                                    }}>
+                                        <MaterialComIcon name="folder-open" size={20} color="white" style={{ marginStart: -5, marginEnd: 5 }} />
+                                        <Text style={{ fontWeight: 'bold', color: 'white' }}>Move to Folder</Text>
+                                    </TouchableOpacity>
+                                </View>
                                 <View style={{ width: '100%' }}>
                                     <Divider style={{ width: '100%', height: 1 }} />
                                     <TouchableOpacity style={{
