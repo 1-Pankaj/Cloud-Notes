@@ -34,6 +34,8 @@ import MarketplaceSplash from './src/splashscreens/MarketplaceSplash';
 import Marketplace from './src/Marketplace';
 
 import * as SQLite from 'expo-sqlite'
+import FolderSplash from './src/splashscreens/FolderSplash';
+import Folder from './src/Folder';
 
 const Stack = createStackNavigator()
 
@@ -50,6 +52,7 @@ function App() {
   const [reminderSplash, setReminderSplash] = useState(true)
   const [starredNotesSplash, setStarredNotesSplash] = useState(true)
   const [readingModeSplash, setReadingModeSplash] = useState(true)
+  const [folderSplash, setFolderSplash] = useState(true)
 
 
   const GetSplashData = () => {
@@ -144,6 +147,23 @@ function App() {
             (sql, rs) => {
               if (rs.rows.length > 0) {
                 setReadingModeSplash(false)
+              }
+            }, error => {
+              console.log("Error");
+            })
+        }, error => {
+          console.log("Error");
+        })
+    })
+
+
+    db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS foldersplash(firsttime Boolean)", [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM foldersplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setFolderSplash(false)
               }
             }, error => {
               console.log("Error");
@@ -284,6 +304,23 @@ function App() {
             headerShown: false
           }} />
           <Stack.Screen name='PasswordPage' component={PasswordPage} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          {folderSplash ?
+            <Stack.Screen name='FolderSplash' component={FolderSplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
+          <Stack.Screen name='Folder' component={Folder} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

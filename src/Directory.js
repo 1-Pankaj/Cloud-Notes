@@ -281,6 +281,26 @@ const Directory = (props) => {
         })
     }
 
+    const FolderFirstTimeCheck = () => {
+        db.transaction((tx)=>{
+            tx.executeSql("CREATE TABLE IF NOT EXISTS foldersplash(firsttime Boolean)",[],
+            (sql,rs)=>{
+                sql.executeSql("SELECT firsttime FROM foldersplash",[],
+                (sql,rs)=>{
+                    if(rs.rows.length > 0){
+                        props.navigation.navigate('Folder')
+                    }else{
+                        props.navigation.navigate('FolderSplash')
+                    }
+                }, error =>{
+                    console.log("Error");
+                })
+            }, error =>{
+                console.log("Error");
+            })
+        })
+    }
+
     useEffect(() => {
         GetFeatures()
         GetCount()
@@ -776,6 +796,22 @@ const Directory = (props) => {
                                 </View>
                             </View>
                         </TouchableOpacity>
+
+
+                        <TouchableOpacity style={{ borderRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => { FolderFirstTimeCheck() }}>
+                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommIcons name="folder-account-outline" size={28} style={{ alignSelf: 'center', marginStart: 22 }} color="#FFBC01" />
+                                    <Text style={{ fontSize: 16.2, marginStart: 15 }}>My Folders</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{deletedNotesCount}</Text>
+                                    <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+
+
                         <View style={{ alignSelf: 'flex-start', marginStart: 20, marginTop: 30 }}>
                             <Text style={{ fontSize: 17, fontFamily: 'mulish' }}>Browser Storage</Text>
                         </View>
@@ -821,7 +857,7 @@ const Directory = (props) => {
                                         <Text style={{ fontSize: 13, color: '#FFBC01', fontWeight: 'bold' }}>Clear</Text>
                                     </TouchableOpacity>
                                 </View>
-                                <DataTable style={{ width: '90%',backgroundColor:colorScheme === 'dark'? '#303030' : 'white', borderRadius: 10 }}>
+                                <DataTable style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10 }}>
                                     <DataTable.Header>
                                         <DataTable.Title>Title</DataTable.Title>
                                         <DataTable.Title numeric>Date</DataTable.Title>
