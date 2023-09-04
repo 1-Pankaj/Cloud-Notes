@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Checkbox, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
+import { Button, Checkbox, Dialog, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
@@ -46,7 +46,6 @@ const HomeScreen = (props) => {
         userSignIn.then((user) => {
             ToastAndroid.show('Signed in as ' + user.user.displayName, ToastAndroid.SHORT)
         }).catch((error) => {
-            console.log(error);
         })
     }
 
@@ -61,7 +60,7 @@ const HomeScreen = (props) => {
     const [grid, setGrid] = useState(false)
     const [longpress, setLongPress] = useState(false)
     const [modalLongPress, setModalLongPress] = useState(false)
-    const [lognPressId, setLongPressId] = useState('')
+    const [longPressId, setLongPressId] = useState('')
     const [pinnedData, setPinnedData] = useState(false)
     const [initializing, setInitializing] = useState(true);
     const [user, setUser] = useState();
@@ -81,6 +80,8 @@ const HomeScreen = (props) => {
     const [menuSort, setMenuSort] = useState(false)
     const [sortFun, setSortFun] = useState('id')
     const [ascDesc, setAscDesc] = useState('DESC')
+    const [permanentDeleteId, setPermanentDeleteId] = useState('')
+    const [permanentDeleteDialog, setPermanentDeleteDialog] = useState(false)
 
 
 
@@ -115,7 +116,6 @@ const HomeScreen = (props) => {
                     (sql, rs) => {
                     },
                     error => {
-                        console.log("Error");
                     })
         })
 
@@ -123,7 +123,6 @@ const HomeScreen = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS archived (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -131,7 +130,6 @@ const HomeScreen = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS starredsplash (firsttime Boolean)", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("error");
                 })
         })
 
@@ -139,7 +137,6 @@ const HomeScreen = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS pinnednote(id INTEGER PRIMARY KEY AUTOINCREMENT, noteid VARCHAR(20), title VARCHAR(20), note VARCHAR(20))", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -147,7 +144,6 @@ const HomeScreen = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS selectedNotes(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(5000) NOT NULL, noteid VARCHAR(20) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, checked Boolean)", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -163,7 +159,6 @@ const HomeScreen = (props) => {
                         props.navigation.navigate('StarredNotes')
                     }
                 }, error => {
-                    console.log("error");
                 })
         })
     }
@@ -185,17 +180,14 @@ const HomeScreen = (props) => {
                                             ToastAndroid.show("Pinned Note", ToastAndroid.SHORT)
                                             SelectData()
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }
                             }, error => {
-                                console.log('Error');
                             })
                     } else {
                         setPinnedData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -221,7 +213,6 @@ const HomeScreen = (props) => {
                     //selectedNotes (id,title,note,noteid,date,time,checked)
                 },
                 error => {
-                    console.log("Error");
                     setRefreshing(false)
                 })
         })
@@ -254,13 +245,11 @@ const HomeScreen = (props) => {
                                     setSelectAll(false)
                                 }
                             }, error => {
-                                console.log("Error");
                             })
                     } else {
                         setSelectionData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -280,7 +269,6 @@ const HomeScreen = (props) => {
                         setTodayData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -299,7 +287,6 @@ const HomeScreen = (props) => {
                         setPreviousData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -322,7 +309,6 @@ const HomeScreen = (props) => {
                         setPinnedData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -348,15 +334,12 @@ const HomeScreen = (props) => {
                                         (sql, rs) => {
                                             SelectData()
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -412,24 +395,18 @@ const HomeScreen = (props) => {
                                                                     SelectData()
                                                                     ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                                                                 }, error => {
-                                                                    console.log("Error");
                                                                 })
                                                         }, error => {
-                                                            console.log("error");
                                                         })
                                                 }, error => {
-                                                    console.log("Error");
                                                 })
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }, error => {
-                                console.log("error");
                             })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -461,20 +438,16 @@ const HomeScreen = (props) => {
                                                 (sql, rs) => {
                                                     ToastAndroid.show(`Note ${title} Starred!`, ToastAndroid.SHORT)
                                                 }, error => {
-                                                    console.log("error");
                                                 })
                                         } else {
                                             ToastAndroid.show(title + " note is already Starred", ToastAndroid.SHORT)
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("error");
                         })
                 }, error => {
-                    console.log("error");
                 })
         })
     }
@@ -485,6 +458,18 @@ const HomeScreen = (props) => {
     }
 
 
+    const FinallyDelete = () => {
+        db.transaction((tx) => {
+            tx.executeSql("DELETE FROM notes WHERE id = (?)", [permanentDeleteId],
+                (sql, rs) => {
+                    setPermanentDeleteDialog(false)
+                    setPermanentDeleteId('')
+                    SelectData()
+                    ToastAndroid.show('Deleted', ToastAndroid.SHORT)
+                }, error => {
+                })
+        })
+    }
 
 
 
@@ -518,21 +503,18 @@ const HomeScreen = (props) => {
                                                             ToastAndroid.show("Archived!", ToastAndroid.SHORT)
                                                             SelectData()
                                                         }, error => {
-                                                            console.log("Error");
                                                         })
 
                                                 },
-                                                error => { console.log("Error"); })
+                                                error => {
+                                                })
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -562,7 +544,6 @@ const HomeScreen = (props) => {
 
                 },
                 error => {
-                    console.log("Error");
                 })
         })
 
@@ -580,19 +561,16 @@ const HomeScreen = (props) => {
                                 (sql, rs) => {
                                     SelectData()
                                 }, error => {
-                                    console.log("Error");
                                 })
                         } else {
                             sql.executeSql("UPDATE selectedNotes SET checked = true WHERE noteid = (?)", [id],
                                 (sql, rs) => {
                                     SelectData()
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -610,7 +588,6 @@ const HomeScreen = (props) => {
                         props.navigation.navigate('HomeSplash')
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -633,10 +610,8 @@ const HomeScreen = (props) => {
                                 props.navigation.navigate('Reminders')
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -657,14 +632,11 @@ const HomeScreen = (props) => {
                                             setBanner(true)
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -682,10 +654,8 @@ const HomeScreen = (props) => {
                                 props.navigation.navigate('MarketplaceSplash')
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -696,7 +666,6 @@ const HomeScreen = (props) => {
                 (sql, rs) => {
                     setLongPress(false)
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -712,7 +681,6 @@ const HomeScreen = (props) => {
                     SelectData()
                     ToastAndroid.show("Unpinned Note", ToastAndroid.SHORT)
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -736,10 +704,8 @@ const HomeScreen = (props) => {
                                 })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -751,6 +717,12 @@ const HomeScreen = (props) => {
             page: 'Home',
             extraName: ''
         })
+        setFabVisible(false)
+    }
+
+    const PermanentDelete = (id) => {
+        setPermanentDeleteId(id)
+        setPermanentDeleteDialog(true)
     }
 
     const GetFeatures = () => {
@@ -844,7 +816,7 @@ const HomeScreen = (props) => {
                                     results.push({
                                         icon: 'emoticon-happy-outline',
                                         label: 'Moodify',
-                                        onPress: () => console.log('Mood'),
+                                        onPress: () => { },
                                         style: { backgroundColor: '#FFBC01' },
                                         color: 'white'
                                     })
@@ -853,10 +825,8 @@ const HomeScreen = (props) => {
                                 setFabButton(results)
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -870,18 +840,15 @@ const HomeScreen = (props) => {
                             (sql, rs) => {
                                 SelectData()
                             }, error => {
-                                console.log("Error");
                             })
                     } else {
                         sql.executeSql("UPDATE selectedNotes set checked = true", [],
                             (sql, rs) => {
                                 SelectData()
                             }, error => {
-                                console.log("Error");
                             })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -920,23 +887,17 @@ const HomeScreen = (props) => {
                                                                             sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [noteid],
                                                                                 (sql, rs) => {
                                                                                 }, error => {
-                                                                                    console.log("Error");
                                                                                 })
                                                                         }, error => {
-                                                                            console.log("error");
                                                                         })
                                                                 }, error => {
-                                                                    console.log("Error");
                                                                 })
                                                         }, error => {
-                                                            console.log("Error");
                                                         })
                                                 }, error => {
-                                                    console.log("Error");
                                                 })
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             })
                         }
@@ -946,7 +907,6 @@ const HomeScreen = (props) => {
                         ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -977,16 +937,13 @@ const HomeScreen = (props) => {
                                                         (sql, rs) => {
 
                                                         }, error => {
-                                                            console.log("Error");
                                                         })
 
                                                 },
-                                                error => { console.log("Error"); })
+                                                error => { })
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
 
                         }
@@ -996,7 +953,6 @@ const HomeScreen = (props) => {
                         ToastAndroid.show("Archived!", ToastAndroid.SHORT)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -1021,15 +977,12 @@ const HomeScreen = (props) => {
                                                     sql.executeSql("INSERT INTO pinnednote (noteid, title, note) values (?,?,?)", [noteid, title, note],
                                                         (sql, rs) => {
                                                         }, error => {
-                                                            console.log("Error");
                                                         })
                                                 }
                                             }, error => {
-                                                console.log('Error');
                                             })
                                     }
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
 
@@ -1039,7 +992,6 @@ const HomeScreen = (props) => {
                         SelectData()
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -1075,20 +1027,16 @@ const HomeScreen = (props) => {
                                                             sql.executeSql("INSERT INTO starrednotes(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
                                                                 (sql, rs) => {
                                                                 }, error => {
-                                                                    console.log("error");
                                                                 })
                                                         } else {
                                                             ToastAndroid.show(title + " note is already Starred", ToastAndroid.SHORT)
                                                         }
                                                     }, error => {
-                                                        console.log("Error");
                                                     })
                                             }
                                         }, error => {
-                                            console.log("error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                         ToastAndroid.show("Selected notes added to starred notes", ToastAndroid.SHORT)
@@ -1097,7 +1045,6 @@ const HomeScreen = (props) => {
                         setSelectionMode(false)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -1320,21 +1267,33 @@ const HomeScreen = (props) => {
                     top={false}
                     expanded={expandedSearch}
                 >
-                    <TextInput placeholder="Search here" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
-                        ref={searchRef}
-                        style={{
-                            width: screenWidth - 60, paddingVertical: 6, backgroundColor: colorScheme === "dark" ? "#303030" : "lightgray", borderRadius: 10,
-                            opacity: 0.7, paddingHorizontal: 10, color: colorScheme === "dark" ? "white" : "black", alignSelf: 'center', fontSize: 13,
-                            fontFamily: 'mulish', marginTop: 10, marginBottom: 10
-                        }}
-                        selectTextOnFocus
-                        cursorColor="#FFBC01"
-                        multiline={false}
-                        value={searchText}
-                        selectionColor="#FFBC01"
-                        onChangeText={(text) => { SearchInDatabase(text) }}
-                    />
+                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
+                        <TextInput placeholder="Search here" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
+                            ref={searchRef}
+                            style={{
+                                width: screenWidth - 60, paddingVertical: 6, backgroundColor: colorScheme === "dark" ? "#303030" : "lightgray", borderRadius: 10,
+                                opacity: 0.7, paddingHorizontal: 10, color: colorScheme === "dark" ? "white" : "black", alignSelf: 'center', fontSize: 13,
+                                fontFamily: 'mulish', marginTop: 10, marginBottom: 10
+                            }}
+                            selectTextOnFocus
+                            cursorColor="#FFBC01"
+                            multiline={false}
+                            blurOnSubmit
+                            value={searchText}
+                            selectionColor="#FFBC01"
+                            onChangeText={(text) => { SearchInDatabase(text) }}
+                        />
+                        {searchText ? <TouchableOpacity onPress={() => {
+                            props.navigation.navigate('Browser', {
+                                page: 'GlobalSearch',
+                                url: searchText
+                            })
+                        }}>
+                            <Ionicons name="globe-outline" size={25} color="#FFBC01" />
+                        </TouchableOpacity> : null}
+                    </View>
                 </ExpandableSection>
+
                 {pinnedData && !selectionMode ?
                     <View style={{ width: screenWidth, alignItems: 'center', marginBottom: 20 }}>
                         <Text style={{ alignSelf: 'flex-start', marginStart: 15, marginTop: 20, fontSize: 25, marginBottom: 5, fontWeight: 'bold' }}>Pinned Notes</Text>
@@ -1953,7 +1912,7 @@ const HomeScreen = (props) => {
                                     width: '100%', height: 50, alignItems: 'center',
                                     flexDirection: 'row', justifyContent: 'center'
                                 }} activeOpacity={0.7} onPress={() => {
-                                    PinNote(lognPressId)
+                                    PinNote(longPressId)
                                     setModalLongPress(false)
                                 }}>
                                     <MaterialIcons name="pin-outline" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
@@ -1977,7 +1936,7 @@ const HomeScreen = (props) => {
                                             width: '100%', height: 50, alignItems: 'center',
                                             flexDirection: 'row', justifyContent: 'center'
                                         }} activeOpacity={0.7} onPress={() => {
-                                            StarNote(lognPressId)
+                                            StarNote(longPressId)
                                             setModalLongPress(false)
                                         }}>
                                             <MaterialComIcon name="star-border" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
@@ -1993,7 +1952,7 @@ const HomeScreen = (props) => {
                                             width: '100%', height: 50, alignItems: 'center',
                                             flexDirection: 'row', justifyContent: 'center'
                                         }} activeOpacity={0.7} onPress={() => {
-                                            ArchiveFirstTimeCheck(lognPressId)
+                                            ArchiveFirstTimeCheck(longPressId)
                                             setModalLongPress(false)
                                         }}>
                                             <MaterialComIcon name="archive" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
@@ -2010,7 +1969,7 @@ const HomeScreen = (props) => {
                                             flexDirection: 'row', justifyContent: 'center'
                                         }} activeOpacity={0.7} onPress={() => {
                                             setModalLongPress(false)
-                                            ReadingModeCheck(lognPressId)
+                                            ReadingModeCheck(longPressId)
                                         }}>
                                             <MaterialComIcon name="menu-book" size={20} color="#FFBC01" style={{ marginStart: -5, marginEnd: 5 }} />
                                             <Text style={{ fontWeight: 'bold', color: '#FFBC01' }}>Open in Reading Mode</Text>
@@ -2025,10 +1984,23 @@ const HomeScreen = (props) => {
                                         flexDirection: 'row', justifyContent: 'center', backgroundColor: '#5a48f5'
                                     }} activeOpacity={0.7} onPress={() => {
                                         setModalLongPress(false)
-                                        MoveToFolder(lognPressId)
+                                        MoveToFolder(longPressId)
                                     }}>
                                         <MaterialComIcon name="folder-open" size={20} color="white" style={{ marginStart: -5, marginEnd: 5 }} />
                                         <Text style={{ fontWeight: 'bold', color: 'white' }}>Move to Folder</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={{ width: '100%' }}>
+                                    <Divider style={{ width: '100%', height: 1 }} />
+                                    <TouchableOpacity style={{
+                                        width: '100%', height: 50, alignItems: 'center',
+                                        flexDirection: 'row', justifyContent: 'center', backgroundColor: '#FFBC01',
+                                    }} activeOpacity={0.7} onPress={() => {
+                                        setModalLongPress(false)
+                                        DeleteFromTable(longPressId)
+                                    }}>
+                                        <MaterialComIcon name="delete-outline" size={20} color="white" style={{ marginStart: -5, marginEnd: 5 }} />
+                                        <Text style={{ fontWeight: 'bold', color: 'white' }}>Move to Trash</Text>
                                     </TouchableOpacity>
                                 </View>
                                 <View style={{ width: '100%' }}>
@@ -2039,16 +2011,32 @@ const HomeScreen = (props) => {
                                         borderBottomStartRadius: 16
                                     }} activeOpacity={0.7} onPress={() => {
                                         setModalLongPress(false)
-                                        DeleteFromTable(lognPressId)
+                                        PermanentDelete(longPressId)
                                     }}>
-                                        <MaterialComIcon name="delete-outline" size={20} color="white" style={{ marginStart: -5, marginEnd: 5 }} />
-                                        <Text style={{ fontWeight: 'bold', color: 'white' }}>Move to Trash</Text>
+                                        <MaterialComIcon name="delete-forever" size={20} color="white" style={{ marginStart: -5, marginEnd: 5 }} />
+                                        <Text style={{ fontWeight: 'bold', color: 'white' }}>Permanently Delete</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
                         </Modal>
                     </Portal>
 
+
+                    <Portal>
+                        <Dialog visible={permanentDeleteDialog} onDismiss={() => { setPermanentDeleteDialog(false) }} dismissable dismissableBackButton>
+                            <Dialog.Title>Read before deleting!</Dialog.Title>
+                            <Dialog.Content>
+                                <Text variant="bodyMedium">Doing this will permanently delete this note, this action is irreversible. Are you sure?</Text>
+                            </Dialog.Content>
+                            <Dialog.Actions>
+                                <Button onPress={() => {
+                                    setPermanentDeleteDialog(false)
+                                    setPermanentDeleteId('')
+                                }}>Cancel</Button>
+                                <Button onPress={FinallyDelete} labelStyle={{ color: 'red' }} mode="text">Delete</Button>
+                            </Dialog.Actions>
+                        </Dialog>
+                    </Portal>
 
                     {selectionMode ?
                         null

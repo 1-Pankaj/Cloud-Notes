@@ -3,13 +3,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import * as SQLite from 'expo-sqlite'
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Animated, Appearance, Dimensions, Easing, FlatList, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, Dimensions, Easing, FlatList, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { Button, Dialog, Modal, Portal, Surface, Text, TouchableRipple } from "react-native-paper";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen'
 import { useIsFocused } from "@react-navigation/native";
-import { ExpandableSection } from "react-native-ui-lib";
+import { Drawer, ExpandableSection } from "react-native-ui-lib";
 import AnimatedLottieView from "lottie-react-native";
 
 const db = SQLite.openDatabase('CloudNotes.db')
@@ -52,28 +52,8 @@ const Folder = (props) => {
         setFolderName('')
     }
 
-    const AnimateExpansion = () => {
-        if (expanded) {
-            Animated.timing(spinValue,
-                {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: false
-                }
-            ).start(() => {
-                setExpanded(false)
-            })
-        } else {
-            Animated.timing(spinValue,
-                {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: false
-                }
-            ).start(() => {
-                setExpanded(true)
-            })
-        }
+    const AnimateExpansion = (id) => {
+
     }
 
     const CreateTable = () => {
@@ -211,10 +191,7 @@ const Folder = (props) => {
                                             sql.executeSql("DELETE FROM notes WHERE id = (?)", [moveId],
                                                 (sql, rs) => {
                                                     ToastAndroid.show('Moved', ToastAndroid.SHORT)
-                                                    props.navigation.replace('OpenFolder', {
-                                                        foldername: foldername,
-                                                        extraname: extraName
-                                                    })
+                                                    props.navigation.navigate('Home')
                                                 }, error => {
                                                     console.log("Error");
                                                 })
@@ -259,10 +236,9 @@ const Folder = (props) => {
                                                                     sql.executeSql(`DELETE FROM ${moveFolder} WHERE id = (?)`, [moveId],
                                                                         (sql, rs) => {
                                                                             ToastAndroid.show('Moved', ToastAndroid.SHORT)
-                                                                            props.navigation.replace('OpenFolder', {
-                                                                                foldername: moveFolder,
-                                                                                extraname: extraName
-                                                                            })
+                                                                            setMoveFolder('')
+                                                                            setMoveId('')
+                                                                            GetData()
                                                                         }, error => {
                                                                             console.log("error");
                                                                         })
@@ -293,10 +269,9 @@ const Folder = (props) => {
                                                             sql.executeSql(`DELETE FROM ${moveFolder} WHERE id = (?)`, [moveId],
                                                                 (sql, rs) => {
                                                                     ToastAndroid.show('Moved', ToastAndroid.SHORT)
-                                                                    props.navigation.replace('OpenFolder', {
-                                                                        foldername: moveFolder,
-                                                                        extraname: extraName
-                                                                    })
+                                                                    setMoveFolder('')
+                                                                    setMoveId('')
+                                                                    GetData()
                                                                 }, error => {
                                                                     console.log("error");
                                                                 })
@@ -403,10 +378,7 @@ const Folder = (props) => {
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10 }}
                     onPress={() => {
                         moveFolder ?
-                            props.navigation.replace('OpenFolder', {
-                                foldername: moveFolder,
-                                extraname: extraName
-                            })
+                            setMoveFolder('')
                             :
                             props.navigation.navigate('Directory')
                     }}>
@@ -432,37 +404,61 @@ const Folder = (props) => {
                         showsVerticalScrollIndicator={false}
                         renderItem={(item) => {
                             return (
-                                <TouchableOpacity style={{ marginTop: 15 }} activeOpacity={0.6} onPress={() => {
-                                    moveFolder ?
-                                        MoveToThisFolder(item.item.id)
-                                        :
-                                        AnimateExpansion()
-                                }}>
-                                    <View style={{ width: screenWidth - 30, backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10, alignItems: 'center' }}>
-                                        <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', height: 45, justifyContent: 'space-between' }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                <MaterialIcons name={expanded ? 'folder-open' : "folder"} size={28} color="#FFBC01" />
-                                                <TouchableOpacity>
-                                                    <TextInput placeholder={item.item.extraName} numberOfLines={1} autoFocus={false} maxLength={20} blurOnSubmit onChangeText={(text) => {
-                                                        setNewFoldername(text)
-                                                    }} editable={moveFolder ? false : true}
-                                                        placeholderTextColor={colorScheme === 'dark' ? 'white' : '#303030'}
-                                                        cursorColor="#FFBC01" style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20, width: '100%' }} selectTextOnFocus
-                                                        selectionColor="#FFBC01" onFocus={() => { }} onBlur={() => { RenameFolder(item.item.id) }} />
-                                                </TouchableOpacity>
+                                <Drawer disableHaptic
+                                    leftItem={{
+                                        text: 'Open', background: '#FFBC01', onPress: () => {
+                                            props.navigation.navigate('OpenFolder', {
+                                                id: item.item.id,
+                                                foldername: item.item.folderName,
+                                                extraname: item.item.extraName,
+                                                index: item.index
+                                            })
+                                        }
+                                    }}
+                                    rightItems={[{ text: 'Delete', onPress: () => { DeleteFolder(item.item.id) }, background: 'red' }]} onFullSwipeRight={() => { DeleteFolder(item.item.id) }} fullSwipeLeft fullSwipeRight onFullSwipeLeft={() => {
+                                        props.navigation.navigate('OpenFolder', {
+                                            id: item.item.id,
+                                            foldername: item.item.folderName,
+                                            extraname: item.item.extraName,
+                                            index: item.index
+                                        })
+                                    }} style={{ marginTop: 15, borderRadius: 10 }}>
+                                    <TouchableHighlight style={{ borderRadius: 10 }} activeOpacity={0.6} onPress={() => {
+                                        moveFolder ?
+                                            MoveToThisFolder(item.item.id)
+                                            :
+                                            props.navigation.navigate('OpenFolder', {
+                                                id: item.item.id,
+                                                foldername: item.item.folderName,
+                                                extraname: item.item.extraName,
+                                                index: item.index
+                                            })
+                                    }} underlayColor={colorScheme === 'dark' ? '#303030' : 'lightgray'}>
+                                        <View style={{ width: screenWidth - 30, backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10, alignItems: 'center' }}>
+                                            <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', height: 55, justifyContent: 'space-between' }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <MaterialIcons name="folder" size={28} color="#FFBC01" />
+                                                    <TouchableOpacity>
+                                                        <TextInput placeholder={item.item.extraName} numberOfLines={1} autoFocus={false} maxLength={20} blurOnSubmit onChangeText={(text) => {
+                                                            setNewFoldername(text)
+                                                        }} editable={moveFolder ? false : true}
+                                                            placeholderTextColor={colorScheme === 'dark' ? 'white' : '#303030'}
+                                                            cursorColor="#FFBC01" style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20, width: '100%' }} selectTextOnFocus
+                                                            selectionColor="#FFBC01" onFocus={() => { }} onBlur={() => { RenameFolder(item.item.id) }} />
+                                                    </TouchableOpacity>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                    <Text style={{ marginEnd: 20, fontSize: 18 }}>{item.item.count}</Text>
+                                                    <Animated.View style={{
+                                                        transform: [{
+                                                            rotate: spin
+                                                        }]
+                                                    }}>
+                                                        <MaterialIcons name="arrow-forward-ios" size={20} color="#FFBC01" />
+                                                    </Animated.View>
+                                                </View>
                                             </View>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                <Text style={{ marginEnd: 20, fontSize: 18 }}>{item.item.count}</Text>
-                                                <Animated.View style={{
-                                                    transform: [{
-                                                        rotate: spin
-                                                    }]
-                                                }}>
-                                                    <MaterialIcons name="arrow-forward-ios" size={20} color="#FFBC01" />
-                                                </Animated.View>
-                                            </View>
-                                        </View>
-                                        <ExpandableSection expanded={expanded}>
+                                            {/* <ExpandableSection expanded={item.item.expanded? true : false}>
                                             <View style={{ width: screenWidth - 30, marginTop: 20 }}>
                                                 <Text style={{ alignSelf: 'flex-start', marginStart: 20 }}>Created on:           {item.item.date}</Text>
                                                 <Text style={{ alignSelf: 'flex-start', marginStart: 20 }}>Creation time:      {item.item.time}</Text>
@@ -486,9 +482,10 @@ const Folder = (props) => {
                                                     </TouchableOpacity>
                                                 </View>
                                             </View>
-                                        </ExpandableSection>
-                                    </View>
-                                </TouchableOpacity>
+                                        </ExpandableSection> */}
+                                        </View>
+                                    </TouchableHighlight>
+                                </Drawer>
                             )
                         }}
                     />
@@ -500,25 +497,22 @@ const Folder = (props) => {
                     />
                     <Text style={{ fontSize: 18 }}>No folders found, try creating one!</Text>
                 </View>}
-            {moveFolder ?
-                null
-                :
-                <View style={{ width: screenWidth, marginVertical: 10 }}>
-                    <Surface style={{ alignSelf: 'flex-end', marginEnd: 20, borderRadius: 50 }}>
-                        <TouchableRipple borderless style={{
+            <View style={{ width: screenWidth, marginVertical: 10 }}>
+                <Surface style={{ alignSelf: 'flex-end', marginEnd: 20, borderRadius: 50 }}>
+                    <TouchableRipple borderless style={{
+                        width: 60, height: 60, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: 50
+                    }}
+                        onPress={() => { OpenCreateFolderModal() }} rippleColor='#F0CA5E'>
+                        <View style={{
                             width: 60, height: 60, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
                             borderRadius: 50
-                        }}
-                            onPress={() => { OpenCreateFolderModal() }} rippleColor='#F0CA5E'>
-                            <View style={{
-                                width: 60, height: 60, backgroundColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
-                                borderRadius: 50
-                            }}>
-                                <MaterialIcons name="add" size={35} color="white" />
-                            </View>
-                        </TouchableRipple>
-                    </Surface>
-                </View>}
+                        }}>
+                            <MaterialIcons name="add" size={35} color="white" />
+                        </View>
+                    </TouchableRipple>
+                </Surface>
+            </View>
             <Modal visible={openModal} dismissableBackButton onDismiss={() => {
                 setOpenModal(false)
                 setFolderName('')
@@ -563,7 +557,10 @@ const Folder = (props) => {
                         <Text variant="bodyMedium">{dialogMessage}</Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={hideDialog}>Cancel</Button>
+                        <Button onPress={() => {
+                            hideDialog()
+                            GetData()
+                        }}>Cancel</Button>
                         <Button onPress={FinallyDelete} labelStyle={{ color: 'red' }} mode="text">Delete</Button>
                     </Dialog.Actions>
                 </Dialog>

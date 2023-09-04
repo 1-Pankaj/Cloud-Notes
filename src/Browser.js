@@ -194,7 +194,7 @@ const Browser = (props) => {
                     } else {
                         setUriWeb("https://www.google.com/search?q=" + props.route.params.url.trim())
                     }
-                }, 1000);
+                }, 1500);
             }
         }
     }, [])
