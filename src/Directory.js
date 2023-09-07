@@ -63,7 +63,7 @@ const Directory = (props) => {
     const [starredEnabled, setStarredEnabled] = useState(false)
     const [todoEnabled, setTodoEnabled] = useState(false)
     const [folderCount, setFolderCount] = useState(0)
-    
+
 
     const animatedSearchWidth = useRef(new Animated.Value(0)).current
 
@@ -164,7 +164,7 @@ const Directory = (props) => {
         })
     }
 
-    
+
 
     const StarredNotesCheck = () => {
         db.transaction((tx) => {
@@ -715,7 +715,7 @@ const Directory = (props) => {
                             null}
                         {starredEnabled ?
                             <View>
-                                <Divider style={{ width: screenWidth - 40 }} />
+                                <Divider style={{ width: screenWidth - 40, }} />
                                 <TouchableOpacity style={{ borderBottomStartRadius: 10, borderBottomEndRadius: 10 }} activeOpacity={0.6} onPress={() => { StarredNotesCheck() }}>
                                     <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderBottomStartRadius: 10, borderBottomEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>

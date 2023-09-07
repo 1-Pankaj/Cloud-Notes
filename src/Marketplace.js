@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-import { Appearance, Dimensions, FlatList, Image, ScrollView, TouchableOpacity, View, Modal, BackHandler } from "react-native";
+import { Appearance, Dimensions, FlatList, Image, ScrollView, TouchableOpacity, View, BackHandler } from "react-native";
 import { ActivityIndicator, Card, FAB, Portal, ProgressBar, Surface, Text, TouchableRipple, Modal as LoadModal } from "react-native-paper";
 
 import * as SQLite from 'expo-sqlite'
@@ -397,7 +397,7 @@ const Marketplace = (props) => {
                 </Card>
             </LoadModal>
 
-            <Modal animationType="slide" visible={modalMore} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={true}>
+            <LoadModal  visible={modalMore} dismissable onDismiss={()=>{setModalMore(false)}} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={true}>
                 <View style={{ width: screenWidth, height: screenHeight - 20, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4', borderTopStartRadius: 20, borderTopEndRadius: 20, justifyContent: 'center', alignItems: 'center' }}>
                     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginStart: 10, marginTop: 25, marginBottom: 25 }}
                         onPress={() => {
@@ -461,7 +461,7 @@ const Marketplace = (props) => {
                     </ScrollView>
                 </View>
 
-            </Modal>
+            </LoadModal>
         </SafeAreaView>
     )
 }

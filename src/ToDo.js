@@ -278,7 +278,7 @@ const ToDo = (props) => {
         db.transaction((tx) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS recordTasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(100) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, tasknum VARCHAR(200) NOT NULL)", [],
                 (sql, rs) => {
-                    let title = 'Task Record For '+new Date()
+                    let title = 'Task Record For ' + new Date()
                     sql.executeSql("INSERT INTO recordTasks (title, date, time, tasknum) values (?,?,?,?)", [title, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), allCount],
                         (sql, rs) => {
                             setSnackbarVisible(true)
@@ -457,26 +457,31 @@ const ToDo = (props) => {
                     <Text style={{ fontWeight: 'bold', fontSize: 17, textAlign: 'center', marginVertical: 20 }}>ToDo List is Empty, Try adding some!</Text>
                 </View>}
             <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-evenly', width: screenWidth, marginBottom: 20 }}>
-                <View style={{ width: screenWidth - 100, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: inputFocused ? '#FFBC01' : 'gray', borderRadius: 20 }}>
-
-                    <TextInputBasic placeholder="Add new ToDo" style={{ width: '90%', paddingStart: 10, paddingTop: 15, paddingBottom: 15, paddingEnd: 10, color: colorScheme === 'dark' ? 'white' : '#101010' }}
+                <TouchableOpacity style={{ marginStart: 5 }}>
+                    <MaterialIcons name="keyboard-voice" size={25} color="#FFBC01" />
+                </TouchableOpacity>
+                <View style={{
+                    width: screenWidth - 60, alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: inputFocused ? '#FFBC01' : colorScheme === 'dark' ? 'gray' : 'lightgray', backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 50,
+                    flexDirection: 'row',
+                }}>
+                    <TextInputBasic placeholder="Add new ToDo" style={{ width: '75%', marginStart: 20, paddingTop: 13, paddingBottom: 13, color: colorScheme === 'dark' ? 'white' : '#101010' }}
                         underlineColor="transparent" multiline={false} maxLength={150}
                         cursorColor="#FFBC01" selectionColor="#FFBC01" ref={inputRef} onFocus={() => { setInputFocused(true) }}
                         onBlur={() => { setInputFocused(false) }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : 'gray'}
                         activeUnderlineColor="transparent" value={task} onChangeText={(txt) => { setTask(txt) }}
                     />
-
+                    <TouchableOpacity style={{
+                        width: 45, height: 45, backgroundColor: '#FFBC01', borderRadius: 30, alignItems: 'center',
+                        justifyContent: 'center', marginEnd: 5
+                    }} onPress={() => {
+                        inputRef.current.blur()
+                        AddData(task.trim())
+                        setTask('')
+                    }}>
+                        <MaterialIcons name="add" size={25} color="white" />
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={{
-                    width: 55, height: 55, backgroundColor: '#FFBC01', borderRadius: 30, alignItems: 'center',
-                    justifyContent: 'center'
-                }} onPress={() => {
-                    inputRef.current.blur()
-                    AddData(task.trim())
-                    setTask('')
-                }}>
-                    <MaterialIcons name="add" size={25} color="white" />
-                </TouchableOpacity>
+
                 <Portal>
                     <Snackbar visible={snackbarVisible} onDismiss={() => { setSnackbarVisible(false) }}
                         action={{
@@ -627,7 +632,7 @@ const ToDo = (props) => {
                                 </DataTable.Header>
                                 {taskData.slice(from, to).map((item, index) => {
                                     return (
-                                        <DataTable.Row key={item.id} onPress={() => { setTaskRecord(item.title)}}>
+                                        <DataTable.Row key={item.id} onPress={() => { setTaskRecord(item.title) }}>
                                             <DataTable.Cell>{item.title}</DataTable.Cell>
                                             <DataTable.Cell numeric>{item.date}</DataTable.Cell>
                                             <DataTable.Cell numeric>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</DataTable.Cell>
@@ -660,7 +665,7 @@ const ToDo = (props) => {
                                             <Text style={{ marginStart: 20, fontSize: 18, width: 200, paddingVertical: 15, fontWeight: 'bold', }}
                                             >{taskRecord.trim()}</Text>
                                         </View>
-                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15, marginTop:15 }} onPress={() => { setTaskRecord('')}}>
+                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15, marginTop: 15 }} onPress={() => { setTaskRecord('') }}>
                                             <MaterialIcons name="close" size={15} color={colorScheme === 'dark' ? 'white' : '#101010'} />
                                         </TouchableOpacity>
                                     </View>

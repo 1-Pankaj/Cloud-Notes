@@ -6,12 +6,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Checkbox, Dialog, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
+import { Button, Card, Checkbox, Dialog, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
 import * as Speech from 'expo-speech'
 
+import Voice from '@react-native-voice/voice'
 import MaterialIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import MaterialComIcon from '@expo/vector-icons/MaterialIcons'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -83,8 +84,11 @@ const HomeScreen = (props) => {
     const [permanentDeleteId, setPermanentDeleteId] = useState('')
     const [permanentDeleteDialog, setPermanentDeleteDialog] = useState(false)
     const [reminderData, setReminderData] = useState(null)
-
-
+    const [recording, setRecording] = useState(false)
+    const [results, setResults] = useState([])
+    const [resultsText, setResultsText] = useState('')
+    const [expandExtra, setExpandExtra] = useState(false)
+    const [recordingModal, setRecordingModal] = useState(false)
 
     const openMenu = () => setMenuVisible(true);
 
@@ -100,6 +104,54 @@ const HomeScreen = (props) => {
 
     const [fabButton, setFabButton] = useState(null)
 
+
+    const StartStopRecording = async () => {
+        if (recording === true) {
+            Voice.stop()
+            setRecording(false)
+        } else {
+            await Voice.start('en-US');
+            setRecording(true)
+        }
+    }
+
+    const onSpeechResults = (res) => {
+        setResults(res.value)
+        res.value.map((res, index) => {
+            setResultsText(res.trim())
+            console.log(res);
+            if(res.includes('note') || res.includes('new note')){
+                props.navigation.navigate('CreateNote')
+            }
+            else if(res.includes('directory') || res.includes('Directory')){
+                props.navigation.navigate('Directory')
+            }
+            else if(res.includes('archive') || res.includes('Archive')){
+                props.navigation.navigate('ArchivePage')
+            }
+            setRecordingModal(false)
+        })
+    }
+    const onSpeechEnd = (res) => {
+        setRecording(false)
+    }
+
+    const onSpeechError = (error) => {
+        setRecording(false)
+        Voice.stop().then(Voice.destroy())
+    }
+
+
+    useEffect(() => {
+
+        Voice.onSpeechError = onSpeechError
+        Voice.onSpeechResults = onSpeechResults
+        Voice.onSpeechEnd = onSpeechEnd
+
+        return () => {
+            Voice.destroy().then(Voice.removeAllListeners);
+        }
+    }, [])
 
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
 
@@ -1085,7 +1137,7 @@ const HomeScreen = (props) => {
                             }
                         }
                         setReminderData(results)
-                    }else{
+                    } else {
                         setReminderData(null)
                     }
                 }, error => {
@@ -1963,24 +2015,40 @@ const HomeScreen = (props) => {
                     {selectionMode ?
                         null
                         :
-                        <Tooltip title="Browse Internet">
-                            <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => {
-                                setFabVisible(false)
-                                props.navigation.navigate("Browser")
-                            }}>
-                                <Ionicons name="globe-outline" size={25} color="#FFBC01" />
-                            </TouchableOpacity>
-                        </Tooltip>}
+                        <View>
+                            <ExpandableSection top expanded={expandExtra}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                                    <Tooltip title="Browse Internet">
+                                        <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => {
+                                            setFabVisible(false)
+                                            setExpandExtra(false)
+                                            props.navigation.navigate("Browser")
+                                        }}>
+                                            <Ionicons name="globe-outline" size={25} color="#FFBC01" />
+                                        </TouchableOpacity>
+                                    </Tooltip>
+                                </View>
+                            </ExpandableSection>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
 
-                    {selectionMode ?
-                        null
-                        :
-                        refreshing ?
-                            <AnimatedLottieView source={require('../assets/refreshing.json')} autoPlay loop style={{ width: 30, marginBottom: 10, marginEnd: 25 }} />
-                            :
-                            <View>
-                                <Text style={{ marginBottom: 10, marginEnd: 25, fontSize: 13, fontFamily: 'mulish' }}>{noteCount} {noteCount == 1 ? 'Note' : 'Notes'}</Text>
-                            </View>}
+                                <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => { setExpandExtra(!expandExtra) }}>
+                                    <MaterialIcons name={expandExtra ? 'close' : "circle-multiple-outline"} size={25} color="#FFBC01" />
+                                </TouchableOpacity>
+
+                                <ExpandableSection expanded={expandExtra}>
+                                    <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => {
+                                        setRecordingModal(true)
+                                    }}>
+                                        <MaterialComIcon name="keyboard-voice" size={25} color="#FFBC01" />
+                                    </TouchableOpacity>
+                                </ExpandableSection>
+
+                            </View>
+
+                        </View>
+                    }
+
+
 
                     <View style={{ marginEnd: 35 }}><Text style={{ color: 'transparent' }}>0</Text></View>
                     <Portal>
@@ -2117,6 +2185,21 @@ const HomeScreen = (props) => {
                                 <Button onPress={FinallyDelete} labelStyle={{ color: 'red' }} mode="text">Delete</Button>
                             </Dialog.Actions>
                         </Dialog>
+                    </Portal>
+                    <Portal>
+                        <Modal dismissable dismissableBackButton visible={recordingModal} onDismiss={() => { setRecordingModal(false) }}
+                            style={{ alignItems: 'center', justifyContent: 'center' }}>
+                            <TouchableHighlight style={{ width: 150, height: 150, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : 'white', borderRadius: 100, alignItems: 'center', justifyContent: 'center' }}
+                            onPress={()=>{StartStopRecording()}} underlayColor={colorScheme === 'dark'? '#303030' : '#dedede'}>
+                                
+                                    {recording ?
+                                        <Card style={{ width: 150, height: 150, borderRadius: 100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
+                                            <MaterialComIcon name="keyboard-voice" size={50} color="red" />
+                                        </Card>
+                                        :
+                                        <MaterialComIcon name="keyboard-voice" size={50} color="#FFBC01" />}
+                            </TouchableHighlight>
+                        </Modal>
                     </Portal>
 
                     {selectionMode ?

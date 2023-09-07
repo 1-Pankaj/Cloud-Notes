@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
-import { Animated, Appearance, BackHandler, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import {  Appearance, BackHandler, Dimensions, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
 
 
@@ -8,7 +8,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 
 import * as SQLite from 'expo-sqlite'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import AntDesign from '@expo/vector-icons/AntDesign'
 import * as ImagePicker from 'expo-image-picker'
 
 import * as SplashScreen from 'expo-splash-screen';
@@ -70,14 +69,10 @@ const CreateNote = (props) => {
 
     const StartStopRecording = async () => {
         if (recording === true) {
-            ToastAndroid.show("Speech recognition stopped", ToastAndroid.SHORT)
             Voice.stop()
-            setRecording(false)
         } else {
             await Voice.start('en-US');
             setRecording(true)
-            ToastAndroid.show("Speech recognition started", ToastAndroid.SHORT)
-
         }
     }
 
@@ -87,16 +82,21 @@ const CreateNote = (props) => {
             setNoteText(noteText.trim() + '\n' + res.trim())
         })
     }
+    const onSpeechEnd = (res) => {
+        setRecording(false)
+    }
 
     const onSpeechError = (error) => {
         setRecording(false)
         Voice.stop().then(Voice.destroy())
     }
 
+
     useEffect(() => {
 
         Voice.onSpeechError = onSpeechError
         Voice.onSpeechResults = onSpeechResults
+        Voice.onSpeechEnd = onSpeechEnd
 
         return () => {
             Voice.destroy().then(Voice.removeAllListeners);
