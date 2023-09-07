@@ -29,7 +29,6 @@ const ArchiveSplash = (props) => {
                     props.navigation.navigate("Home")
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -51,7 +50,7 @@ const ArchiveSplash = (props) => {
                     source={require('../../assets/archivesplash.json')}
                     loop autoPlay
                     style={{ width: screenWidth, height: 300 }}/>
-                <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 22, textAlign: 'center' }}>
+                <Text style={{  fontWeight: 'bold', fontSize: 22, textAlign: 'center' }}>
                     Your Archived messages are safe in Directory!</Text>
                 <Text style={{ fontWeight: 'bold', fontSize: 14, textAlign: 'center', paddingHorizontal: 10 }}>
                     Notes you archive are stored safely in your Directory of CloudNotes, simply Press top left back button on home page to open your Directory.{'\n\n'}
@@ -61,7 +60,7 @@ const ArchiveSplash = (props) => {
                     mode="contained"
                     style={{ justifyContent: 'center', alignItems: 'center' }}
                     onPress={() => { WriteToSplash() }}>
-                    <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, color: 'white' }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 17, color: 'white' }}>
                         Continue
                     </Text>
                 </Button>

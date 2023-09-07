@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Appearance, Dimensions, FlatList, ImageBackground, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { Appearance, BackHandler, Dimensions, FlatList, ImageBackground, ToastAndroid, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
 import { Button, Dialog, Menu, Portal, Text } from "react-native-paper";
@@ -50,13 +50,23 @@ const StarredNotes = (props) => {
 
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
+
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const [data, setData] = useState(null)
 
@@ -87,11 +97,9 @@ const StarredNotes = (props) => {
                                 setData(results)
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -130,7 +138,6 @@ const StarredNotes = (props) => {
                     GetData()
                     ToastAndroid.show('Note Unstarred!', ToastAndroid.SHORT)
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -143,7 +150,6 @@ const StarredNotes = (props) => {
                     GetData()
                     ToastAndroid.show("All Notes Unstarred", ToastAndroid.SHORT)
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -185,17 +191,13 @@ const StarredNotes = (props) => {
                                                 GetData()
                                                 ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                                             }, error => {
-                                                console.log("error");
                                             })
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -226,17 +228,13 @@ const StarredNotes = (props) => {
                                                 GetData()
                                                 ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                                             }, error => {
-                                                console.log("error");
                                             })
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("error");
                 })
         })
     }
@@ -256,7 +254,7 @@ const StarredNotes = (props) => {
     return (
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }}>
-                <TouchableOpacity style={{ marginTop: 20, marginStart: 15 }} onPress={() => { props.navigation.navigate('Home') }}>
+                <TouchableOpacity style={{ marginTop: 20, marginStart: 15 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
                         <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom: 2 }}>Starred Notes</Text>

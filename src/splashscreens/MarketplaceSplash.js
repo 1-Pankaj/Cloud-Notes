@@ -20,7 +20,6 @@ const MarketplaceSplash = (props) => {
             (sql,rs)=>{
                 props.navigation.replace('Marketplace')
             }, error =>{
-                console.log("Error");
             })
         })
     }

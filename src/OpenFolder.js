@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Appearance, Dimensions, FlatList, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Appearance, BackHandler, Dimensions, FlatList, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
 import { useIsFocused } from "@react-navigation/native";
@@ -44,7 +44,6 @@ const OpenFolder = (props) => {
                         }
                     }
                 }, error => {
-                    console.log("Error 11");
                 })
         })
     }
@@ -57,7 +56,17 @@ const OpenFolder = (props) => {
             extraName: extraName
         })
     }
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
 
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const DeleteNote = (id) => {
         db.transaction(tx => {
@@ -91,21 +100,16 @@ const OpenFolder = (props) => {
                                                             GetData()
                                                             ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
                                                         }, error => {
-                                                            console.log("error");
                                                         })
                                                 }, error => {
-                                                    console.log("Error");
                                                 })
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }, error => {
-                                console.log("error");
                             })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -137,7 +141,6 @@ const OpenFolder = (props) => {
                         setData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -149,7 +152,6 @@ const OpenFolder = (props) => {
                         setCreatedTime(rs.rows._array[0].time)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -173,7 +175,7 @@ const OpenFolder = (props) => {
     return (
         <SafeAreaView style={Styles.container}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
-                <TouchableOpacity style={{ marginStart: 10, flexDirection: 'row', alignItems: 'center' }} onPress={() => { props.navigation.navigate('Folder') }}>
+                <TouchableOpacity style={{ marginStart: 10, flexDirection: 'row', alignItems: 'center' }} onPress={() => { props.navigation.goBack() }}>
                     <MaterialIcons name="arrow-back-ios" size={27} color="#FFBC01" />
                     <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>{extraName}</Text>
                 </TouchableOpacity>

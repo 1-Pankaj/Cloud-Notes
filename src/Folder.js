@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import * as SQLite from 'expo-sqlite'
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Animated, Appearance, Dimensions, Easing, FlatList, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, BackHandler, Dimensions, Easing, FlatList, TextInput, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { Button, Dialog, Modal, Portal, Surface, Text, TouchableRipple } from "react-native-paper";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useFonts } from "expo-font";
@@ -61,7 +61,6 @@ const Folder = (props) => {
             tx.executeSql('CREATE TABLE IF NOT EXISTS allfolders(id INTEGER PRIMARY KEY AUTOINCREMENT, folderName VARCHAR(20) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, expanded Boolean NOT NULL, extraName VARCHAR(20) NOT NULL)', [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Eeeerror");
                 })
         })
     }
@@ -86,7 +85,6 @@ const Folder = (props) => {
                                     count = rs.rows.length
                                     results.push({ id: id, folderName: folderName, date: date, time: time, count: count, expanded: expanded, extraName: extraName })
                                 }, error => {
-                                    console.log("ErrorFolderName");
                                 })
 
                         }
@@ -96,7 +94,6 @@ const Folder = (props) => {
                         setData(null)
                     }
                 }, error => {
-                    console.log("Eerror");
                 })
         })
     }
@@ -108,7 +105,6 @@ const Folder = (props) => {
                     (sql, rs) => {
                         GetData()
                     }, error => {
-                        console.log("Error");
                     })
             })
         } else {
@@ -139,10 +135,8 @@ const Folder = (props) => {
                                                     setFolderName('')
                                                     setOpenModal(false)
                                                 }, error => {
-                                                    console.log("error");
                                                 })
                                         }, error => {
-                                            console.log("E11rror");
                                         })
                                 }
                             }
@@ -155,14 +149,11 @@ const Folder = (props) => {
                                             setFolderName('')
                                             setOpenModal(false)
                                         }, error => {
-                                            console.log("error");
                                         })
                                 }, error => {
-                                    console.log("E11rror");
                                 })
                         }
                     }, error => {
-                        console.log("error");
                     })
             })
         }
@@ -193,17 +184,13 @@ const Folder = (props) => {
                                                     ToastAndroid.show('Moved', ToastAndroid.SHORT)
                                                     props.navigation.navigate('Home')
                                                 }, error => {
-                                                    console.log("Error");
                                                 })
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }, error => {
-                        console.log("Error");
                     })
             })
         } else {
@@ -240,17 +227,13 @@ const Folder = (props) => {
                                                                             setMoveId('')
                                                                             GetData()
                                                                         }, error => {
-                                                                            console.log("error");
                                                                         })
                                                                 }, error => {
-                                                                    console.log("Error");
                                                                 })
                                                         }
                                                     }, error => {
-                                                        console.log("Error");
                                                     })
                                             }, error => {
-                                                console.log("Error");
                                             })
                                     } else {
                                         sql.executeSql(`SELECT * FROM ${moveFolder} WHERE id = (?)`, [moveId],
@@ -273,24 +256,19 @@ const Folder = (props) => {
                                                                     setMoveId('')
                                                                     GetData()
                                                                 }, error => {
-                                                                    console.log("error");
                                                                 })
                                                         }, error => {
-                                                            console.log("Error");
                                                         })
 
                                                 }
                                             }, error => {
-                                                console.log("error");
                                             })
 
                                     }
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }, error => {
-                        console.log("Error");
                     })
             })
         }
@@ -318,28 +296,34 @@ const Folder = (props) => {
                                         GetData()
                                         setExpanded(false)
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }, error => {
-                                console.log("Error");
                             })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
 
-    const DeleteData = () => {
-        db.transaction((tx) => {
-            tx.executeSql("DELETE FROM allfolders", [],
-                (sql, rs) => {
-                    GetData()
-                }, error => {
-                    console.log("error");
-                })
-        })
+
+    function handleBackButtonClick() {
+        if (moveFolder) {
+            setMoveFolder('')
+            setMoveId('')
+            return true
+        } else {
+            props.navigation.goBack()
+            return true
+        }
     }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
+
 
     const isFocused = useIsFocused()
 
@@ -355,7 +339,6 @@ const Folder = (props) => {
             setMoveId(props.route.params.id)
             setExtraName(props.route.params.extraName)
         }
-        // DeleteData()
     }, [isFocused])
 
     const [fontsLoaded] = useFonts({
@@ -380,7 +363,7 @@ const Folder = (props) => {
                         moveFolder ?
                             setMoveFolder('')
                             :
-                            props.navigation.navigate('Directory')
+                            props.navigation.goBack()
                     }}>
                     {moveFolder ?
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>

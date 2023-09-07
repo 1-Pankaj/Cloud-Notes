@@ -20,7 +20,6 @@ const FolderSplash = (props) => {
                 (sql, rs) => {
                     props.navigation.replace('Folder')
                 }, error => {
-                    console.log("Error");
                 })
         })
     }

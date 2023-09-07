@@ -29,7 +29,6 @@ const HomeSplash = (props) => {
                     props.navigation.navigate("Home")
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }

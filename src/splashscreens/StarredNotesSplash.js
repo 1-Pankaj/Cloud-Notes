@@ -42,7 +42,6 @@ const StarredNotesSplash = (props) =>{
             (sql,rs)=>{
                 props.navigation.replace('StarredNotes')
             }, error =>{
-
             })
         })
     }

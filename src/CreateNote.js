@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
-import { Animated, Appearance, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
-import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text } from "react-native-paper";
+import { Animated, Appearance, BackHandler, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
 
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
@@ -18,6 +18,7 @@ import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice'
+import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { ColorPicker, Colors, ExpandableSection } from "react-native-ui-lib";
 
 
@@ -26,6 +27,7 @@ SplashScreen.preventAutoHideAsync();
 const db = SQLite.openDatabase("CloudNotes.db")
 
 const screenWidth = Dimensions.get("window").width
+const screenHeight = Dimensions.get("window").height
 
 const CreateNote = (props) => {
 
@@ -48,9 +50,12 @@ const CreateNote = (props) => {
     const [extraName, setExtraName] = useState('')
     const [editing, setEditing] = useState(false)
     const [editingId, setEditingId] = useState('')
+    const [expandedView, setExpandedView] = useState(false)
+    const [focusedTitle, setFocusedTitle] = useState(false)
+    const [pageColors, setPageColors] = useState([Colors.black, Colors.white, '#FFBC01'])
+    const [fontColors, setFontColors] = useState([Colors.black, Colors.white, '#FFBC01'])
 
 
-    const colorSection = new Animated.Value(0)
     const [open, setOpen] = useState(false)
     const [pageColor, setPageColor] = useState('default')
     const [fontColor, setFontColor] = useState('default')
@@ -84,7 +89,6 @@ const CreateNote = (props) => {
     }
 
     const onSpeechError = (error) => {
-        console.log(error);
         setRecording(false)
         Voice.stop().then(Voice.destroy())
     }
@@ -138,7 +142,6 @@ const CreateNote = (props) => {
                             }
                         },
                         error => {
-                            console.log("Error");
                         })
                 })
             }
@@ -157,7 +160,6 @@ const CreateNote = (props) => {
                                 setSaveButton("Update archive")
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 })
             }
@@ -179,7 +181,6 @@ const CreateNote = (props) => {
                                 setSaveButton("Update Star")
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 })
             } else if (props.route.params.page == 'Folders') {
@@ -199,7 +200,6 @@ const CreateNote = (props) => {
                                 setFontSize(Math.floor(rs.rows.item(0).fontSize))
                                 setSaveButton("Save to Folder")
                             }, error => {
-                                console.log("error");
                             })
                     })
                     setEditingId(props.route.params.id)
@@ -318,21 +318,13 @@ const CreateNote = (props) => {
 
 
     const UpdateData = (id, title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        if (refTitle.current.isFocused() == true) {
-            refTitle.current.blur()
-        }
-        if (refInput.current.isFocused() == true) {
-            refInput.current.blur()
-        }
         if (titleText || noteText) {
             db.transaction(tx => {
                 tx.executeSql(`UPDATE notes SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
                     (sql, rs) => {
-                        console.log("Done");
                         props.navigation.navigate("Home")
                     },
                     error => {
-                        console.log("Error");
                     })
             })
         }
@@ -341,81 +333,75 @@ const CreateNote = (props) => {
 
 
     const SaveToFolder = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        if (refTitle.current.isFocused() == true) {
-            refTitle.current.blur()
-        }
-        if (refInput.current.isFocused() == true) {
-            refInput.current.blur()
-        }
+        
         if (titleText || noteText) {
             if (editing) {
                 db.transaction(tx => {
                     tx.executeSql(`UPDATE ${folderName} set title = (?),note = (?),date =(?),time = (?),pageColor = (?),fontColor =(?),fontStyle = (?),fontSize = (?) WHERE id = ${editingId}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
                         (sql, rs) => {
-                            console.log("Done");
                             props.navigation.navigate('OpenFolder', {
                                 foldername: folderName,
                                 extraname: extraName
                             })
                         },
                         error => {
-                            console.log("Error");
                         })
                 })
             } else {
                 db.transaction(tx => {
                     tx.executeSql(`INSERT INTO ${folderName}(title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
                         (sql, rs) => {
-                            console.log("Done");
                             props.navigation.navigate('OpenFolder', {
                                 foldername: folderName,
                                 extraname: extraName
                             })
                         },
                         error => {
-                            console.log("Error");
                         })
                 })
             }
         }
 
     }
+    function handleBackButtonClick() {
+        if (expandedView == true) {
+            setExpandedView(false)
+            return true;
+        } else {
+            props.navigation.goBack()
+            return true
+        }
+    }
 
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [expandedView, props])
 
 
     const UpdateArchive = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        if (refTitle.current.isFocused() == true) {
-            refTitle.current.blur()
-        }
-        if (refInput.current.isFocused() == true) {
-            refInput.current.blur()
-        }
+        
         if (titleText || noteText) {
             db.transaction((tx) => {
                 tx.executeSql(`UPDATE archived SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${props.route.params.id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
                     (sql, rs) => {
                         props.navigation.navigate('ArchivePage')
                     }, error => {
-                        console.log("Error");
                     })
             })
         }
     }
 
     const UpdateStarred = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        if (refTitle.current.isFocused() == true) {
-            refTitle.current.blur()
-        }
-        if (refInput.current.isFocused() == true) {
-            refInput.current.blur()
-        }
+        
         if (titleText || noteText) {
             db.transaction((tx) => {
                 tx.executeSql(`UPDATE starrednotes SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${props.route.params.id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
                     (sql, rs) => {
                         props.navigation.navigate('StarredNotes')
                     }, error => {
-                        console.log("Error");
                     })
             })
         }
@@ -432,7 +418,6 @@ const CreateNote = (props) => {
         } else if (prop > 75 || prop == 100) {
             setFontSize(30)
         } else {
-            console.log("Error");
         }
     }
 
@@ -454,7 +439,6 @@ const CreateNote = (props) => {
                 (sql, rs) => {
                     ToastAndroid.show(`Note ${title} Starred!`, ToastAndroid.SHORT)
                 }, error => {
-                    console.log("error");
                 })
         })
     }
@@ -466,14 +450,12 @@ const CreateNote = (props) => {
                 (sql, rs) => {
                     sql.executeSql("SELECT * FROM notes", [],
                         (sql, rs) => {
-                            props.navigation.navigate("Home")
+                            props.navigation.goBack()
                         },
                         error => {
-                            console.log("Error");
                         })
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -498,220 +480,317 @@ const CreateNote = (props) => {
 
 
     const SaveToDatabase = () => {
-        if (titleText === "" && noteText === "") {
-            if (refTitle.current.isFocused() == true) {
-                refTitle.current.blur()
-            }
-            if (refInput.current.isFocused() == true) {
-                refInput.current.blur()
-            }
-
-        } else {
-            InsertData(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
-        }
+        InsertData(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
     }
 
 
     return (
-        <View
-            enabled={true} style={{ flex: 1 }}
-            behavior="padding">
-
-            <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
-                <View style={[Styles.container, { justifyContent: 'space-between', }]}>
-                    <KeyboardAvoidingView style={{ width: screenWidth, alignItems: 'center', height: '90%' }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
-                        <View style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.3, alignSelf: 'center', marginTop: -500 }} />
-                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <TouchableOpacity onPress={() => {
-                                saveButton == 'Save to Folder' ?
-                                    props.navigation.navigate('OpenFolder', {
-                                        foldername: folderName,
-                                        extraname: extraName
-                                    })
-                                    :
-                                    props.navigation.navigate("Home")
-                            }} style={{ margin: 20 }}>
-                                <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+        <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
+            <View style={[Styles.container, { justifyContent: 'space-between', }]}>
+                <View style={{ width: screenWidth, alignItems: 'center', height: '90%', }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
+                    <View style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.6, alignSelf: 'center', marginTop: -500 }} />
+                    <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <TouchableOpacity onPress={() => {
+                            saveButton == 'Save to Folder' ?
+                                props.navigation.navigate('OpenFolder', {
+                                    foldername: folderName,
+                                    extraname: extraName
+                                })
+                                :
+                                props.navigation.goBack()
+                        }} style={{ margin: 20 }}>
+                            <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <TouchableOpacity style={{ marginEnd: 30 }} onPress={() => { setOpen(!open) }}>
+                                <Ionicons name={open ? "close" : "color-fill-outline"} size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
                             </TouchableOpacity>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <TouchableOpacity style={{ marginEnd: 30 }} onPress={() => { setOpen(!open) }}>
-                                    <Ionicons name={open ? "close" : "color-fill-outline"} size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    saveButton === "Update" ?
-                                        UpdateData(props.route.params.id, titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                            <TouchableOpacity onPress={() => {
+                                saveButton === "Update" ?
+                                    UpdateData(props.route.params.id, titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                    :
+                                    saveButton == "Update archive" ?
+                                        UpdateArchive(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
                                         :
-                                        saveButton == "Update archive" ?
-                                            UpdateArchive(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                        saveButton == 'Update Star' ?
+                                            UpdateStarred(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
                                             :
-                                            saveButton == 'Update Star' ?
-                                                UpdateStarred(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                            saveButton == 'Save to Folder' ?
+                                                SaveToFolder(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
                                                 :
-                                                saveButton == 'Save to Folder' ?
-                                                    SaveToFolder(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
-                                                    :
-                                                    SaveToDatabase()
-                                }}>
-                                    <Text style={{
-                                        color: pageColor === 'default' ? "#FFBC01" : 'black', fontSize: 19,
-                                        marginEnd: 20, fontFamily: 'mulish'
-                                    }}>{saveButton}</Text>
-                                </TouchableOpacity>
+                                                SaveToDatabase()
+                            }}>
+                                <Text style={{
+                                    color: pageColor === 'default' ? "#FFBC01" : 'black', fontSize: 19,
+                                    marginEnd: 20, fontFamily: 'mulish'
+                                }}>{saveButton}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <ExpandableSection
+                        top={false}
+                        expanded={open}>
+                        <View style={{ width: screenWidth }}>
+
+                            <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Page Colour</Text>
+                            <View style={{ alignItems: 'flex-start', width: screenWidth }}>
+                                <ColorPicker
+                                    colors={pageColors}
+                                    initialColor={Colors.green10}
+                                    value={'#FFBC01'}
+                                    center doneButtonColor="#FFBC01" visible
+                                    backgroundColor="transparent"
+                                    onDismiss={() => { }}
+                                    onSubmit={(color) => {
+                                        let colorsArray = pageColors
+                                        colorsArray.push(color)
+                                        setPageColors(colorsArray)
+                                        setPageColor(color)
+                                        setOpen(false)
+                                    }}
+                                    onValueChange={(color) => {
+                                        UpdateColor(color)
+                                        setOpen(false)
+                                    }}
+                                />
                             </View>
                         </View>
-                        <ExpandableSection
-                            top={false}
-                            expanded={open}>
-                            <View style={{ width: screenWidth }}>
-
-                                <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Page Colour</Text>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
-                                    <ColorPicker
-                                        colors={[Colors.blue10, Colors.yellow10, Colors.green30, Colors.purple20, Colors.white, Colors.black]}
-                                        initialColor={Colors.green10}
-                                        value={'#FFBC01'}
-                                        center doneButtonColor="#FFBC01" visible
-                                        backgroundColor="transparent"
-                                        onDismiss={() => { }}
-                                        onSubmit={(color) => UpdateColor(color)}
-                                        onValueChange={(color) => UpdateColor(color)}
-                                    />
-                                </View>
-                            </View>
-                            <View style={{ width: screenWidth }}>
-                                <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Colour</Text>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', width: screenWidth }}>
-                                    <ColorPicker
-                                        colors={[Colors.blue10, Colors.yellow10, Colors.green30, Colors.purple20, Colors.white, Colors.black]}
-                                        initialColor={Colors.green10}
-                                        value={'#FFBC01'}
-                                        center doneButtonColor="#FFBC01" visible
-                                        backgroundColor="transparent"
-                                        onDismiss={() => { }}
-                                        onSubmit={(color) => setFontColor(color)}
-                                        onValueChange={(color) => setFontColor(color)}
-                                    />
-                                </View>
-                            </View>
-                            <View style={{ width: screenWidth, marginBottom: 5 }}>
-                                <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Style</Text>
-                                <ScrollView horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{ alignItems: 'center', marginBottom: 20, marginStart: 20, marginTop: 10, marginEnd: 20 }}>
-                                    <Chip selected={fontStyle === 'default' ? true : false} onPress={() => { setFontStyle('default') }} mode="outlined" style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontFamily: 'mulish', fontSize: 16 }}>Default</Text></Chip>
-                                    <Chip selected={fontStyle === 'amatic' ? true : false} onPress={() => { setFontStyle('amatic') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined" ><Text style={{ fontFamily: 'amatic', fontSize: 18 }}>Amatic</Text></Chip>
-                                    <Chip selected={fontStyle === 'dancingspirit' ? true : false} onPress={() => { setFontStyle('dancingspirit') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'dancingspirit', fontSize: 18 }}>Dancing Spirit</Text></Chip>
-                                    <Chip selected={fontStyle === 'gochihand' ? true : false} onPress={() => { setFontStyle('gochihand') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'gochihand', fontSize: 18 }}>Gochihand</Text></Chip>
-                                    <Chip selected={fontStyle === 'greatvibes' ? true : false} onPress={() => { setFontStyle('greatvibes') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'greatvibes', fontSize: 16 }}>Great Vibes</Text></Chip>
-                                    <Chip selected={fontStyle === 'kaushan' ? true : false} onPress={() => { setFontStyle('kaushan') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'kaushan', fontSize: 16 }}>Kaushan</Text></Chip>
-                                    <Chip selected={fontStyle === 'thegreat' ? true : false} onPress={() => { setFontStyle('thegreat') }} style={{ marginStart: 20, marginEnd: 40, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'thegreat', fontSize: 16 }}>The Great Frederika</Text></Chip>
-                                </ScrollView>
-                            </View>
-                            <View style={{ width: screenWidth, }}>
-                                <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Size</Text>
-                                <Slider value={0} thumbTintColor="#FFBC01" maximumTrackTintColor="gray" minimumTrackTintColor="#FFBC01" onValueChange={(tx) => { SetFontSizeSlider(Math.floor(tx)) }}
-                                    minimumValue={0} maximumValue={100}
+                        <View style={{ width: screenWidth }}>
+                            <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Colour</Text>
+                            <View style={{ alignItems: 'flex-start', width: screenWidth }}>
+                                <ColorPicker
+                                    colors={fontColors}
+                                    initialColor={Colors.green10}
+                                    value={'#FFBC01'}
+                                    center doneButtonColor="#FFBC01" visible
+                                    backgroundColor="transparent"
+                                    onDismiss={() => { }}
+                                    onSubmit={(color) => {
+                                        let colorsArray = fontColors
+                                        colorsArray.push(color)
+                                        setFontColors(colorsArray)
+                                        setFontColor(color)
+                                        setOpen(false)
+                                    }}
+                                    onValueChange={(color) => {
+                                        setFontColor(color)
+                                        setOpen(false)
+                                    }}
                                 />
-                                <View style={{ width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, alignItems: 'center' }}>
-                                    <FontAwesome name="font" size={12} color={colorScheme === 'dark' ? 'white' : 'black'} />
-                                    <FontAwesome name="font" size={20} color={colorScheme === 'dark' ? 'white' : 'black'} />
-
-                                </View>
                             </View>
-                        </ExpandableSection>
+                        </View>
+                        <View style={{ width: screenWidth, marginBottom: 5 }}>
+                            <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Style</Text>
+                            <ScrollView horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ alignItems: 'center', marginBottom: 20, marginStart: 20, marginTop: 10, marginEnd: 20 }}>
+                                <Chip selected={fontStyle === 'default' ? true : false} onPress={() => { setFontStyle('default') }} mode="outlined" style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontFamily: 'mulish', fontSize: 16 }}>Default</Text></Chip>
+                                <Chip selected={fontStyle === 'amatic' ? true : false} onPress={() => { setFontStyle('amatic') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined" ><Text style={{ fontFamily: 'amatic', fontSize: 18 }}>Amatic</Text></Chip>
+                                <Chip selected={fontStyle === 'dancingspirit' ? true : false} onPress={() => { setFontStyle('dancingspirit') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'dancingspirit', fontSize: 18 }}>Dancing Spirit</Text></Chip>
+                                <Chip selected={fontStyle === 'gochihand' ? true : false} onPress={() => { setFontStyle('gochihand') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'gochihand', fontSize: 18 }}>Gochihand</Text></Chip>
+                                <Chip selected={fontStyle === 'greatvibes' ? true : false} onPress={() => { setFontStyle('greatvibes') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'greatvibes', fontSize: 16 }}>Great Vibes</Text></Chip>
+                                <Chip selected={fontStyle === 'kaushan' ? true : false} onPress={() => { setFontStyle('kaushan') }} style={{ marginStart: 20, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'kaushan', fontSize: 16 }}>Kaushan</Text></Chip>
+                                <Chip selected={fontStyle === 'thegreat' ? true : false} onPress={() => { setFontStyle('thegreat') }} style={{ marginStart: 20, marginEnd: 40, height: 40, alignItems: 'center', justifyContent: 'center' }} mode="outlined"><Text style={{ fontFamily: 'thegreat', fontSize: 16 }}>The Great Frederika</Text></Chip>
+                            </ScrollView>
+                        </View>
+                        <View style={{ width: screenWidth, }}>
+                            <Text style={{ fontFamily: 'mulish', fontWeight: 'bold', fontSize: 17, marginStart: 25, marginTop: 10, marginBottom: 10 }}>Font Size</Text>
+                            <Slider value={0} thumbTintColor="#FFBC01" maximumTrackTintColor="gray" minimumTrackTintColor="#FFBC01" onValueChange={(tx) => { SetFontSizeSlider(Math.floor(tx)) }}
+                                minimumValue={0} maximumValue={100}
+                            />
+                            <View style={{ width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, alignItems: 'center' }}>
+                                <FontAwesome name="font" size={12} color={colorScheme === 'dark' ? 'white' : 'black'} />
+                                <FontAwesome name="font" size={20} color={colorScheme === 'dark' ? 'white' : 'black'} />
 
-                        <Text style={{ marginBottom: 10, fontSize: 12 }}>{dateText} {timeText}</Text>
+                            </View>
+                        </View>
+                    </ExpandableSection>
 
-                        <View style={{ width: screenWidth, alignItems: 'center', marginHorizontal: 20 }}>
-                            <TextInput placeholder="Title" placeholderTextColor="#606060" style={{
-                                width: '90%', backgroundColor: 'transparent',
-                                fontFamily: fontStyle === 'default' ? 'mulish' : fontStyle, fontSize: fontStyle === 'default' ? fontSize + 6 : fontSize + 14, fontWeight: fontStyle === 'default' ? 'bold' : 'normal', marginStart: 20, marginTop: 20
-                                , color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#101010' : fontColor
-                            }}
-                                value={titleText} onChangeText={(text) => { setTitleText(text) }}
-                                ref={refTitle} onBlur={() => { refInput.current.focus() }}
-                                maxLength={100} activeOutlineColor="transparent" outlineColor="transparent"
-                                underlineColor="transparent" underlineColorAndroid="transparent"
-                                selectionColor="#FFBC01" activeUnderlineColor="transparent"
-                                cursorColor="yellow" />
+                    <Text style={{ marginBottom: 10, fontSize: 12 }}>{dateText} {timeText}</Text>
 
+                    <TextInput placeholder="Title" placeholderTextColor="#606060" style={{
+                        width: '90%', backgroundColor: 'transparent',
+                        fontFamily: fontStyle === 'default' ? 'mulish' : fontStyle, fontSize: fontStyle === 'default' ? fontSize + 6 : fontSize + 14, fontWeight: fontStyle === 'default' ? 'bold' : 'normal', marginStart: 20, marginTop: 20
+                        , color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#101010' : fontColor,
+                    }} multiline onKeyPress={(e) => {
+                        if (e.nativeEvent.key == 'Enter') {
+                            refTitle.current.blur()
+                            refInput.current.focus()
+                            setTimeout(() => {
+                                setTitleText(titleText.trim())
+                            }, 100)
+                        }
+                    }} onFocus={() => { setFocusedTitle(true) }}
+                        value={titleText} onChangeText={(text) => { setTitleText(text) }}
+                        ref={refTitle} onBlur={() => { setFocusedTitle(false) }}
+                        maxLength={100} activeOutlineColor="transparent" outlineColor="transparent"
+                        underlineColor="transparent" underlineColorAndroid="transparent"
+                        selectionColor="#FFBC01" activeUnderlineColor="transparent"
+                        cursorColor="yellow" />
+                    <KeyboardAvoidingView style={{ width: screenWidth, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginStart: 20, flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: 30, }}>
                             <TextInput placeholder="Note" placeholderTextColor="#606060" style={{
-                                width: '90%', backgroundColor: 'transparent',
-                                fontFamily: fontStyle === 'default' ? null : fontStyle, fontSize: fontSize, marginStart: 20, marginTop: 30,
-                                color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#202020' : fontColor, marginBottom: 25
-                            }}
+                                width: '80%', backgroundColor: 'transparent',
+                                fontFamily: fontStyle === 'default' ? 'mulish' : fontStyle, fontSize: fontSize, marginStart: 20,
+                                color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#202020' : fontColor,
+                            }} onFocus={() => { setFocusedTitle(false) }}
                                 scrollEnabled={true} selectionColor="#FFBC01"
-                                textContentType="none"
-
+                                onKeyPress={(e) => {
+                                    if (e.nativeEvent.key == 'Backspace') {
+                                        noteText ? null : refTitle.current.focus()
+                                    }
+                                }}
                                 multiline={true} ref={refInput} value={noteText} onChangeText={(text) => { AutoSaveNote(text) }}
-                                maxLength={4000} activeOutlineColor="transparent" outlineColor="transparent"
+                                maxLength={5000} activeOutlineColor="transparent" outlineColor="transparent"
                                 underlineColor="transparent" underlineColorAndroid="transparent"
                                 activeUnderlineColor="transparent"
-                                cursorColor="yellow" autoFocus={props.route.params == undefined ? true : false}
-
-                                onBlur={() => { }} />
+                                cursorColor="yellow" autoFocus={props.route.params == undefined ? true : false} />
+                            <Tooltip title="Expand">
+                                <TouchableOpacity onPress={() => {
+                                    setExpandedView(true)
+                                }}>
+                                    <MaterialCommIcons name="arrow-expand" size={20} style={{ marginEnd: 10, marginStart: 10 }} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+                                </TouchableOpacity>
+                            </Tooltip>
                         </View>
+                    </KeyboardAvoidingView>
+
+                </View>
+                <View style={{ width: screenWidth, paddingHorizontal: 25, paddingBottom: 5, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+
+                    <TouchableOpacity style={{}} onPress={() => {
+                        SpeakText()
+
+                    }}>
+                        <MaterialIcons name="volume-up" size={30} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { StartStopRecording() }}>
+                        {recording ?
+                            <Card style={{ width: 75, height: 75, borderRadius: 40, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
+                                <MaterialIcons name="keyboard-voice" size={30} color="red" />
+                            </Card>
+                            :
+                            <MaterialIcons name="keyboard-voice" size={25} color={pageColor === 'default' ? '#FFBC01' : 'black'} />}
+                    </TouchableOpacity>
+                    {starVisible ?
+                        <TouchableOpacity onPress={() => { StarNote(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize) }}>
+                            <MaterialIcons name="star-border" size={25} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
+                        </TouchableOpacity>
+                        :
+                        null}
+
+                    <Menu
+                        visible={visible}
+                        onDismiss={closeMenu}
+
+                        anchor={<TouchableOpacity onPress={openMenu}>
+                            <Ionicons name="camera" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
+                        </TouchableOpacity>}>
+                        <Menu.Item onPress={() => {
+                            closeMenu()
+                            LaunchCamera()
+                        }} title="Camera" leadingIcon="camera" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
+                        <Menu.Item onPress={() => {
+                            closeMenu()
+                            PickImage()
+                        }} title="Gallery" leadingIcon="image" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
+                    </Menu>
+
+                </View>
+            </View>
+            <Portal>
+                <Modal visible={loading}
+                    dismissable={false}
+                    contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <Card style={{ padding: 30, borderRadius: 50 }}>
+                        <ActivityIndicator size={40} />
+                    </Card>
+                </Modal>
+            </Portal>
+            <Portal>
+                <Snackbar visible={snackbar.visible} action={{ label: 'Done', onPress: () => { setSnackBar({ visible: false, message: '' }) } }} duration={3000} onDismiss={() => { setSnackBar({ visible: false, message: '' }) }}>
+                    {snackbar.message}
+                </Snackbar>
+            </Portal>
+            <Modal style={{ alignItems: "center", justifyContent: 'center' }} visible={expandedView} dismissable onDismiss={() => { setExpandedView(false) }} dismissableBackButton>
+                <View style={{
+                    marginTop: 20, width: screenWidth, height: screenHeight, borderTopStartRadius: 20, borderTopEndRadius: 20, alignItems: 'center',
+                    flex: 1, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4'
+                }}>
+
+                    <View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: pageColor === 'default' ? colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4' : pageColor, opacity: 0.6, borderTopEndRadius: 20, borderTopStartRadius: 20 }} />
+                    <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', width: '90%', marginTop: 15 }}>
+                        <TouchableOpacity onPress={() => { setExpandedView(false) }}>
+                            <MaterialIcons name="close" size={30} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => {
+                            saveButton === "Update" ?
+                                UpdateData(props.route.params.id, titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                :
+                                saveButton == "Update archive" ?
+                                    UpdateArchive(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                    :
+                                    saveButton == 'Update Star' ?
+                                        UpdateStarred(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                        :
+                                        saveButton == 'Save to Folder' ?
+                                            SaveToFolder(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize)
+                                            :
+                                            SaveToDatabase()
+                        }}>
+                            <Text style={{
+                                color: pageColor === 'default' ? "#FFBC01" : 'black', fontSize: 21, fontFamily: 'mulish'
+                            }}>{saveButton}</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={{ marginBottom: 10, fontSize: 12, marginTop: 10 }}>{dateText} {timeText}</Text>
+                    <KeyboardAvoidingView style={{ width: '90%', alignItems: 'flex-start', alignSelf: 'flex-start', flex: focusedTitle ? 0.5 : 0.2 }}>
+                        <TextInput placeholder="Title" placeholderTextColor="#606060" style={{
+                            width: '100%', backgroundColor: 'transparent',
+                            fontFamily: fontStyle === 'default' ? 'mulish' : fontStyle, fontSize: fontStyle === 'default' ? fontSize + 6 : fontSize + 14, fontWeight: fontStyle === 'default' ? 'bold' : 'normal', marginStart: 20, marginTop: 20
+                            , color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#101010' : fontColor
+                        }} multiline onFocus={() => { setFocusedTitle(true) }} onKeyPress={(e) => {
+                            if (e.nativeEvent.key == 'Enter') {
+                                refTitle.current.blur()
+                                refInput.current.focus()
+                                setTimeout(() => {
+                                    setTitleText(titleText.trim())
+                                }, 100)
+                            }
+                        }}
+                            value={titleText} onChangeText={(text) => { setTitleText(text) }}
+                            onBlur={() => {
+                                setFocusedTitle(false)
+                            }}
+                            maxLength={100} activeOutlineColor="transparent" outlineColor="transparent"
+                            underlineColor="transparent" underlineColorAndroid="transparent"
+                            selectionColor="#FFBC01" activeUnderlineColor="transparent"
+                            cursorColor="yellow" />
+                    </KeyboardAvoidingView>
+                    <KeyboardAvoidingView style={{ width: '90%', flex: 1, alignItems: 'flex-start', alignSelf: 'flex-start', }}>
+                        <TextInput placeholder="Note" placeholderTextColor="#606060" style={{
+                            width: '100%', backgroundColor: 'transparent',
+                            fontFamily: fontStyle === 'default' ? null : fontStyle, fontSize: fontSize, marginStart: 20,
+                            color: fontColor === 'default' ? colorScheme === 'dark' ? white : '#202020' : fontColor,
+                        }}
+                            scrollEnabled={true} selectionColor="#FFBC01"
+                            onKeyPress={(e) => {
+                                if (e.nativeEvent.key == 'Backspace') {
+                                    noteText ? null : refTitle.current.focus()
+                                }
+                            }}
+                            multiline={true} value={noteText} onChangeText={(text) => { AutoSaveNote(text) }}
+                            maxLength={5000} activeOutlineColor="transparent" outlineColor="transparent"
+                            underlineColor="transparent" underlineColorAndroid="transparent"
+                            activeUnderlineColor="transparent"
+                            cursorColor="yellow" autoFocus={props.route.params == undefined ? true : false} />
 
                     </KeyboardAvoidingView>
-                    <View style={{ width: screenWidth, paddingHorizontal: 25, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-
-                        <TouchableOpacity style={{}} onPress={() => {
-                            SpeakText()
-
-                        }}>
-                            <MaterialIcons name="volume-up" size={30} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => { StartStopRecording() }}>
-                            {recording ?
-                                <Card style={{ width: 75, height: 75, borderRadius: 40, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
-                                    <MaterialIcons name="keyboard-voice" size={30} color="red" />
-                                </Card>
-                                :
-                                <MaterialIcons name="keyboard-voice" size={25} color={pageColor === 'default' ? '#FFBC01' : 'black'} />}
-                        </TouchableOpacity>
-                        {starVisible ?
-                            <TouchableOpacity onPress={() => { StarNote(titleText, noteText, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), pageColor, fontColor, fontStyle, fontSize) }}>
-                                <MaterialIcons name="star-border" size={25} color={pageColor === 'default' ? '#FFBC01' : 'black'} />
-                            </TouchableOpacity>
-                            :
-                            null}
-
-                        <Menu
-                            visible={visible}
-                            onDismiss={closeMenu}
-
-                            anchor={<TouchableOpacity onPress={openMenu}>
-                                <Ionicons name="camera" size={25} color={pageColor === 'default' ? "#FFBC01" : 'black'} />
-                            </TouchableOpacity>}>
-                            <Menu.Item onPress={() => {
-                                closeMenu()
-                                LaunchCamera()
-                            }} title="Camera" leadingIcon="camera" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
-                            <Menu.Item onPress={() => {
-                                closeMenu()
-                                PickImage()
-                            }} title="Gallery" leadingIcon="image" theme={{ colors: { onSurfaceVariant: "#FFBC01" } }} />
-                        </Menu>
-
-                    </View>
                 </View>
-                <Portal>
-                    <Modal visible={loading}
-                        dismissable={false}
-                        contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <Card style={{ padding: 30, borderRadius: 50 }}>
-                            <ActivityIndicator size={40} />
-                        </Card>
-                    </Modal>
-                </Portal>
-                <Portal>
-                    <Snackbar visible={snackbar.visible} action={{ label: 'Done', onPress: () => { setSnackBar({ visible: false, message: '' }) } }} duration={3000} onDismiss={() => { setSnackBar({ visible: false, message: '' }) }}>
-                        {snackbar.message}
-                    </Snackbar>
-                </Portal>
-            </SafeAreaView>
+            </Modal>
+        </SafeAreaView>
 
-        </View>
     )
 }
 

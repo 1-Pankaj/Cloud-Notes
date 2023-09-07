@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
 import * as SQLite from 'expo-sqlite'
-import { Appearance, Dimensions, FlatList, ImageBackground, TouchableOpacity, View } from "react-native";
+import { Appearance, BackHandler, Dimensions, FlatList, ImageBackground, TouchableOpacity, View } from "react-native";
 import { Button, Dialog, Menu, Portal, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
@@ -49,10 +49,8 @@ const TrashPage = (props) => {
 
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -84,7 +82,6 @@ const TrashPage = (props) => {
 
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -117,11 +114,9 @@ const TrashPage = (props) => {
 
                                     })
                             }, error => {
-                                console.log("Error");
                             })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -142,7 +137,6 @@ const TrashPage = (props) => {
                     setDialogMessage('All notes deleted successfully!')
                     setDialog(true)
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -172,15 +166,12 @@ const TrashPage = (props) => {
                                             setDialogMessage('All notes recovered successfully!')
                                             setDialog(true)
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -207,6 +198,18 @@ const TrashPage = (props) => {
             })
         }
     }
+
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const RecoverAllPermission = () => {
         setDeleteNoteId('recover')
@@ -250,7 +253,7 @@ const TrashPage = (props) => {
     return (
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: screenWidth }}>
-                <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20, marginStart: 25 }} onPress={() => { props.navigation.navigate('Directory') }}>
+                <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20, marginStart: 25 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
                         <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom: 2 }}>Trash</Text>
@@ -314,7 +317,6 @@ const TrashPage = (props) => {
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => {
                                             DeleteTrashedNote(item.item.id)
-                                            console.log(deleteFun)
                                         }}>
                                             <MaterialIcons name="delete-forever" size={25} color="red" style={{ marginEnd: 20 }} />
                                         </TouchableOpacity>

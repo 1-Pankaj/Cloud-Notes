@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import * as SQLite from 'expo-sqlite'
-import { Appearance, Dimensions, ToastAndroid, TouchableOpacity, View, TextInput as TextInputBasic, FlatList, ScrollView } from "react-native";
+import { Appearance, Dimensions, ToastAndroid, TouchableOpacity, View, TextInput as TextInputBasic, FlatList, ScrollView, BackHandler, Modal as BaseModal, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Dialog, Menu, Modal, Portal, RadioButton, Snackbar, Text, TextInput } from "react-native-paper";
+import { Button, DataTable, Dialog, Menu, Modal, Portal, RadioButton, Snackbar, Text, TextInput } from "react-native-paper";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import MaterialComIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import AnimatedLottieView from "lottie-react-native";
@@ -17,6 +17,7 @@ const db = SQLite.openDatabase('CloudNotes.db')
 
 
 const screenWidth = Dimensions.get('window').width
+const screenHeight = Dimensions.get('window').height
 
 const ToDo = (props) => {
 
@@ -40,6 +41,17 @@ const ToDo = (props) => {
     const [doneCount, setDoneCount] = useState(0)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
+    const [recordModal, setRecordModal] = useState(false)
+    const [taskData, setTaskData] = useState(null)
+    const [page, setPage] = useState(0);
+    const [folderCount, setFolderCount] = useState(0)
+    const [numberOfItemsPerPageList] = useState([2, 3, 4, 8]);
+    const [itemsPerPage, onItemsPerPageChange] = useState(
+        numberOfItemsPerPageList[0]
+    );
+    const [inputFocused, setInputFocused] = useState(false)
+    const [emojiRecord, setEmojiRecord] = useState('')
+    const [taskRecord, setTaskRecord] = useState('')
 
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
@@ -58,10 +70,47 @@ const ToDo = (props) => {
 
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
+
+
+
+    const GetTaskData = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM recordTasks", [],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let results = []
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            let id = rs.rows._array[i].id
+                            let title = rs.rows._array[i].title
+                            let date = rs.rows._array[i].date
+                            let time = rs.rows._array[i].time
+                            let tasknum = rs.rows._array[i].tasknum
+                            let lastindex = tasknum.lastIndexOf('.')
+                            tasknum = tasknum.slice(0, lastindex)
+
+                            results.push({ id: id, title: title, date: date, time: time, tasknum: tasknum })
+                        }
+
+                        setTaskData(results)
+
+
+                    } else {
+                        setTaskData(null)
+                    }
+                }, error => {
+                })
+        })
+    }
+
+    const from = page * itemsPerPage;
+    const to = Math.min((page + 1) * itemsPerPage, taskData ? taskData.length : 0);
+
+    useEffect(() => {
+        setPage(0);
+    }, [itemsPerPage])
 
     const setEmojiInDatabase = () => {
         db.transaction((tx) => {
@@ -72,7 +121,6 @@ const ToDo = (props) => {
                         setEmojiModal(false)
                         setEmoji('')
                     }, error => {
-                        console.log("Error");
                     })
             }
         })
@@ -91,7 +139,6 @@ const ToDo = (props) => {
                     (sql, rs) => {
                         GetData()
                     }, error => {
-                        console.log("Error");
                     })
             })
         }
@@ -139,14 +186,11 @@ const ToDo = (props) => {
                                             setSelected(select)
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log(error);
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -170,7 +214,6 @@ const ToDo = (props) => {
                         GetData()
                         ToastAndroid.show('Deleted', ToastAndroid.SHORT)
                     }, error => {
-                        console.log("Error");
                     })
             })
         } else {
@@ -182,7 +225,6 @@ const ToDo = (props) => {
                         (sql, rs) => {
                             GetData()
                         }, error => {
-                            console.log("Error");
                         })
                 }
                 ToastAndroid.show('Deleted', ToastAndroid.SHORT)
@@ -199,14 +241,12 @@ const ToDo = (props) => {
                             (sql, rs) => {
                                 GetData()
                             }, error => {
-                                console.log("Error");
                             })
                     } else {
                         sql.executeSql("UPDATE todo set selected = 'false' WHERE id = (?)", [id],
                             (sql, rs) => {
                                 GetData()
                             }, error => {
-                                console.log("Error");
                             })
                     }
 
@@ -224,36 +264,60 @@ const ToDo = (props) => {
                                             }
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
 
     }
 
-    const RecordTasks = () =>{
-        db.transaction((tx)=>{
-            tx.executeSql("CREATE TABLE IF NOT EXISTS recordTasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(100) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, tasknum VARCHAR(200) NOT NULL)",[],
-            (sql,rs)=>{
-                let title = 'Task'
-                sql.executeSql("INSERT INTO recordTasks (title, date, time, tasknum) values (?,?,?,?)",[title, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), allCount],
-                (sql,rs)=>{
-                    setSnackbarVisible(true)
-                    setSnackbarMessage('Record successful, can be found in Directory')
-                }, error =>{
-                    console.log("Error");
+    const RecordTasks = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS recordTasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(100) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, tasknum VARCHAR(200) NOT NULL)", [],
+                (sql, rs) => {
+                    let title = 'Task Record For '+new Date()
+                    sql.executeSql("INSERT INTO recordTasks (title, date, time, tasknum) values (?,?,?,?)", [title, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), allCount],
+                        (sql, rs) => {
+                            setSnackbarVisible(true)
+                            setSnackbarMessage('Record successful, can be found in History')
+                            GetTaskData()
+                        }, error => {
+                        })
+                }, error => {
                 })
-            }, error =>{
-                console.log("Error");
-            })
         })
     }
+
+    function handleBackButtonClick() {
+        if (recordModal) {
+            setRecordModal(false)
+            return true
+        } else {
+            props.navigation.goBack()
+            return true
+        }
+    }
+
+    const ClearTaskRecord = () => {
+        db.transaction((tx) => {
+            tx.executeSql("DELETE FROM recordTasks", [],
+                (sql, rs) => {
+                    GetTaskData()
+                    ToastAndroid.show("Task Records cleared", ToastAndroid.SHORT)
+                }, error => {
+                })
+        })
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [recordModal])
 
     const GetEmojiData = () => {
         let results = []
@@ -299,12 +363,13 @@ const ToDo = (props) => {
     useEffect(() => {
         GetData()
         GetEmojiData()
+        GetTaskData()
     }, [isFocused])
 
     return (
         <SafeAreaView style={[Styles.container, { justifyContent: 'space-around' }]}>
             <View style={{ width: screenWidth, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
-                <TouchableOpacity style={{ marginTop: 20, marginStart: 10 }} onPress={() => { props.navigation.navigate('Home') }}>
+                <TouchableOpacity style={{ marginTop: 20, marginStart: 10 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="arrow-back-ios" size={25} color="#FFBC01" />
                         <Text style={{ fontWeight: 'bold', fontSize: 23, color: '#FFBC01', marginBottom: 2 }}>ToDo's</Text>
@@ -319,6 +384,17 @@ const ToDo = (props) => {
                         </TouchableOpacity>
                         :
                         null}
+                    <TouchableOpacity style={{ marginTop: 20, marginEnd: 20 }} onPress={() => {
+                        GetTaskData()
+                        if (taskData) {
+                            setRecordModal(true)
+                            inputRef.current.blur()
+                        } else {
+                            ToastAndroid.show('No records!', ToastAndroid.SHORT)
+                        }
+                    }}>
+                        <MaterialIcons name="history" size={25} color="#FFBC01" />
+                    </TouchableOpacity>
                     {data ?
                         <Menu visible={menuVisible} onDismiss={() => { setMenuVisible(false) }} anchor={<TouchableOpacity style={{ marginTop: 20, marginEnd: 25 }}
                             onPress={() => { setMenuVisible(true) }}>
@@ -381,11 +457,16 @@ const ToDo = (props) => {
                     <Text style={{ fontWeight: 'bold', fontSize: 17, textAlign: 'center', marginVertical: 20 }}>ToDo List is Empty, Try adding some!</Text>
                 </View>}
             <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-evenly', width: screenWidth, marginBottom: 20 }}>
-                <TextInput placeholder="Add new ToDo" style={{ width: screenWidth - 100, paddingStart: 10, paddingTop: 5, paddingBottom: 5, paddingEnd: 10 }}
-                    underlineColor="transparent" outlineStyle={{ borderRadius: 20 }} multiline={false} maxLength={150}
-                    cursorColor="#FFBC01" selectionColor="#FFBC01" mode="outlined" ref={inputRef}
-                    activeUnderlineColor="transparent" value={task} onChangeText={(txt) => { setTask(txt) }}
-                />
+                <View style={{ width: screenWidth - 100, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: inputFocused ? '#FFBC01' : 'gray', borderRadius: 20 }}>
+
+                    <TextInputBasic placeholder="Add new ToDo" style={{ width: '90%', paddingStart: 10, paddingTop: 15, paddingBottom: 15, paddingEnd: 10, color: colorScheme === 'dark' ? 'white' : '#101010' }}
+                        underlineColor="transparent" multiline={false} maxLength={150}
+                        cursorColor="#FFBC01" selectionColor="#FFBC01" ref={inputRef} onFocus={() => { setInputFocused(true) }}
+                        onBlur={() => { setInputFocused(false) }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : 'gray'}
+                        activeUnderlineColor="transparent" value={task} onChangeText={(txt) => { setTask(txt) }}
+                    />
+
+                </View>
                 <TouchableOpacity style={{
                     width: 55, height: 55, backgroundColor: '#FFBC01', borderRadius: 30, alignItems: 'center',
                     justifyContent: 'center'
@@ -399,12 +480,12 @@ const ToDo = (props) => {
                 <Portal>
                     <Snackbar visible={snackbarVisible} onDismiss={() => { setSnackbarVisible(false) }}
                         action={{
-                            label: snackbarMessage == 'Record successful, can be found in Directory'? 'Done' : 'Record',
+                            label: snackbarMessage == 'Record successful, can be found in History' ? 'Done' : 'Record',
                             onPress: () => {
-                                snackbarMessage == 'Record successful, can be found in Directory'?
-                                setSnackbarVisible(false)
-                                :
-                                RecordTasks()
+                                snackbarMessage == 'Record successful, can be found in History' ?
+                                    setSnackbarVisible(false)
+                                    :
+                                    RecordTasks()
                             },
                         }}
                         duration={5000}>{snackbarMessage}</Snackbar>
@@ -521,6 +602,78 @@ const ToDo = (props) => {
                     </Modal>
                 </Portal>
             </View>
+            <Modal visible={recordModal} dismissable dismissableBackButton onDismiss={() => { setRecordModal(false) }} style={{ alignItems: 'center', justifyContent: 'flex-end', elevation: 20 }}>
+                <View style={{
+                    width: screenWidth, paddingVertical: 20, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4',
+                    borderTopEndRadius: 20, borderTopStartRadius: 20, alignItems: 'center', justifyContent: 'space-evenly',
+                }}>
+                    {taskData ?
+                        <View style={{ width: screenWidth, alignItems: 'center', alignSelf: 'center', marginTop: 30, marginBottom: 30 }}>
+                            <View style={{ alignItems: 'center', width: '90%', flexDirection: 'row', justifyContent: 'space-between', marginStart: 20, marginBottom: 20, marginEnd: 20 }}>
+                                <Text style={{ fontSize: 17, fontFamily: 'mulish' }}>Task Records</Text>
+                                <TouchableOpacity onPress={() => {
+                                    ClearTaskRecord()
+                                    setRecordModal(false)
+                                }}>
+                                    <Text style={{ fontSize: 13, color: '#FFBC01', fontWeight: 'bold' }}>Clear</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <DataTable style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10 }}>
+                                <DataTable.Header>
+                                    <DataTable.Title>Title</DataTable.Title>
+                                    <DataTable.Title numeric>Date</DataTable.Title>
+                                    <DataTable.Title numeric>Time</DataTable.Title>
+                                    <DataTable.Title numeric>Tasks</DataTable.Title>
+                                </DataTable.Header>
+                                {taskData.slice(from, to).map((item, index) => {
+                                    return (
+                                        <DataTable.Row key={item.id} onPress={() => { setTaskRecord(item.title)}}>
+                                            <DataTable.Cell>{item.title}</DataTable.Cell>
+                                            <DataTable.Cell numeric>{item.date}</DataTable.Cell>
+                                            <DataTable.Cell numeric>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</DataTable.Cell>
+                                            <DataTable.Cell numeric>{item.tasknum}</DataTable.Cell>
+                                        </DataTable.Row>
+                                    )
+                                })}
+
+                                <DataTable.Pagination
+                                    page={page}
+                                    numberOfPages={Math.ceil(taskData.length / itemsPerPage)}
+                                    onPageChange={(page) => setPage(page)}
+                                    label={`${from + 1}-${to} of ${taskData.length}`}
+                                    numberOfItemsPerPageList={numberOfItemsPerPageList}
+                                    numberOfItemsPerPage={itemsPerPage}
+                                    onItemsPerPageChange={onItemsPerPageChange}
+                                    showFastPaginationControls
+                                    selectPageDropdownLabel={'Rows per page'}
+                                />
+                            </DataTable>
+
+
+                            {taskRecord ?
+                                <View style={{ marginTop: 10 }}>
+                                    <View style={{
+                                        width: screenWidth - 40, borderRadius: 10, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#404040' : '#dedede', backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', flexDirection: 'row',
+                                        alignItems: 'center', justifyContent: 'space-between'
+                                    }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Text style={{ marginStart: 20, fontSize: 18, width: 200, paddingVertical: 15, fontWeight: 'bold', }}
+                                            >{taskRecord.trim()}</Text>
+                                        </View>
+                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15, marginTop:15 }} onPress={() => { setTaskRecord('')}}>
+                                            <MaterialIcons name="close" size={15} color={colorScheme === 'dark' ? 'white' : '#101010'} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                                :
+                                null}
+
+
+                        </View>
+                        :
+                        null}
+                </View>
+            </Modal>
         </SafeAreaView>
     )
 }

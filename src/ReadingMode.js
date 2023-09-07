@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Dimensions, View, TouchableOpacity, ScrollView, TextInput, ToastAndroid, ImageBackground, Appearance } from "react-native";
+import { Dimensions, View, TouchableOpacity, ScrollView, TextInput, ToastAndroid, ImageBackground, Appearance, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import * as Speech from 'expo-speech'
@@ -305,6 +305,18 @@ const ReadingMode = (props) => {
         })
     }
 
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
+
     const CopytoClipboard = async () => {
         await Clipboard.setStringAsync(selected)
         ToastAndroid.show('Copied to Clipboard!', ToastAndroid.SHORT)
@@ -327,7 +339,7 @@ const ReadingMode = (props) => {
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, height: screenHeight + 100, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute' }} />
             <TouchableOpacity style={{ flexDirection: "row", alignSelf: 'flex-start', marginTop: 20, marginStart: 5, alignItems: 'center' }}
-                onPress={() => { props.navigation.navigate('Home') }}>
+                onPress={() => { props.navigation.goBack() }}>
                 <MaterialIcons name="arrow-back-ios" size={25} color={pageColor === 'default' ? '#FFBC01' : textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor} />
                 <Text style={{ color: pageColor === 'default' ? '#FFBC01' : textColor === 'default' ? colorScheme === 'dark' ? 'white' : '#101010' : textColor, fontSize: 23, fontWeight: 'bold', marginBottom: 2 }}>Reading Mode</Text>
             </TouchableOpacity>

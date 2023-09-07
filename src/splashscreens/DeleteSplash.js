@@ -29,7 +29,6 @@ const DeleteSplash = (props) => {
                     props.navigation.navigate("Home")
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }

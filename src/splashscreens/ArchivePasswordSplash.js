@@ -33,7 +33,6 @@ const ArchivePasswordSplash = (props) => {
                     props.navigation.replace("PasswordPage")
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -45,7 +44,6 @@ const ArchivePasswordSplash = (props) => {
                     props.navigation.replace("ArchivePage")
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-import { Appearance, Dimensions, FlatList, Image, ScrollView, TouchableOpacity, View, Modal } from "react-native";
+import { Appearance, Dimensions, FlatList, Image, ScrollView, TouchableOpacity, View, Modal, BackHandler } from "react-native";
 import { ActivityIndicator, Card, FAB, Portal, ProgressBar, Surface, Text, TouchableRipple, Modal as LoadModal } from "react-native-paper";
 
 import * as SQLite from 'expo-sqlite'
@@ -49,7 +49,6 @@ const Marketplace = (props) => {
                                 }, 300);
                                 GetData()
                             }, error => {
-                                console.log("Error");
                             })
                     })
                 }, 600);
@@ -57,6 +56,19 @@ const Marketplace = (props) => {
         }, 1500);
 
     }
+
+
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const DisablePackage = (tablename) => {
         setFabVisible(true)
@@ -78,7 +90,6 @@ const Marketplace = (props) => {
                                 }, 500);
                                 GetData()
                             }, error => {
-                                console.log("Error");
                             })
                     })
                 }, 600);
@@ -250,7 +261,7 @@ const Marketplace = (props) => {
         'mulish': require("../assets/fonts/mulish.ttf")
     })
 
-    const OpenPackage = (page) =>{
+    const OpenPackage = (page) => {
         props.navigation.navigate(page)
         setFabVisible(false)
         setModalMore(false)
@@ -280,14 +291,11 @@ const Marketplace = (props) => {
                                     (sql, rs) => {
                                         GetData()
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -312,7 +320,7 @@ const Marketplace = (props) => {
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10 }}
-                    onPress={() => { props.navigation.navigate('Home') }}>
+                    onPress={() => { props.navigation.goBack() }}>
                     <MaterialIcons name="arrow-back-ios" size={27} color="#FFBC01" />
                     <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>Marketplace</Text>
                 </TouchableOpacity>
@@ -389,7 +397,7 @@ const Marketplace = (props) => {
                 </Card>
             </LoadModal>
 
-            <Modal animationType="slide"  visible={modalMore} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={true}>
+            <Modal animationType="slide" visible={modalMore} style={{ alignItems: 'center', justifyContent: 'flex-end' }} dismissableBackButton={true}>
                 <View style={{ width: screenWidth, height: screenHeight - 20, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f4f4f4', borderTopStartRadius: 20, borderTopEndRadius: 20, justifyContent: 'center', alignItems: 'center' }}>
                     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginStart: 10, marginTop: 25, marginBottom: 25 }}
                         onPress={() => {

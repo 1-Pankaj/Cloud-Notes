@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Appearance, Dimensions, TextInput, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Appearance, BackHandler, Dimensions, TextInput, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -36,11 +36,21 @@ const PasswordPage = (props) => {
                     (sql, rs) => {
                         props.navigation.replace('ArchivePage')
                     }, error => {
-                        console.log("Error");
                     })
             })
         }
     }
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const SelectPassword = () => {
         db.transaction((tx) => {
@@ -52,7 +62,6 @@ const PasswordPage = (props) => {
                         setPassword(rs.rows._array[0].password)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -130,7 +139,6 @@ const PasswordPage = (props) => {
                     (sql, rs) => {
                         props.navigation.replace('ArchivePage')
                     }, error => {
-                        console.log("Error");
                     })
             })
         } else {
@@ -147,7 +155,6 @@ const PasswordPage = (props) => {
                     (sql, rs) => {
                         props.navigation.replace('ArchivePage')
                     }, error => {
-                        console.log("Error");
                     })
             })
         }

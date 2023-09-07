@@ -47,7 +47,6 @@ const ReadingModeSplash = (props) => {
                     noteid: noteid
                 })
             }, error =>{
-                console.log("Error");
             })
         })
     }

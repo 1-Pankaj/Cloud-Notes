@@ -37,6 +37,8 @@ import * as SQLite from 'expo-sqlite'
 import FolderSplash from './src/splashscreens/FolderSplash';
 import Folder from './src/Folder';
 import OpenFolder from './src/OpenFolder';
+import Moodify from './src/Moodify';
+import MoodifySplash from './src/splashscreens/MoodifySplash';
 
 const Stack = createStackNavigator()
 
@@ -54,6 +56,7 @@ function App() {
   const [starredNotesSplash, setStarredNotesSplash] = useState(true)
   const [readingModeSplash, setReadingModeSplash] = useState(true)
   const [folderSplash, setFolderSplash] = useState(true)
+  const [moodifySplash, setMoodifySplash] = useState(true)
 
 
   const GetSplashData = () => {
@@ -73,7 +76,6 @@ function App() {
             }
           }
         }, error => {
-          console.log("Error");
         })
     })
 
@@ -86,10 +88,8 @@ function App() {
                 setMarketplaceSplash(false)
               }
             }, error => {
-              console.log("Error");
             })
         }, error => {
-          console.log("Error");
         })
     })
 
@@ -102,10 +102,8 @@ function App() {
                 setTodoSplash(false)
               }
             }, error => {
-              console.log("Error");
             })
         }, error => {
-          console.log("error");
         })
     })
 
@@ -118,10 +116,8 @@ function App() {
                 setReminderSplash(false)
               }
             }, error => {
-              console.log("error");
             })
         }, error => {
-          console.log("Error");
         })
     })
 
@@ -134,10 +130,8 @@ function App() {
                 setStarredNotesSplash(false)
               }
             }, error => {
-              console.log("Error");
             })
         }, error => {
-          console.log("Error");
         })
     })
 
@@ -150,10 +144,8 @@ function App() {
                 setReadingModeSplash(false)
               }
             }, error => {
-              console.log("Error");
             })
         }, error => {
-          console.log("Error");
         })
     })
 
@@ -167,12 +159,25 @@ function App() {
                 setFolderSplash(false)
               }
             }, error => {
-              console.log("Error");
             })
         }, error => {
-          console.log("Error");
         })
     })
+
+    db.transaction((tx) => {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS moodifysplash(firsttime Boolean)", [],
+        (sql, rs) => {
+          sql.executeSql("SELECT firsttime FROM moodifysplash", [],
+            (sql, rs) => {
+              if (rs.rows.length > 0) {
+                setMoodifySplash(false)
+              }
+            }, error => {
+            })
+        }, error => {
+        })
+    })
+
 
   }
 
@@ -194,9 +199,6 @@ function App() {
     setColorScheme(Appearance.getColorScheme)
   })
 
-  useEffect(() => {
-
-  })
 
   useEffect(() => {
     if (colorScheme == "dark") {
@@ -311,6 +313,23 @@ function App() {
             ...(isAndroid && TransitionPresets.ModalPresentationIOS),
             headerShown: false
           }} />
+          <Stack.Screen name='Moodify' component={Moodify} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          {moodifySplash ?
+            <Stack.Screen name='MoodifySplash' component={MoodifySplash} options={{
+              gestureEnabled: true,
+              presentation: 'modal',
+              animation: "slide_from_bottom",
+              ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+              headerShown: false
+            }} />
+            :
+            null}
           {folderSplash ?
             <Stack.Screen name='FolderSplash' component={FolderSplash} options={{
               gestureEnabled: true,

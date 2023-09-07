@@ -19,7 +19,6 @@ const ToDoSplash = (props) =>{
             (sql,rs)=>{
                 props.navigation.replace('ToDo')
             }, error=>{
-                console.log("Error");
             })
         })
     }

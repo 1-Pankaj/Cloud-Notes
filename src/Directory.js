@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View, Image, ToastAndroid } from "react-native";
+import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View, Image, ToastAndroid, BackHandler } from "react-native";
 import Styles from "./Styles";
 import { Button, Card, DataTable, Divider, Text } from "react-native-paper";
 
@@ -41,7 +41,6 @@ const Directory = (props) => {
             ToastAndroid.show('Signed in ' + user.user.displayName, ToastAndroid.SHORT)
             setUser(user)
         }).catch((error) => {
-            console.log(error);
         })
     }
 
@@ -63,13 +62,8 @@ const Directory = (props) => {
     const [archiveEnabled, setArchiveEnabled] = useState(false)
     const [starredEnabled, setStarredEnabled] = useState(false)
     const [todoEnabled, setTodoEnabled] = useState(false)
-    const [taskData, setTaskData] = useState(null)
-    const [page, setPage] = useState(0);
     const [folderCount, setFolderCount] = useState(0)
-    const [numberOfItemsPerPageList] = useState([2, 3, 4, 8, 12, 20]);
-    const [itemsPerPage, onItemsPerPageChange] = useState(
-        numberOfItemsPerPageList[0]
-    );
+    
 
     const animatedSearchWidth = useRef(new Animated.Value(0)).current
 
@@ -92,7 +86,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setAllNotesCount(rs.rows.length)
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -100,7 +93,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setArchivedNoteCount(rs.rows.length)
                 }, error => {
-                    console.log("error");
                 })
         })
 
@@ -108,7 +100,6 @@ const Directory = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS bookmark(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL)", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -116,7 +107,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                 },
                 error => {
-                    console.log("Error");
                 })
         })
 
@@ -124,7 +114,6 @@ const Directory = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS deletednotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL, note VARCHAR(4000) NOT NULL, date VARCHAR(15) NOT NULL,time VARCHAR(15) NOT NULL , pageColor VARCHAR(20) NOT NULL, fontColor VARCHAR(20) NOT NULL, fontStyle VARCHAR(20) NOT NULL, fontSize VARCHAR(20) NOT NULL)", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -132,7 +121,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setDeletedNotesCount(rs.rows.length)
                 }, error => {
-                    console.log("error");
                 })
         })
         db.transaction((tx) => {
@@ -140,7 +128,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setBookmarkCount(rs.rows.length)
                 }, error => {
-                    console.log("Error")
                 })
         })
         db.transaction((tx) => {
@@ -148,7 +135,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setHistoryCount(rs.rows.length)
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -157,7 +143,6 @@ const Directory = (props) => {
                 (sql, rs) => {
                     setFolderCount(rs.rows.length)
                 }, error => {
-                    console.log('ErrorAll');
                 })
         })
 
@@ -175,47 +160,11 @@ const Directory = (props) => {
 
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
 
-    const GetTaskData = () => {
-        db.transaction((tx) => {
-            tx.executeSql("SELECT * FROM recordTasks", [],
-                (sql, rs) => {
-                    if (rs.rows.length > 0) {
-                        let results = []
-                        for (let i = 0; i < rs.rows.length; i++) {
-                            let id = rs.rows._array[i].id
-                            let title = rs.rows._array[i].title
-                            let date = rs.rows._array[i].date
-                            let time = rs.rows._array[i].time
-                            let tasknum = rs.rows._array[i].tasknum
-                            let lastindex = tasknum.lastIndexOf('.')
-                            tasknum = tasknum.slice(0, lastindex)
-
-                            results.push({ id: id, title: title, date: date, time: time, tasknum: tasknum })
-                        }
-
-                        setTaskData(results)
-
-
-                    } else {
-                        setTaskData(null)
-                    }
-                }, error => {
-                    console.log("Error11");
-                })
-        })
-    }
-
-    const from = page * itemsPerPage;
-    const to = Math.min((page + 1) * itemsPerPage, taskData ? taskData.length : 0);
-
-    useEffect(() => {
-        setPage(0);
-    }, [itemsPerPage])
+    
 
     const StarredNotesCheck = () => {
         db.transaction((tx) => {
@@ -227,7 +176,6 @@ const Directory = (props) => {
                         props.navigation.navigate('StarredNotes')
                     }
                 }, error => {
-                    console.log("error");
                 })
         })
     }
@@ -238,7 +186,6 @@ const Directory = (props) => {
                 (sql, rs) => {
 
                 }, error => {
-                    console.log("Error");
                 })
 
             tx.executeSql("SELECT * FROM archivepass", [],
@@ -253,7 +200,6 @@ const Directory = (props) => {
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -283,10 +229,8 @@ const Directory = (props) => {
 
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -303,10 +247,8 @@ const Directory = (props) => {
                                 props.navigation.navigate('FolderSplash')
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -314,7 +256,6 @@ const Directory = (props) => {
     useEffect(() => {
         GetFeatures()
         GetCount()
-        GetTaskData()
     }, [isFocused])
 
     useEffect(() => {
@@ -324,7 +265,7 @@ const Directory = (props) => {
                 duration: 2500,
                 useNativeDriver: false
             }).start()
-        }, 150);
+        }, 250);
     }, [animatedSearchWidth])
 
     function onAuthStateChanged(user) {
@@ -332,17 +273,18 @@ const Directory = (props) => {
         if (initializing) setInitializing(false);
     }
 
-    const ClearTaskRecord = () => {
-        db.transaction((tx) => {
-            tx.executeSql("DELETE FROM recordTasks", [],
-                (sql, rs) => {
-                    GetTaskData()
-                    ToastAndroid.show("Task Records cleared", ToastAndroid.SHORT)
-                }, error => {
-                    console.log("Error");
-                })
-        })
+
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
     }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     useEffect(() => {
         const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
@@ -381,7 +323,6 @@ const Directory = (props) => {
                         setDataNotes(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -404,7 +345,6 @@ const Directory = (props) => {
                         setDataStar(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -427,7 +367,6 @@ const Directory = (props) => {
                         setDataTrash(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -457,17 +396,14 @@ const Directory = (props) => {
                                                 setDataArchive(null)
                                             }
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 } else {
                                     setPasswordProtected(true)
                                 }
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -478,7 +414,7 @@ const Directory = (props) => {
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <ScrollView style={[{ padding: 8, width: screenWidth, flex: 1 }]} contentContainerStyle={{ alignItems: 'center', flex: 1, }} showsVerticalScrollIndicator={false}>
                 <View style={{ width: screenWidth - 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginVertical: 20 }} onPress={() => { props.navigation.navigate('Home') }}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginVertical: 20 }} onPress={() => { props.navigation.goBack() }}>
                         <Ionicons name="chevron-back-outline" color='#FFBC01' size={32} style={{ marginStart: 1, marginTop: 2 }} />
                         <Text style={{ fontWeight: 'bold', fontSize: 25, color: '#FFBC01', alignSelf: 'center' }}>Directory</Text>
                     </TouchableOpacity>
@@ -508,8 +444,9 @@ const Directory = (props) => {
                         </TouchableOpacity>
                     </View>
                 </View>
+
                 <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', marginTop: 10 }}>
-                    <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010' }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}
+                    <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010', }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}
                         cursorColor="#FFBC01" selectionColor="#FFBC01" maxLength={25} numberOfLines={1}
                         multiline={false} value={searchText} onChangeText={(text) => { SearchTextInDatabase(text) }} />
                     {searchText ?
@@ -860,48 +797,6 @@ const Directory = (props) => {
                                 </View>
                             </View>
                         </TouchableOpacity>
-
-                        {taskData && todoEnabled ?
-                            <View style={{ width: screenWidth, alignItems: 'center', alignSelf: 'center', marginTop: 30, marginBottom: 30 }}>
-                                <View style={{ alignItems: 'center', width: '90%', flexDirection: 'row', justifyContent: 'space-between', marginStart: 20, marginBottom: 20, marginEnd: 20 }}>
-                                    <Text style={{ fontSize: 17, fontFamily: 'mulish' }}>Task Records</Text>
-                                    <TouchableOpacity onPress={() => { ClearTaskRecord() }}>
-                                        <Text style={{ fontSize: 13, color: '#FFBC01', fontWeight: 'bold' }}>Clear</Text>
-                                    </TouchableOpacity>
-                                </View>
-                                <DataTable style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10 }}>
-                                    <DataTable.Header>
-                                        <DataTable.Title>Title</DataTable.Title>
-                                        <DataTable.Title numeric>Date</DataTable.Title>
-                                        <DataTable.Title numeric>Time</DataTable.Title>
-                                        <DataTable.Title numeric>Tasks</DataTable.Title>
-                                    </DataTable.Header>
-                                    {taskData.slice(from, to).map((item, index) => {
-                                        return (
-                                            <DataTable.Row key={item.id}>
-                                                <DataTable.Cell>{item.title + " " + index}</DataTable.Cell>
-                                                <DataTable.Cell numeric>{item.date}</DataTable.Cell>
-                                                <DataTable.Cell numeric>{item.time.length === 10 ? item.time.slice(0, 4) + item.time.slice(7, 10) : item.time.slice(0, 5) + item.time.slice(8, 11)}</DataTable.Cell>
-                                                <DataTable.Cell numeric>{item.tasknum}</DataTable.Cell>
-                                            </DataTable.Row>
-                                        )
-                                    })}
-
-                                    <DataTable.Pagination
-                                        page={page}
-                                        numberOfPages={Math.ceil(taskData.length / itemsPerPage)}
-                                        onPageChange={(page) => setPage(page)}
-                                        label={`${from + 1}-${to} of ${taskData.length}`}
-                                        numberOfItemsPerPageList={numberOfItemsPerPageList}
-                                        numberOfItemsPerPage={itemsPerPage}
-                                        onItemsPerPageChange={onItemsPerPageChange}
-                                        showFastPaginationControls
-                                        selectPageDropdownLabel={'Rows per page'}
-                                    />
-                                </DataTable>
-                            </View>
-                            :
-                            null}
                     </ScrollView>}
             </ScrollView>
         </SafeAreaView>

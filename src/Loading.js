@@ -32,11 +32,9 @@ const Loading = (prop) => {
                             }
                         },
                         error => {
-                            console.log("error");
                         })
                 },
                 error => {
-                    console.log("error");
                 })
         })
     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, Easing, FlatList, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Appearance, BackHandler, Dimensions, Easing, FlatList, TextInput, TouchableOpacity, View } from "react-native";
 import Styles from "./Styles";
 import { ProgressBar, Text } from "react-native-paper";
 
@@ -80,7 +80,6 @@ const Browser = (props) => {
                         setBookmarked(true)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -98,7 +97,6 @@ const Browser = (props) => {
                     }
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -108,7 +106,6 @@ const Browser = (props) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS bookmark(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(500) NOT NULL)", [],
                 (sql, rs) => {
                 }, error => {
-                    console.log("Error");
                 })
         })
         db.transaction((tx) => {
@@ -116,7 +113,6 @@ const Browser = (props) => {
                 (sql, rs) => {
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -128,7 +124,6 @@ const Browser = (props) => {
                     GetUrlFromDatabase()
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -140,7 +135,6 @@ const Browser = (props) => {
                     GetUrlFromDatabase()
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
@@ -162,30 +156,38 @@ const Browser = (props) => {
                     GetUrlFromDatabase()
                 },
                 error => {
-                    console.log("Error");
                 })
         })
     }
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
 
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
     })
 
 
     useEffect(() => {
-        console.log('run');
         if (props.route.params === undefined) {
 
         } else {
             if (props.route.params.page == 'Bookmark') {
                 setTimeout(() => {
                     setUriWeb(props.route.params.url.trim())
-                }, 1000);
+                }, 1500);
             }
             else if (props.route.params.page == 'History') {
                 setTimeout(() => {
                     setUriWeb(props.route.params.url.trim())
-                }, 1000);
+                }, 1500);
             }
             else if (props.route.params.page == 'GlobalSearch') {
                 setTimeout(() => {
@@ -198,6 +200,8 @@ const Browser = (props) => {
             }
         }
     }, [])
+
+    
 
     const isFocused = useIsFocused()
     useEffect(() => {
@@ -212,7 +216,6 @@ const Browser = (props) => {
                 (sql, rs) => {
                     setBookmarked(true)
                 }, error => {
-                    console.log(error);
                 })
         })
     }
@@ -223,7 +226,6 @@ const Browser = (props) => {
                 (sql, rs) => {
                     setBookmarked(false)
                 }, error => {
-                    console.log("Error");
                 })
         })
     }

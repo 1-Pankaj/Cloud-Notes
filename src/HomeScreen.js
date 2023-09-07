@@ -82,6 +82,7 @@ const HomeScreen = (props) => {
     const [ascDesc, setAscDesc] = useState('DESC')
     const [permanentDeleteId, setPermanentDeleteId] = useState('')
     const [permanentDeleteDialog, setPermanentDeleteDialog] = useState(false)
+    const [reminderData, setReminderData] = useState(null)
 
 
 
@@ -199,7 +200,8 @@ const HomeScreen = (props) => {
             tx.executeSql(`SELECT * FROM notes ORDER BY ${sortFun} ${ascDesc}`, [],
                 (sql, rs) => {
                     let results = []
-
+                    let length = rs.rows.length
+                    setNoteCount(length)
                     if (rs.rows.length > 0) {
                         for (let i = 0; i < rs.rows.length; i++) {
                             let item = rs.rows.item(i)
@@ -282,7 +284,6 @@ const HomeScreen = (props) => {
                         }
                         setPreviousData(results)
                         setRefreshing(false)
-                        GetNoteCount()
                     } else {
                         setPreviousData(null)
                     }
@@ -344,16 +345,6 @@ const HomeScreen = (props) => {
         })
     }
 
-
-    const GetNoteCount = () => {
-        if (previousData && todayData) {
-            setNoteCount(previousData.length + todayData.length)
-        } else if (previousData && !todayData) {
-            setNoteCount(previousData.length)
-        } else if (todayData && !previousData) {
-            setNoteCount(todayData.length)
-        }
-    }
 
     const DeleteFromTable = (id) => {
         db.transaction(tx => {
@@ -593,6 +584,25 @@ const HomeScreen = (props) => {
     }
 
 
+    const CheckMoodifyFirstTime = () => {
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS moodifysplash(firsttime Boolean)", [],
+                (sql, rs) => {
+                    sql.executeSql("SELECT firsttime FROM moodifysplash", [],
+                        (sql, rs) => {
+                            if (rs.rows.length > 0) {
+                                props.navigation.navigate('Moodify')
+                                setFabVisible(false)
+                            } else {
+                                props.navigation.navigate('MoodifySplash')
+                                setFabVisible(false)
+                            }
+                        }, error => {
+                        })
+                }, error => {
+                })
+        })
+    }
 
 
     const CheckFirstTimeReminder = () => {
@@ -816,7 +826,7 @@ const HomeScreen = (props) => {
                                     results.push({
                                         icon: 'emoticon-happy-outline',
                                         label: 'Moodify',
-                                        onPress: () => { },
+                                        onPress: () => { CheckMoodifyFirstTime() },
                                         style: { backgroundColor: '#FFBC01' },
                                         color: 'white'
                                     })
@@ -1049,15 +1059,48 @@ const HomeScreen = (props) => {
         })
     }
 
+    const DeleteReminder = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("DELETE FROM reminder WHERE id = (?)", [id],
+                (sql, rs) => {
+                    GetRemiders()
+                }, error => {
+                })
+        })
+    }
+
+    const GetRemiders = () => {
+        db.transaction((tx) => {
+            tx.executeSql('SELECT * FROM reminder', [],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let hours = new Date().getHours().toString()
+                        let minutes = new Date().getMinutes().toString().length < 2 ? '0' + new Date().getMinutes().toString() : new Date().getMinutes().toString()
+                        let timeString = hours + ':' + minutes
+                        let results = []
+
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            if (rs.rows._array[i].time < timeString) {
+                                results.push({ id: rs.rows._array[i].id, message: rs.rows._array[i].message, time: rs.rows._array[i].time, title: rs.rows._array[i].title })
+                            }
+                        }
+                        setReminderData(results)
+                    }else{
+                        setReminderData(null)
+                    }
+                }, error => {
+                })
+        })
+    }
+
 
     useEffect(() => {
         CreateTable()
         LongPressCheck()
         SelectData()
         GetFeatures()
-        GetNoteCount()
         CheckFirstTime()
-        GetNoteCount()
+        GetRemiders()
         Speech.isSpeakingAsync().then((rs) => {
             if (rs) {
                 Speech.stop()
@@ -1074,9 +1117,7 @@ const HomeScreen = (props) => {
         }
     }, [isFocused, props, grid])
 
-    useEffect(() => {
-        GetNoteCount()
-    }, [previousData, todayData, data])
+
 
     function handleBackButtonClick() {
         if (selectionMode == true) {
@@ -1096,7 +1137,6 @@ const HomeScreen = (props) => {
             BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
         };
     }, [selectionMode])
-
 
 
     useEffect(() => {
@@ -1132,7 +1172,6 @@ const HomeScreen = (props) => {
                             setSelectionMode(false)
                         }}>
                             <MaterialComIcon name="close" size={25} color="#FFBC01" />
-
                         </TouchableOpacity>
                         :
                         <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => {
@@ -1182,7 +1221,7 @@ const HomeScreen = (props) => {
                                 :
                                 <TouchableOpacity onPress={() => {
                                     setExpandedSearch(!expandedSearch)
-
+                                    setSearchText('')
                                 }} style={{ marginEnd: 25 }}>
                                     <MaterialComIcon name={expandedSearch ? "close" : "search"} size={25} color="#FFBC01" />
                                 </TouchableOpacity>
@@ -1288,12 +1327,52 @@ const HomeScreen = (props) => {
                                 page: 'GlobalSearch',
                                 url: searchText
                             })
+                            setFabVisible(false)
                         }}>
                             <Ionicons name="globe-outline" size={25} color="#FFBC01" />
                         </TouchableOpacity> : null}
                     </View>
                 </ExpandableSection>
+                {reminderData && !selectionMode && !searchText ?
+                    <View style={{ width: screenWidth, alignItems: 'center', marginBottom: 20 }}>
+                        <Text style={{ alignSelf: 'flex-start', marginStart: 15, marginTop: 20, fontSize: 25, marginBottom: 5, fontWeight: 'bold', marginEnd: 15 }}>Completed Reminders</Text>
+                        <FlatList
+                            data={reminderData}
+                            key={item => item.id}
+                            style={{ marginTop: 20, width: screenWidth, marginEnd: 20 }}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', }}
+                            horizontal
+                            renderItem={(item) => {
+                                return (
+                                    <View style={{ width: 290, height: 140, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, marginStart: 20 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 10 }}>
+                                            <View style={{ alignItems: 'flex-start', marginStart: 10, maxWidth: 200 }}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Reminder set for</Text>
+                                                <Text numberOfLines={2} style={{ fontSize: 17, marginTop: 10 }}>{item.item.title.length > 20 ? item.item.title.trim().slice(0, 20) + '...' : item.item.title.trim().slice(0, 20)}</Text>
+                                                <Text numberOfLines={2} style={{ fontSize: 12 }}>{item.item.message.length > 40 ? item.item.message.trim().slice(0, 40) + '...' : item.item.message.trim().slice(0, 40)}</Text>
+                                            </View>
+                                            <View style={{ alignItems: 'flex-end', marginEnd: 10 }}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Set For</Text>
+                                                <Text style={{ fontFamily: 'mulish', alignSelf: 'center' }}>{item.item.time}</Text>
+                                            </View>
+                                        </View>
+                                        <View style={{ alignSelf: 'flex-end', flexDirection: 'row', flex: 1, alignItems: 'flex-end', marginBottom: 10, marginEnd: 10 }}>
+                                            <TouchableOpacity style={{
+                                                width: 65, height: 30, borderRadius: 30, borderWidth: 1, borderColor: '#FFBC01', alignItems: 'center', justifyContent: 'center',
+                                                alignSelf: 'flex-end',
+                                            }} onPress={() => { DeleteReminder(item.item.id) }}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 12, color: '#FFBC01' }}>Dismiss</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                )
+                            }}
 
+                        />
+                    </View>
+                    :
+                    null}
                 {pinnedData && !selectionMode ?
                     <View style={{ width: screenWidth, alignItems: 'center', marginBottom: 20 }}>
                         <Text style={{ alignSelf: 'flex-start', marginStart: 15, marginTop: 20, fontSize: 25, marginBottom: 5, fontWeight: 'bold' }}>Pinned Notes</Text>
@@ -1341,6 +1420,7 @@ const HomeScreen = (props) => {
                                     numColumns={2} scrollEnabled={true} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                                         setRefreshing(true)
                                         SelectData()
+                                        GetRemiders()
                                     }} />}
                                     bounces centerContent style={{ width: screenWidth, marginStart: 5, }}
                                     alwaysBounceHorizontal alwaysBounceVertical showsVerticalScrollIndicator={false}
@@ -1393,6 +1473,7 @@ const HomeScreen = (props) => {
 
                                 {data ?
                                     <View>
+
                                         <ScrollView style={{ width: screenWidth, marginBottom: 20, marginTop: 10 }} contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }} bounces refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                                             setRefreshing(true)
                                             SelectData()
@@ -1758,7 +1839,7 @@ const HomeScreen = (props) => {
                                                                             CheckUncheck(item.item.noteid)
                                                                         }}>
                                                                         <View>
-                                                                            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.item.title.trim().slice(0, 16)}</Text>
+                                                                            <Text style={{ fontSize: 20, fontWeight: 'bold' }} numberOfLines={1}>{item.item.title.trim().slice(0, 16)}</Text>
                                                                             <Text numberOfLines={2} style={{ fontSize: 11 }}>{item.item.note.trim().slice(0, 25)}</Text>
                                                                         </View>
                                                                         <View style={{}}>
@@ -1858,7 +1939,7 @@ const HomeScreen = (props) => {
                         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                             <AnimatedLottieView
                                 source={require('../assets/emptyanim.json')}
-                                style={{ width: '100%' }}
+                                style={{ width: '100%', height: reminderData ? 250 : 350 }}
                                 autoPlay loop renderMode="HARDWARE" hardwareAccelerationAndroid />
                             <Text style={{ fontFamily: 'mulish', fontSize: 17 }}>Oops, CloudNotes is empty!</Text>
                         </View>

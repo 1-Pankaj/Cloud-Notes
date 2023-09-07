@@ -62,19 +62,16 @@ const ArchivePage = (props) => {
                                 (sql, rs) => {
                                     GetData()
                                 }, error => {
-                                    console.log("Error");
                                 })
                         } else {
                             sql.executeSql("UPDATE selectedNotesArchived SET checked = true WHERE noteid = (?)", [id],
                                 (sql, rs) => {
                                     GetData()
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -92,7 +89,6 @@ const ArchivePage = (props) => {
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -106,18 +102,15 @@ const ArchivePage = (props) => {
                             (sql, rs) => {
                                 GetData()
                             }, error => {
-                                console.log("Error");
                             })
                     } else {
                         sql.executeSql("UPDATE selectedNotesArchived set checked = true", [],
                             (sql, rs) => {
                                 GetData()
                             }, error => {
-                                console.log("Error");
                             })
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -138,7 +131,6 @@ const ArchivePage = (props) => {
                         setData(null)
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
 
@@ -171,14 +163,11 @@ const ArchivePage = (props) => {
                                             setSelectAll(false)
                                         }
                                     }, error => {
-                                        console.log("Error");
                                     })
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -201,10 +190,8 @@ const ArchivePage = (props) => {
 
                             }
                         }, error => {
-                            console.log("Error");
                         })
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -232,15 +219,12 @@ const ArchivePage = (props) => {
                                         (sql, rs) => {
                                             GetData()
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -251,7 +235,8 @@ const ArchivePage = (props) => {
             setSelectionMode(false)
             return true;
         } else {
-            props.navigation.navigate('Directory')
+            props.navigation.goBack()
+            return true
         }
     }
 
@@ -297,13 +282,12 @@ const ArchivePage = (props) => {
                                     setDialogMessage('Note unarchived!')
                                     GetData()
                                 }, error => {
-                                    console.log("Error");
                                 })
                         })
                 })
         })
     }
-
+    
 
 
     const UnarchiveAll = () => {
@@ -329,10 +313,8 @@ const ArchivePage = (props) => {
                                             setDialog(true)
                                             setDialogMessage("All notes unarchived!")
                                         }, error => {
-                                            console.log("Error");
                                         })
                                 }, error => {
-                                    console.log("Error");
                                 })
                         }
                     }
@@ -350,7 +332,7 @@ const ArchivePage = (props) => {
                         selectionMode ?
                             setSelectionMode(false)
                             :
-                            props.navigation.navigate("Directory")
+                            props.navigation.goBack()
                     }} style={{ margin: 20 }}>
                         {selectionMode ?
                             <MaterialIcons name="close" size={30} color="#FFBC01" />
@@ -506,7 +488,7 @@ const ArchivePage = (props) => {
                                                     CheckUncheck(item.item.noteid)
                                                 }}>
                                                 <View>
-                                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.item.title.trim().slice(0, 16)}</Text>
+                                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }} numberOfLines={1}>{item.item.title.trim().slice(0, 16)}</Text>
                                                     <Text numberOfLines={2} style={{ fontSize: 11 }}>{item.item.note.trim().slice(0, 25)}</Text>
                                                 </View>
                                                 <View style={{}}>

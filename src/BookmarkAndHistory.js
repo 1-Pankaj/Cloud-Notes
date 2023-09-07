@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
 import * as SQLite from 'expo-sqlite'
-import { View, TouchableOpacity, Appearance, Dimensions, Text, FlatList } from "react-native";
+import { View, TouchableOpacity, Appearance, Dimensions, Text, FlatList, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
 import { useIsFocused } from "@react-navigation/native";
@@ -68,7 +68,17 @@ const BookmarkAndHistory = (props) => {
             })
         }
     }
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
 
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
     })
@@ -108,7 +118,6 @@ const BookmarkAndHistory = (props) => {
                 (sql, rs) => {
                     GetData()
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -118,7 +127,6 @@ const BookmarkAndHistory = (props) => {
                 (sql, rs) => {
                     GetData()
                 }, error => {
-                    console.log("Error");
                 })
         })
     }
@@ -126,7 +134,7 @@ const BookmarkAndHistory = (props) => {
     return (
         <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', padding: 8, justifyContent: 'space-between' }}>
-                <TouchableOpacity style={{ marginStart: 10, marginTop: 20, marginBottom: 20 }} onPress={() => { props.navigation.navigate('Directory') }}>
+                <TouchableOpacity style={{ marginStart: 10, marginTop: 20, marginBottom: 20 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcon name="arrow-back-ios" size={25} style={{ marginTop: 2 }} color="#FFBC01" />
                         <Text style={{ fontSize: 23, color: '#FFBC01', fontWeight: 'bold' }}>{pageType}</Text>
