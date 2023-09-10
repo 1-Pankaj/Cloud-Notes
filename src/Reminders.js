@@ -12,6 +12,7 @@ import { useIsFocused } from "@react-navigation/native";
 import AnimatedLottieView from "lottie-react-native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen'
+import { Drawer } from "react-native-ui-lib";
 
 const screenWidth = Dimensions.get('window').width
 
@@ -133,6 +134,7 @@ const Reminders = (props) => {
                     cancelNotification(rs.rows._array[0].notificationid)
                     sql.executeSql("DELETE FROM reminder WHERE id = (?)", [id],
                         (sql, rs) => {
+                            setData(null)
                             ToastAndroid.show("Deleted", ToastAndroid.SHORT)
                             GetData()
                         }, error => {
@@ -303,13 +305,13 @@ const Reminders = (props) => {
                         <Text style={{ fontSize: 23, marginBottom: 2, fontWeight: 'bold', color: '#FFBC01' }}>Reminders</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => { 
-                    if(taskData){
+                <TouchableOpacity onPress={() => {
+                    if (taskData) {
                         setRecordModal(true)
-                    }else{
+                    } else {
                         ToastAndroid.show("No records!", ToastAndroid.SHORT)
                     }
-                 }}>
+                }}>
                     <MaterialIcons name="history" size={25} color="#FFBC01" style={{ marginEnd: 20, marginTop: 20, marginBottom: 20 }} />
                 </TouchableOpacity>
             </View>
@@ -324,24 +326,27 @@ const Reminders = (props) => {
                         keyExtractor={item => item.id}
                         renderItem={(item) => {
                             return (
-                                <View style={{
-                                    width: screenWidth - 50, paddingVertical: 10, backgroundColor: colorScheme === 'dark' ? '#212121' : 'white', borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3',
-                                    marginTop: 10
-                                }}>
-                                    <View style={{ marginStart: 15, marginTop: 5, marginBottom: 5, marginEnd: 15 }}>
-                                        <Text style={{ fontSize: 17, fontWeight: 'bold', maxWidth: 200 }} numberOfLines={2}>{item.item.title.trim()}</Text>
-                                        <Text style={{ fontSize: 12, marginTop: 2, maxWidth: 230 }}>{item.item.message.trim()}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', height: '100%' }}>
-                                        <View style={{ marginEnd: 10 }}>
-                                            <Text style={{ fontSize: 10, marginEnd: 10 }}>Upcoming</Text>
-                                            <Text style={{ alignSelf: 'center' }}>{item.item.time}</Text>
+                                <Drawer style={{marginTop:10, borderRadius:10}}
+                                fullRightThreshold={0.7} fullSwipeRight onFullSwipeRight={()=>{DeleteReminder(item.item.id)}}
+                                rightItems={[{text:'Delete', background:'red', onPress:()=>{DeleteReminder(item.item.id)}}]} disableHaptic>
+                                    <View style={{
+                                        width: screenWidth - 50, paddingVertical: 10, backgroundColor: colorScheme === 'dark' ? '#212121' : 'white', borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3',
+                                    }}>
+                                        <View style={{ marginStart: 15, marginTop: 5, marginBottom: 5, marginEnd: 15 }}>
+                                            <Text style={{ fontSize: 17, fontWeight: 'bold', maxWidth: 200 }} numberOfLines={2}>{item.item.title.trim()}</Text>
+                                            <Text style={{ fontSize: 12, marginTop: 2, maxWidth: 230 }}>{item.item.message.trim()}</Text>
                                         </View>
-                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15 }} onPress={() => { DeleteReminder(item.item.id) }}>
-                                            <MaterialIcons name="close" size={15} color={colorScheme === 'dark' ? 'white' : '#101010'} />
-                                        </TouchableOpacity>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', height: '100%' }}>
+                                            <View style={{ marginEnd: 10 }}>
+                                                <Text style={{ fontSize: 10, marginEnd: 10 }}>Upcoming</Text>
+                                                <Text style={{ alignSelf: 'center' }}>{item.item.time}</Text>
+                                            </View>
+                                            <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15 }} onPress={() => { DeleteReminder(item.item.id) }}>
+                                                <MaterialIcons name="close" size={15} color={colorScheme === 'dark' ? 'white' : '#101010'} />
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
-                                </View>
+                                </Drawer>
                             )
                         }}
                     />
@@ -361,8 +366,8 @@ const Reminders = (props) => {
                 <Modal visible={modalVisible}
                     dismissable={false} style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <View style={{ alignItems: 'center', width: screenWidth - 50, height: 300, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 30, justifyContent: 'space-evenly' }}>
-                        <TextInput label='Reminder' style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? 'gray' : '#e3e3e3' }} value={titleText} onChangeText={(txt) => { setTitleText(txt) }} maxLength={40} numberOfLines={1} />
-                        <TextInput label='Reminder Message' style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? 'gray' : '#e3e3e3' }} value={messageText} onChangeText={(txt) => { setMessageText(txt) }} maxLength={100} numberOfLines={1} />
+                        <TextInput label='Reminder' style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? '#505050' : '#e3e3e3' }} value={titleText} onChangeText={(txt) => { setTitleText(txt) }} maxLength={40} numberOfLines={1} />
+                        <TextInput label='Reminder Message (Optional)' style={{ width: '90%', backgroundColor: colorScheme === 'dark' ? '#505050' : '#e3e3e3' }} value={messageText} onChangeText={(txt) => { setMessageText(txt) }} maxLength={100} numberOfLines={1} />
                         <Text style={{ fontSize: 11, width: '90%', textAlign: 'center' }}>On Next page, Time set in Reminder is in 24 hour format, make sure to put correct timing!</Text>
                         <View style={{ alignItems: 'center', alignSelf: 'flex-end', flexDirection: 'row' }}>
                             <Button onPress={() => {
@@ -442,8 +447,10 @@ const Reminders = (props) => {
                                             <Text style={{ fontSize: 10, marginEnd: 10 }}>Set For</Text>
                                             <Text style={{ alignSelf: 'center' }}>{time}</Text>
                                         </View>
-                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15 }} onPress={() => { setTitle('')
-                                        setExtra('') }}>
+                                        <TouchableOpacity style={{ alignSelf: 'flex-start', marginEnd: 15 }} onPress={() => {
+                                            setTitle('')
+                                            setExtra('')
+                                        }}>
                                             <MaterialIcons name="close" size={15} color={colorScheme === 'dark' ? 'white' : '#101010'} />
                                         </TouchableOpacity>
                                     </View>

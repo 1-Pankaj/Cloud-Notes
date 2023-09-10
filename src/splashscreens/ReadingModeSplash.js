@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { BackHandler, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,8 +18,17 @@ const ReadingModeSplash = (props) => {
     const [fontsLoaded] = useFonts({
         'mulish': require("../../assets/fonts/mulish.ttf")
     })
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
 
-
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     useEffect(()=>{
         if (props.route.params === undefined) {

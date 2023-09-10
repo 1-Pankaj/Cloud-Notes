@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { Appearance, Dimensions, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Appearance, BackHandler, Dimensions, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -25,6 +25,17 @@ const ArchivePasswordSplash = (props) => {
     const [fontsLoaded] = useFonts({
         'mulish': require("../../assets/fonts/mulish.ttf")
     })
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const Archivepass = () => {
         db.transaction((tx) => {

@@ -149,7 +149,7 @@ const BookmarkAndHistory = (props) => {
                     }}>All {pageType === 'Bookmark' ? 'Bookmarks' : 'History'}</Text>
                     <FlatList
                         data={data}
-                        style={{ marginTop: 20 }}
+                        style={{ marginTop: 20 , marginBottom:100}}
                         keyExtractor={item => item.id}
                         renderItem={(item) => {
                             return (

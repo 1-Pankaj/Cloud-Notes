@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 
-import { Dimensions, View } from "react-native";
+import { BackHandler, Dimensions, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 
 import * as SQLite from 'expo-sqlite'
@@ -23,6 +23,17 @@ const MarketplaceSplash = (props) => {
             })
         })
     }
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     return (
         <SafeAreaView style={[Styles.container, { justifyContent: 'space-around' }]}>

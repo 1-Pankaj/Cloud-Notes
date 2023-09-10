@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { Appearance, Dimensions, Image, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Appearance, BackHandler, Dimensions, Image, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "../Styles";
 import { Button, Text } from "react-native-paper";
@@ -25,6 +25,17 @@ const ReminderSplash = (props) =>{
     Appearance.addChangeListener(()=>{
         setColorScheme(Appearance.getColorScheme())
     })
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {

@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Dimensions, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { BackHandler, Dimensions, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -32,6 +32,17 @@ const ArchiveSplash = (props) => {
                 })
         })
     }
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {

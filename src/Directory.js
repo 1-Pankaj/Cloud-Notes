@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View, Image, ToastAndroid, BackHandler } from "react-native";
+import { Appearance, Dimensions, FlatList, ImageBackground, ScrollView, TextInput, TouchableOpacity, View, Image, ToastAndroid, BackHandler } from "react-native";
 import Styles from "./Styles";
 import { Button, Card, DataTable, Divider, Text } from "react-native-paper";
 
@@ -65,7 +65,6 @@ const Directory = (props) => {
     const [folderCount, setFolderCount] = useState(0)
 
 
-    const animatedSearchWidth = useRef(new Animated.Value(0)).current
 
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
@@ -151,11 +150,7 @@ const Directory = (props) => {
                 (sql, rs) => {
                     sql.executeSql("SELECT id FROM starrednotes", [],
                         (sql, rs) => {
-                            if (rs.rows.length === 0) {
-
-                            } else {
-                                setStarredNotesCount(rs.rows.length)
-                            }
+                            setStarredNotesCount(rs.rows.length)
                         }, error => {
 
                         })
@@ -256,17 +251,7 @@ const Directory = (props) => {
     useEffect(() => {
         GetFeatures()
         GetCount()
-    }, [isFocused])
-
-    useEffect(() => {
-        setTimeout(() => {
-            Animated.timing(animatedSearchWidth, {
-                toValue: screenWidth - 40,
-                duration: 2500,
-                useNativeDriver: false
-            }).start()
-        }, 250);
-    }, [animatedSearchWidth])
+    }, [isFocused, props])
 
     function onAuthStateChanged(user) {
         setUser(user);
@@ -445,7 +430,7 @@ const Directory = (props) => {
                     </View>
                 </View>
 
-                <Animated.View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: animatedSearchWidth, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', marginTop: 10 }}>
+                <View style={{ backgroundColor: colorScheme === 'dark' ? '#303030' : '#e3e3e3', width: screenWidth - 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', marginTop: 10 }}>
                     <TextInput placeholder="Global Search" style={{ marginStart: 20, width: '85%', color: colorScheme === 'dark' ? 'white' : '#101010', }} placeholderTextColor={colorScheme === 'dark' ? '#909090' : '#404040'}
                         cursorColor="#FFBC01" selectionColor="#FFBC01" maxLength={25} numberOfLines={1}
                         multiline={false} value={searchText} onChangeText={(text) => { SearchTextInDatabase(text) }} />
@@ -460,7 +445,7 @@ const Directory = (props) => {
                         </TouchableOpacity>
                         :
                         null}
-                </Animated.View>
+                </View>
                 {!searchText == '' ?
                     <ScrollView style={{ width: screenWidth - 40, }} contentContainerStyle={{ alignItems: 'center' }} showsVerticalScrollIndicator={false}>
                         <Text style={{ alignSelf: 'flex-start', margin: 20, fontWeight: 'bold', fontSize: 22 }}>In All Notes</Text>

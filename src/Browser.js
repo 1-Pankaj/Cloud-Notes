@@ -36,6 +36,7 @@ const Browser = (props) => {
     const animatedTranslate = new Animated.Value(0)
     const animatedHeight = new Animated.Value(600)
     const [lastValue, setLastValue] = useState(null)
+    const [textInputFocused, setTextInputFocused] = useState(false)
 
     const HandleScroll = (y) => {
         if (y > 5) {
@@ -160,8 +161,13 @@ const Browser = (props) => {
         })
     }
     function handleBackButtonClick() {
-        props.navigation.goBack()
-        return true
+        if (canGoBack) {
+            webviewRef.current.goBack()
+            return true
+        } else {
+            props.navigation.goBack()
+            return true
+        }
     }
 
     useEffect(() => {
@@ -169,7 +175,7 @@ const Browser = (props) => {
         return () => {
             BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
         };
-    }, [])
+    }, [webviewRef.current])
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
     })
@@ -201,7 +207,7 @@ const Browser = (props) => {
         }
     }, [])
 
-    
+
 
     const isFocused = useIsFocused()
     useEffect(() => {
@@ -243,39 +249,38 @@ const Browser = (props) => {
                             translateY: animatedTranslate
                         }]
                     }}>
-                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <TouchableOpacity onPress={() => {
-                                    canGoBack ? webviewRef.current.goBack() : null
-                                }} style={{ marginStart: 20, marginBottom: 15 }}>
-                                    <MaterialIcons name="arrow-back-ios" size={25} color={canGoBack ? "#FFBC01" : "gray"} />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    canGoForward ? webviewRef.current.goForward() : null
-                                }} style={{ marginStart: 10, marginBottom: 15 }}>
-                                    <MaterialIcons name="arrow-forward-ios" size={25} color={canGoForward ? "#FFBC01" : "gray"} />
-                                </TouchableOpacity>
-                            </View>
-                            <Text style={{
-                                alignSelf: 'center', marginEnd: 10, marginStart: 10, marginBottom: 15, fontFamily: 'mulish',
-                                fontSize: 15
+                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', }}>
+                            <TouchableOpacity onPress={() => {
+                                canGoBack ? webviewRef.current.goBack() : null
+                            }} style={{}}>
+                                <MaterialIcons name="arrow-back-ios" size={25} color={canGoBack ? "#FFBC01" : "gray"} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                canGoForward ? webviewRef.current.goForward() : null
+                            }} style={{}}>
+                                <MaterialIcons name="arrow-forward-ios" size={25} color={canGoForward ? "#FFBC01" : "gray"} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                setUrl('')
+                                setUriWeb('')
                             }}>
-                                {titleText.slice(0, 22)}
-                            </Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginEnd: 20 }}>
-                                <TouchableOpacity onPress={() => { setOpen(!open) }} style={{ marginBottom: 15, }}>
-                                    <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    loading ? webviewRef.current.stopLoading() : webviewRef.current.reload()
-                                }} style={{ marginStart: 15, marginBottom: 15 }}>
-                                    <MaterialCommIcons name={loading ? "close" : "reload"} size={27} color="#FFBC01" />
-                                </TouchableOpacity>
-                            </View>
+                                <MaterialCommIcons name="home-outline" size={30} color="#FFBC01" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => { setOpen(!open) }} style={{}}>
+                                <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                bookmarked ?
+                                    RemoveBookmark()
+                                    :
+                                    SetBookmark()
+                            }} style={{}}>
+                                <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={27} color={bookmarked ? '#FFBC01' : "gray"} />
+                            </TouchableOpacity>
                         </View>
                         <ExpandableSection
                             expanded={open}>
-                            <View style={{ height: 400 }}>
+                            <View style={{ height: 400, marginTop: 10, marginBottom: 20 }}>
 
                                 <View style={{ alignItems: 'center', width: screenWidth, flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 10 }}>
                                     <Text style={{
@@ -301,7 +306,7 @@ const Browser = (props) => {
                                                 width: screenWidth - 20, height: 30, backgroundColor: colorScheme === "dark" ? "#202020" : "#fff", borderRadius: 10,
                                                 alignItems: 'center', justifyContent: 'space-between', marginTop: 10, flexDirection: 'row'
                                             }}>
-                                                <Text style={{ paddingHorizontal: 10, fontFamily: 'mulish', color: 'gray', fontSize: 13, marginEnd: 20 }} numberOfLines={1}>{item.item.url}</Text>
+                                                <Text style={{ paddingHorizontal: 10, fontFamily: 'mulish', color: 'gray', fontSize: 13, marginEnd: 20 }} numberOfLines={1}>{item.item.url.slice(0, 40)}</Text>
                                                 <TouchableOpacity style={{ marginEnd: 20 }} onPress={() => { RemoveUrl(item.item.id) }}>
                                                     <Ionicons name="close" size={20} color={colorScheme === "dark" ? "lightgray" : "#202020"} />
                                                 </TouchableOpacity>
@@ -312,39 +317,46 @@ const Browser = (props) => {
 
                             </View>
                         </ExpandableSection>
-                        <Animated.View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', }}>
-                            <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 10 }} onPress={() => { setBottom(true) }}>
-                                <MaterialIcons name="arrow-drop-down" size={20} color="#FFBC01" />
+                        <View style={{
+                            width: screenWidth - 35, height: 45, flexDirection: 'row', backgroundColor: colorScheme === "dark" ? "#303030" : "#e3e3e3", borderRadius: 10,
+                            alignItems: 'center', alignSelf: 'center', marginTop: 15, marginBottom: 10, justifyContent: 'space-between',
+                        }}>
+                            <TouchableOpacity style={{ marginStart: 15 }} onPress={() => { setBottom(true) }}>
+                                <MaterialIcons name="arrow-drop-down" size={25} color='#FFBC01' />
                             </TouchableOpacity>
-                            <TextInput placeholder="https://example.com/" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
+                            <TextInput placeholder="https://example.com/" selectionColor="#FFBC01" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
                                 style={{
-                                    width: '75%', height: 38, backgroundColor: colorScheme === "dark" ? "#303030" : "lightgray", borderRadius: 10,
-                                    opacity: 0.7, paddingHorizontal: 10, color: colorScheme === "dark" ? "white" : "black", alignSelf: 'center', fontSize: 13,
-                                    fontFamily: 'mulish', marginBottom: 10,
+                                    borderRadius: 10, flex: 1,
+                                    opacity: 0.7, color: colorScheme === "dark" ? "white" : "black", fontSize: 13,
+                                    fontFamily: 'mulish', textAlign: textInputFocused ? 'left' : 'center', paddingHorizontal: 20
                                 }}
                                 selectTextOnFocus
                                 cursorColor="#FFBC01"
-                                multiline={false}
+                                multiline={false} onFocus={() => { setTextInputFocused(true) }}
                                 onChangeText={setUrl}
-                                value={url} onBlur={() => {
+                                value={textInputFocused ? url : titleText} onBlur={() => {
                                     if (url.includes('http' || 'https')) {
                                         setUriWeb(url)
                                         AddUrlToDatabase(url)
-                                    } else {
+                                    }
+                                    else if (url.includes('.')) {
+                                        setUriWeb('https://' + url)
+                                        AddUrlToDatabase(url)
+                                    }
+                                    else {
                                         setUriWeb("https://www.google.com/search?q=" + url)
                                         AddUrlToDatabase("https://www.google.com/search?q=" + url)
                                     }
+                                    setTextInputFocused(false)
                                 }}
                             />
+
                             <TouchableOpacity onPress={() => {
-                                bookmarked ?
-                                    RemoveBookmark()
-                                    :
-                                    SetBookmark()
-                            }} style={{ marginBottom: 10, }}>
-                                <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={30} color={bookmarked ? '#FFBC01' : "gray"} />
+                                loading ? webviewRef.current.stopLoading() : webviewRef.current.reload()
+                            }} style={{ marginEnd: 15 }}>
+                                <MaterialCommIcons name={loading ? "close" : "reload"} size={25} color="#FFBC01" />
                             </TouchableOpacity>
-                        </Animated.View>
+                        </View>
                         <ProgressBar progress={progress} style={{ width: screenWidth, height: 2 }} />
                     </Animated.View>}
 
@@ -390,24 +402,30 @@ const Browser = (props) => {
                             <TouchableOpacity style={{ marginStart: 15 }} onPress={() => { setBottom(false) }}>
                                 <MaterialIcons name="arrow-drop-up" size={25} color='#FFBC01' />
                             </TouchableOpacity>
-                            <TextInput placeholder="https://example.com/" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
+                            <TextInput placeholder="https://example.com/" selectionColor="#FFBC01" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
                                 style={{
-                                    borderRadius: 10, flex: 1, paddingHorizontal: 20,
+                                    borderRadius: 10, flex: 1,
                                     opacity: 0.7, color: colorScheme === "dark" ? "white" : "black", fontSize: 13,
-                                    fontFamily: 'mulish',
+                                    fontFamily: 'mulish', textAlign: textInputFocused ? 'left' : 'center', paddingHorizontal: 20
                                 }}
                                 selectTextOnFocus
                                 cursorColor="#FFBC01"
-                                multiline={false}
+                                multiline={false} onFocus={() => { setTextInputFocused(true) }}
                                 onChangeText={setUrl}
-                                value={url} onBlur={() => {
+                                value={textInputFocused ? url : titleText} onBlur={() => {
                                     if (url.includes('http' || 'https')) {
                                         setUriWeb(url)
                                         AddUrlToDatabase(url)
-                                    } else {
+                                    }
+                                    else if (url.includes('.')) {
+                                        setUriWeb('https://' + url)
+                                        AddUrlToDatabase(url)
+                                    }
+                                    else {
                                         setUriWeb("https://www.google.com/search?q=" + url)
                                         AddUrlToDatabase("https://www.google.com/search?q=" + url)
                                     }
+                                    setTextInputFocused(false)
                                 }}
                             />
 
@@ -456,38 +474,35 @@ const Browser = (props) => {
 
                             </View>
                         </ExpandableSection>
-                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', marginTop: 5, justifyContent: 'space-between' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <TouchableOpacity onPress={() => {
-                                    canGoBack ? webviewRef.current.goBack() : null
-                                }} style={{ marginStart: 20 }}>
-                                    <MaterialIcons name="arrow-back-ios" size={25} color={canGoBack ? "#FFBC01" : "gray"} />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    canGoForward ? webviewRef.current.goForward() : null
-                                }} style={{ marginStart: 10 }}>
-                                    <MaterialIcons name="arrow-forward-ios" size={25} color={canGoForward ? "#FFBC01" : "gray"} />
-                                </TouchableOpacity>
-                            </View>
-                            <Text style={{
-                                alignSelf: 'center', marginEnd: 10, marginStart: 10, fontFamily: 'mulish',
-                                fontSize: 15
+                        <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', marginTop: 5, justifyContent: 'space-around' }}>
+
+                            <TouchableOpacity onPress={() => {
+                                canGoBack ? webviewRef.current.goBack() : null
+                            }} style={{}}>
+                                <MaterialIcons name="arrow-back-ios" size={25} color={canGoBack ? "#FFBC01" : "gray"} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                canGoForward ? webviewRef.current.goForward() : null
+                            }} style={{}}>
+                                <MaterialIcons name="arrow-forward-ios" size={25} color={canGoForward ? "#FFBC01" : "gray"} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                setUrl('')
+                                setUriWeb('')
                             }}>
-                                {titleText.slice(0, 22)}
-                            </Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginEnd: 20 }}>
-                                <TouchableOpacity onPress={() => { setOpen(!open) }} style={{}}>
-                                    <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => {
-                                    bookmarked ?
-                                        RemoveBookmark()
-                                        :
-                                        SetBookmark()
-                                }} style={{ marginStart: 15 }}>
-                                    <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={27} color={bookmarked ? '#FFBC01' : "gray"} />
-                                </TouchableOpacity>
-                            </View>
+                                <MaterialCommIcons name="home-outline" size={30} color="#FFBC01" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => { setOpen(!open) }} style={{}}>
+                                <MaterialCommIcons name={open ? "close" : "history"} size={27} color="#FFBC01" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => {
+                                bookmarked ?
+                                    RemoveBookmark()
+                                    :
+                                    SetBookmark()
+                            }} style={{}}>
+                                <MaterialIcons name={bookmarked ? "bookmark" : "bookmark-outline"} size={27} color={bookmarked ? '#FFBC01' : "gray"} />
+                            </TouchableOpacity>
                         </View>
 
 

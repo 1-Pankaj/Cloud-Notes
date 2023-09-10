@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, Card, Checkbox, Dialog, Divider, FAB, Menu, Modal, Portal, Text, Tooltip } from "react-native-paper";
+import { Button, Card, Checkbox, Dialog, Divider, FAB, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
 import * as SQLite from 'expo-sqlite'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
@@ -53,7 +53,6 @@ const HomeScreen = (props) => {
 
 
 
-    const [visible, setVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
     const [searchText, setSearchText] = useState("")
     const searchRef = useRef(null)
@@ -89,6 +88,11 @@ const HomeScreen = (props) => {
     const [resultsText, setResultsText] = useState('')
     const [expandExtra, setExpandExtra] = useState(false)
     const [recordingModal, setRecordingModal] = useState(false)
+    const [snackbarTrash, setSnackbarTrash] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState('')
+    const [snackbarArchive, setSnackbarArchive] = useState(false)
+    const [lastTrashedid, setLastTrashedId] = useState('')
+    const [lastArchiveId, setLastArchiveId] = useState('')
 
     const openMenu = () => setMenuVisible(true);
 
@@ -107,39 +111,70 @@ const HomeScreen = (props) => {
 
     const StartStopRecording = async () => {
         if (recording === true) {
-            Voice.stop()
+            await Voice.stop().then(() => {
+                Voice.destroy()
+            })
             setRecording(false)
         } else {
-            await Voice.start('en-US');
+            await Voice.start();
             setRecording(true)
         }
     }
 
-    const onSpeechResults = (res) => {
-        setResults(res.value)
-        res.value.map((res, index) => {
-            setResultsText(res.trim())
-            console.log(res);
-            if(res.includes('note') || res.includes('new note')){
+    const onSpeechResults = async (res) => {
+        setRecording(false)
+
+        if (res.value[0]) {
+            let result = res.value[0]
+            if (result.includes('new note' || 'note' || 'Note' || 'notes')) {
                 props.navigation.navigate('CreateNote')
+                setFabVisible(false)
+                setRecordingModal(false)
+                await Voice.stop().then(() => {
+                    Voice.destroy()
+                })
             }
-            else if(res.includes('directory') || res.includes('Directory')){
-                props.navigation.navigate('Directory')
-            }
-            else if(res.includes('archive') || res.includes('Archive')){
-                props.navigation.navigate('ArchivePage')
-            }
-            setRecordingModal(false)
+        }
+        await Voice.stop().then(() => {
+            Voice.destroy()
         })
     }
-    const onSpeechEnd = (res) => {
+    const onSpeechEnd = async (res) => {
         setRecording(false)
+        await Voice.stop().then(() => {
+            Voice.destroy()
+        })
     }
 
-    const onSpeechError = (error) => {
+    const onSpeechError = async (error) => {
         setRecording(false)
-        Voice.stop().then(Voice.destroy())
+        await Voice.stop().then(() => {
+            Voice.destroy()
+        })
     }
+
+    const onPartialResults = async (res) => {
+        setRecording(false)
+        setResults(res.value)
+        if (res.value[0]) {
+            let result = res.value[0]
+            if (result.includes('new note' || 'note' || 'Note' || 'notes')) {
+                props.navigation.navigate('CreateNote')
+                setFabVisible(false)
+                setRecordingModal(false)
+                await Voice.stop().then(() => {
+                    Voice.destroy()
+                })
+            }
+        }
+        await Voice.stop().then(() => {
+            Voice.destroy()
+        })
+    }
+
+
+
+
 
 
     useEffect(() => {
@@ -147,10 +182,8 @@ const HomeScreen = (props) => {
         Voice.onSpeechError = onSpeechError
         Voice.onSpeechResults = onSpeechResults
         Voice.onSpeechEnd = onSpeechEnd
+        Voice.onSpeechPartialResults = onPartialResults
 
-        return () => {
-            Voice.destroy().then(Voice.removeAllListeners);
-        }
     }, [])
 
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
@@ -248,6 +281,7 @@ const HomeScreen = (props) => {
 
 
     const SelectData = () => {
+        GetRemiders()
         db.transaction((tx) => {
             tx.executeSql(`SELECT * FROM notes ORDER BY ${sortFun} ${ascDesc}`, [],
                 (sql, rs) => {
@@ -436,7 +470,14 @@ const HomeScreen = (props) => {
                                                                     setPreviousData(null)
                                                                     setTodayData(null)
                                                                     SelectData()
-                                                                    ToastAndroid.show("Moved to Trash", ToastAndroid.SHORT)
+                                                                    sql.executeSql("SELECT id FROM deletednotes WHERE title = (?) and note = (?) and date = (?) and time = (?)", [title, note, date, time],
+                                                                        (sql, rs) => {
+                                                                            if (rs.rows.length > 0) {
+                                                                                setLastTrashedId(rs.rows._array[0].id)
+                                                                                setSnackbarTrash(true)
+                                                                                setSnackbarMessage('Note move to Trash')
+                                                                            }
+                                                                        }, error => { })
                                                                 }, error => {
                                                                 })
                                                         }, error => {
@@ -515,6 +556,59 @@ const HomeScreen = (props) => {
     }
 
 
+    const RestoreLastArchived = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM archived WHERE id = (?)", [lastArchiveId],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let title = rs.rows._array[0].title
+                        let note = rs.rows._array[0].note
+                        let date = rs.rows._array[0].date
+                        let time = rs.rows._array[0].time
+                        let pageColor = rs.rows._array[0].pageColor
+                        let fontColor = rs.rows._array[0].fontColor
+                        let fontStyle = rs.rows._array[0].fontStyle
+                        let fontSize = rs.rows._array[0].fontSize
+
+                        sql.executeSql("INSERT INTO notes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                            (sql, rs) => {
+                                setRefreshing(true)
+                                SelectData()
+                                setSnackbarArchive(false)
+                                setSnackbarMessage('')
+                                setLastArchiveId('')
+                            }, error => { })
+                    }
+                }, error => { })
+        })
+    }
+
+    const RestoreLastDeleted = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM deletednotes WHERE id = (?)", [lastTrashedid],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let title = rs.rows._array[0].title
+                        let note = rs.rows._array[0].note
+                        let date = rs.rows._array[0].date
+                        let time = rs.rows._array[0].time
+                        let pageColor = rs.rows._array[0].pageColor
+                        let fontColor = rs.rows._array[0].fontColor
+                        let fontStyle = rs.rows._array[0].fontStyle
+                        let fontSize = rs.rows._array[0].fontSize
+
+                        sql.executeSql("INSERT INTO notes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                            (sql, rs) => {
+                                setRefreshing(true)
+                                SelectData()
+                                setSnackbarTrash(false)
+                                setSnackbarMessage('')
+                                setLastTrashedId('')
+                            }, error => { })
+                    }
+                }, error => { })
+        })
+    }
 
     const ArchiveFirstTimeCheck = (id) => {
         db.transaction((tx) => {
@@ -543,7 +637,14 @@ const HomeScreen = (props) => {
                                                     SelectData()
                                                     sql.executeSql("DELETE FROM pinnednote WHERE noteid = (?)", [id],
                                                         (sql, rs) => {
-                                                            ToastAndroid.show("Archived!", ToastAndroid.SHORT)
+                                                            sql.executeSql("SELECT id FROM archived WHERE title = (?) and note = (?) and date = (?) and time = (?)", [title, note, date, time],
+                                                                (sql, rs) => {
+                                                                    if (rs.rows.length > 0) {
+                                                                        setLastArchiveId(rs.rows._array[0].id)
+                                                                        setSnackbarArchive(true)
+                                                                        setSnackbarMessage('Archived note successfully')
+                                                                    }
+                                                                }, error => { })
                                                             SelectData()
                                                         }, error => {
                                                         })
@@ -786,6 +887,8 @@ const HomeScreen = (props) => {
         setPermanentDeleteId(id)
         setPermanentDeleteDialog(true)
     }
+
+
 
     const GetFeatures = () => {
         db.transaction((tx) => {
@@ -1136,7 +1239,6 @@ const HomeScreen = (props) => {
                                 results.push({ id: rs.rows._array[i].id, message: rs.rows._array[i].message, time: rs.rows._array[i].time, title: rs.rows._array[i].title })
                             }
                         }
-                        setReminderData(results)
                     } else {
                         setReminderData(null)
                     }
@@ -1152,7 +1254,6 @@ const HomeScreen = (props) => {
         SelectData()
         GetFeatures()
         CheckFirstTime()
-        GetRemiders()
         Speech.isSpeakingAsync().then((rs) => {
             if (rs) {
                 Speech.stop()
@@ -1529,6 +1630,7 @@ const HomeScreen = (props) => {
                                         <ScrollView style={{ width: screenWidth, marginBottom: 20, marginTop: 10 }} contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }} bounces refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                                             setRefreshing(true)
                                             SelectData()
+                                            GetRemiders()
                                         }} />} showsVerticalScrollIndicator={false}>
                                             {!searchText && todayData && sortFun == 'id' && !selectionMode ?
                                                 <View style={{ width: screenWidth, marginTop: 10 }}>
@@ -2190,14 +2292,14 @@ const HomeScreen = (props) => {
                         <Modal dismissable dismissableBackButton visible={recordingModal} onDismiss={() => { setRecordingModal(false) }}
                             style={{ alignItems: 'center', justifyContent: 'center' }}>
                             <TouchableHighlight style={{ width: 150, height: 150, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : 'white', borderRadius: 100, alignItems: 'center', justifyContent: 'center' }}
-                            onPress={()=>{StartStopRecording()}} underlayColor={colorScheme === 'dark'? '#303030' : '#dedede'}>
-                                
-                                    {recording ?
-                                        <Card style={{ width: 150, height: 150, borderRadius: 100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
-                                            <MaterialComIcon name="keyboard-voice" size={50} color="red" />
-                                        </Card>
-                                        :
-                                        <MaterialComIcon name="keyboard-voice" size={50} color="#FFBC01" />}
+                                onPress={() => { StartStopRecording() }} underlayColor={colorScheme === 'dark' ? '#303030' : '#dedede'}>
+
+                                {recording ?
+                                    <Card style={{ width: 150, height: 150, borderRadius: 100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
+                                        <MaterialComIcon name="keyboard-voice" size={50} color="red" />
+                                    </Card>
+                                    :
+                                    <MaterialComIcon name="keyboard-voice" size={50} color="#FFBC01" />}
                             </TouchableHighlight>
                         </Modal>
                     </Portal>
@@ -2254,7 +2356,30 @@ const HomeScreen = (props) => {
                         </Portal>}
 
                 </View>
-
+                <Portal>
+                    <Snackbar visible={snackbarTrash}
+                        action={{
+                            label: 'Undo',
+                            onPress: () => {
+                                RestoreLastDeleted()
+                            }, textColor: "#FFBC01"
+                        }}
+                        duration={2500} onDismiss={() => { setSnackbarTrash(false) }}>
+                        {snackbarMessage}
+                    </Snackbar>
+                </Portal>
+                <Portal>
+                    <Snackbar visible={snackbarArchive}
+                        action={{
+                            label: 'Undo',
+                            onPress: () => {
+                                RestoreLastArchived()
+                            }, textColor: "#FFBC01"
+                        }}
+                        duration={2500} onDismiss={() => { setSnackbarArchive(false) }}>
+                        {snackbarMessage}
+                    </Snackbar>
+                </Portal>
 
             </View>
         </SafeAreaView>

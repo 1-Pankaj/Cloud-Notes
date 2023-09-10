@@ -12,6 +12,7 @@ import AnimatedLottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen'
+import { Drawer } from "react-native-ui-lib";
 
 const screenWidth = Dimensions.get('window').width
 const screenHeight = Dimensions.get('window').height
@@ -122,7 +123,7 @@ const TrashPage = (props) => {
     }
 
     const DeleteTrashedNote = (id) => {
-        setDeleteNoteId('All')
+        setDeleteNoteId(id)
         setDeleteId(id)
         setDeleteFun(true)
         setDialogMessage('Are you sure you want to delete this note?')
@@ -183,13 +184,13 @@ const TrashPage = (props) => {
         else if (deleteNoteId == 'recover') {
             RecoverAll()
         }
-        else {
+        else{
             db.transaction((tx) => {
                 tx.executeSql("DELETE FROM deletednotes WHERE id = (?)", [deleteId],
                     (sql, rs) => {
                         FetchTrashedNotes()
                         setDeleteFun(false)
-                        setDialogMessage('Trashed note recovered successfully!')
+                        setDialogMessage('Trashed note deleted successfully!')
                         setDialog(true)
                     },
                     error => {
@@ -288,42 +289,47 @@ const TrashPage = (props) => {
                     style={{ marginTop: 20, marginBottom: 50 }}
                     renderItem={(item) => {
                         return (
-                            <View style={{ marginTop: 10, marginBottom: 10 }}>
-                                <View style={{
-                                    width: screenWidth - 40, height: 60, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, flexDirection: 'row',
-                                    alignItems: 'center', justifyContent: 'space-between'
-                                }}>
+                            <Drawer leftItem={{text:"Recover", background:'#FFBC01', onPress:()=>{RestoreNote(item.item.id)}}} 
+                            rightItems={[{text:"Delete", background:'red', onPress:()=>{DeleteTrashedNote(item.item.id)}}]}
+                            onFullSwipeLeft={()=>{RestoreNote(item.item.id)}} disableHaptic
+                            onFullSwipeRight={()=>{DeleteTrashedNote(item.item.id)}} fullSwipeLeft fullSwipeRight fullLeftThreshold={0.7} fullRightThreshold={0.7}
+                            style={{height:65, marginTop: 10, marginBottom: 10, borderRadius:10 }}>
+                                
+                                    <View style={{
+                                        width: screenWidth - 40, height: 65, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, flexDirection: 'row',
+                                        alignItems: 'center', justifyContent: 'space-between'
+                                    }}>
 
-                                    {notebackgroundEnabled ?
-                                        <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.item.pageColor, opacity: 0.7, position: 'absolute' }} />
-                                        :
-                                        null}
-                                    <View style={{ marginStart: 20 }}>
-                                        <Text style={{
-                                            fontSize: 20,
-                                            fontWeight: 'bold', marginTop: -2
-                                        }}
-                                            numberOfLines={1}>{item.item.title.slice(0, 15).trim()}</Text>
-                                        <Text style={{ fontSize: 12 }}
-                                            numberOfLines={1}>{item.item.note.slice(0, 25).trim()}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <View style={{ marginEnd: 10 }}>
-                                            <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.item.date.length === 9 ? item.item.date.slice(0, 4) : item.item.date.slice(0, 5)}</Text>
-                                            <Text style={{ fontFamily: 'mulish', fontSize: 10, marginStart: -15 }}>{item.item.time.length === 10 ? item.item.time.slice(0, 4) + item.item.time.slice(7, 10) : item.item.time.slice(0, 5) + item.item.time.slice(8, 11)}</Text>
+                                        {notebackgroundEnabled ?
+                                            <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.item.pageColor, opacity: 0.7, position: 'absolute' }} />
+                                            :
+                                            null}
+                                        <View style={{ marginStart: 20 }}>
+                                            <Text style={{
+                                                fontSize: 20,
+                                                fontWeight: 'bold', marginTop: -2
+                                            }}
+                                                numberOfLines={1}>{item.item.title.slice(0, 15).trim()}</Text>
+                                            <Text style={{ fontSize: 12 }}
+                                                numberOfLines={1}>{item.item.note.slice(0, 25).trim()}</Text>
                                         </View>
-                                        <TouchableOpacity onPress={() => { RestoreNote(item.item.id) }}>
-                                            <MaterialIcons name="restore-from-trash" size={25} color={notebackgroundEnabled ? item.item.pageColor === 'default' ? '#FFBC01' : 'white' : "#FFBC01"} style={{ marginEnd: 20 }} />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => {
-                                            DeleteTrashedNote(item.item.id)
-                                        }}>
-                                            <MaterialIcons name="delete-forever" size={25} color="red" style={{ marginEnd: 20 }} />
-                                        </TouchableOpacity>
-                                    </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <View style={{ marginEnd: 10 }}>
+                                                <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{item.item.date.length === 9 ? item.item.date.slice(0, 4) : item.item.date.slice(0, 5)}</Text>
+                                                <Text style={{ fontFamily: 'mulish', fontSize: 10, marginStart: -15 }}>{item.item.time.length === 10 ? item.item.time.slice(0, 4) + item.item.time.slice(7, 10) : item.item.time.slice(0, 5) + item.item.time.slice(8, 11)}</Text>
+                                            </View>
+                                            <TouchableOpacity onPress={() => { RestoreNote(item.item.id) }}>
+                                                <MaterialIcons name="restore-from-trash" size={25} color={notebackgroundEnabled ? item.item.pageColor === 'default' ? '#FFBC01' : 'white' : "#FFBC01"} style={{ marginEnd: 20 }} />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => {
+                                                DeleteTrashedNote(item.item.id)
+                                            }}>
+                                                <MaterialIcons name="delete-forever" size={25} color="red" style={{ marginEnd: 20 }} />
+                                            </TouchableOpacity>
+                                        </View>
 
-                                </View>
-                            </View >
+                                    </View>
+                            </Drawer>
                         )
                     }}
                 />
@@ -349,14 +355,14 @@ const TrashPage = (props) => {
                         {deleteFun ?
                             <>
                                 <Button onPress={() => { setDialog(false) }}>Cancel</Button>
-                                <Button onPress={() => { FinallyDelete() }}>{deleteNoteId === 'All' ? 'Delete' : 'Recover'}</Button>
+                                <Button onPress={() => { FinallyDelete() }}>{deleteNoteId === 'All' ? 'Delete' : deleteNoteId == 'recover'? 'Recover' : 'Delete'}</Button>
                             </>
                             :
                             <Button onPress={() => { setDialog(false) }}>Done</Button>}
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
-        </SafeAreaView >
+        </SafeAreaView>
     )
 }
 

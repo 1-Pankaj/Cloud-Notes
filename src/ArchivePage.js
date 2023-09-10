@@ -12,6 +12,7 @@ import { useIsFocused } from "@react-navigation/native";
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { SwipeListView } from "react-native-swipe-list-view";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { Drawer } from "react-native-ui-lib";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -287,7 +288,7 @@ const ArchivePage = (props) => {
                 })
         })
     }
-    
+
 
 
     const UnarchiveAll = () => {
@@ -427,16 +428,16 @@ const ArchivePage = (props) => {
                                 scrollEnabled={false}
                                 renderItem={item => {
                                     return (
-                                        <TouchableOpacity activeOpacity={0.6} style={{ marginTop: 10, marginBottom: 10 }} onPress={() => {
+                                        <TouchableHighlight activeOpacity={0.6} underlayColor={colorScheme === 'dark' ? '#303030' : 'lightgray'} style={{
+                                            borderRadius: 10, height: 60, width: screenWidth - 20, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, flexDirection: 'row',
+                                            alignItems: 'center', justifyContent: 'space-between'
+                                        }} onPress={() => {
                                             props.navigation.navigate('CreateNote', {
                                                 id: item.item.id,
                                                 page: 'Archive'
                                             })
                                         }}>
-                                            <View style={{
-                                                width: screenWidth - 20, height: 60, backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', borderRadius: 10, flexDirection: 'row',
-                                                alignItems: 'center', justifyContent: 'space-between'
-                                            }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                                 {notebackgroundEnabled ?
                                                     <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                     :
@@ -463,9 +464,9 @@ const ArchivePage = (props) => {
                                                     </TouchableOpacity>
 
                                                 </View>
-
                                             </View>
-                                        </TouchableOpacity>
+
+                                        </TouchableHighlight>
                                     )
                                 }}
                             />

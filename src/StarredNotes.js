@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Appearance, BackHandler, Dimensions, FlatList, ImageBackground, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { Appearance, BackHandler, Dimensions, FlatList, ImageBackground, ToastAndroid, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
 import { Button, Dialog, Menu, Portal, Text } from "react-native-paper";
@@ -11,6 +11,7 @@ import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from "expo-font";
 import AnimatedLottieView from "lottie-react-native";
+import { Drawer } from "react-native-ui-lib";
 
 
 const db = SQLite.openDatabase("CloudNotes.db")
@@ -41,9 +42,9 @@ const StarredNotes = (props) => {
                     sql.executeSql("SELECT * FROM features", [],
                         (sql, rs) => {
                             if (rs.rows.length > 0) {
-                                
+
                                 let notebackground = rs.rows._array[0].notebackground
-                                
+
 
                                 setNotebackgroundEnabled(notebackground)
 
@@ -121,6 +122,8 @@ const StarredNotes = (props) => {
         setDialogMessage('Are you sure you want to unstar this note? This action is irreversible!')
         setDeleteFun(false)
         setId(id)
+        setData(null)
+        GetData()
     }
 
     const DeleteVerify = (id) => {
@@ -128,6 +131,8 @@ const StarredNotes = (props) => {
         setDialogMessage('Are you sure you want to move this note to Trash?\n\nYou can recover Trashed note anytime!')
         setDeleteFun(true)
         setId(id)
+        setData(null)
+        GetData()
     }
 
     const UnstarStarredNote = () => {
@@ -281,50 +286,59 @@ const StarredNotes = (props) => {
                         keyExtractor={item => item.id}
                         renderItem={data => {
                             return (
-                                <TouchableOpacity style={{ width: screenWidth - 25, height: 60, marginTop: 10 }} onPress={() => {
-                                    props.navigation.navigate("CreateNote", {
-                                        id: data.item.id,
-                                        page: 'Starred'
-                                    })
-                                }}>
-                                    <View style={{ width: '100%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
-                                        {notebackgroundEnabled?
-                                            <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
-                                            :
-                                            null}
-                                        <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
-                                            <View>
-                                                <Text style={{
-                                                    fontFamily: 'mulish', fontSize: 18,
-                                                    fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                }}
-                                                    numberOfLines={1}>
-                                                    {data.item.title.slice(0, 20).trim()}
-                                                </Text>
-                                                <Text style={{
-                                                    fontFamily: 'mulish', fontSize: 12
-                                                    , color: colorScheme === 'dark' ? 'white' : '#202020'
-                                                }}
-                                                    numberOfLines={1}>
-                                                    {data.item.note.slice(0, 30).trim()}
-                                                </Text>
-                                            </View>
-                                            <View style={{ alignItems: 'center', flexDirection: 'row', }}>
-                                                <View style={{ alignItems: 'center', marginEnd: 20 }}>
-                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
-                                                    <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
+                                <Drawer leftItem={{text:"Trash", background:'#FFBC01', onPress:()=>{DeleteVerify(data.item.id)}}}
+                                rightItems={[{text:'Unstar', background:'red', onPress:()=>{UnstarVerify(data.item.id)}}]} fullLeftThreshold={0.7} fullRightThreshold={0.7}
+                                fullSwipeLeft fullSwipeRight onFullSwipeRight={()=>{
+                                    UnstarVerify(data.item.id)
+                                }} onFullSwipeLeft={()=>{DeleteVerify(data.item.id)}} disableHaptic
+                                style={{marginTop:10, borderRadius:10, height:59}}>
+                                    <TouchableHighlight style={{ width: screenWidth - 25, height: 60,  borderRadius: 10 }}
+                                        underlayColor={colorScheme === 'dark' ? '#303030' : 'lightgray'}
+                                        onPress={() => {
+                                            props.navigation.navigate("CreateNote", {
+                                                id: data.item.id,
+                                                page: 'Starred'
+                                            })
+                                        }} activeOpacity={0.6}>
+                                        <View style={{ width: '100%', height: 60, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                            {notebackgroundEnabled ?
+                                                <View style={{ backgroundColor: data.item.pageColor == "default" ? colorScheme === "dark" ? "#202020" : "#fff" : data.item.pageColor, width: '100%', height: '100%', borderRadius: 8, opacity: 0.6, position: 'absolute' }} />
+                                                :
+                                                null}
+                                            <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, justifyContent: 'space-between' }}>
+                                                <View>
+                                                    <Text style={{
+                                                        fontFamily: 'mulish', fontSize: 18,
+                                                        fontWeight: 'bold', color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                    }}
+                                                        numberOfLines={1}>
+                                                        {data.item.title.slice(0, 20).trim()}
+                                                    </Text>
+                                                    <Text style={{
+                                                        fontFamily: 'mulish', fontSize: 12
+                                                        , color: colorScheme === 'dark' ? 'white' : '#202020'
+                                                    }}
+                                                        numberOfLines={1}>
+                                                        {data.item.note.slice(0, 30).trim()}
+                                                    </Text>
                                                 </View>
-                                                <TouchableOpacity hitSlop={5} style={{ marginEnd: 15 }} onPress={() => { DeleteVerify(data.item.id) }}>
-                                                    <MaterialCommIcons name="delete-alert" size={20} color={notebackgroundEnabled? data.item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
-                                                </TouchableOpacity>
-                                                <TouchableOpacity hitSlop={5} style={{ marginEnd: 5 }} onPress={() => { UnstarVerify(data.item.id) }}>
-                                                    <MaterialCommIcons name="star-off" size={20} color='red' />
-                                                </TouchableOpacity>
+                                                <View style={{ alignItems: 'center', flexDirection: 'row', }}>
+                                                    <View style={{ alignItems: 'center', marginEnd: 20 }}>
+                                                        <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.date.length === 9 ? data.item.date.slice(0, 4) : data.item.date.slice(0, 5)}</Text>
+                                                        <Text style={{ fontFamily: 'mulish', fontSize: 10 }}>{data.item.time.length === 10 ? data.item.time.slice(0, 4) + data.item.time.slice(7, 10) : data.item.time.slice(0, 5) + data.item.time.slice(8, 11)}</Text>
+                                                    </View>
+                                                    <TouchableOpacity hitSlop={5} style={{ marginEnd: 15 }} onPress={() => { DeleteVerify(data.item.id) }}>
+                                                        <MaterialCommIcons name="delete-alert" size={20} color={notebackgroundEnabled ? data.item.pageColor === 'default' ? '#FFBC01' : 'white' : '#FFBC01'} />
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity hitSlop={5} style={{ marginEnd: 5 }} onPress={() => { UnstarVerify(data.item.id) }}>
+                                                        <MaterialCommIcons name="star-off" size={20} color='red' />
+                                                    </TouchableOpacity>
+                                                </View>
                                             </View>
-                                        </View>
 
-                                    </View>
-                                </TouchableOpacity>
+                                        </View>
+                                    </TouchableHighlight>
+                                </Drawer>
                             )
                         }}
                     />

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import * as SQLite from 'expo-sqlite'
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -33,6 +33,13 @@ const Folder = (props) => {
     const [moveId, setMoveId] = useState('')
     const [moveFolder, setMoveFolder] = useState('')
     const [extraName, setExtraName] = useState('')
+    const [allCount, setAllCount] = useState(0)
+    const [currentlyMovingFolderId, setCurrentlyMovingFolderId] = useState('')
+    const [renameId, setRenameId] = useState('')
+    const [renameModal, setRenameModal] = useState(false)
+    const [currentExtraName, setCurrentExtraName] = useState('')
+    const [currentNoteCount, setCurrentNoteCount] = useState(0)
+    const renameRef = useRef(null)
 
     const showDialog = () => setVisible(true);
 
@@ -96,21 +103,15 @@ const Folder = (props) => {
                 }, error => {
                 })
         })
+        db.transaction((tx) => {
+            tx.executeSql("SELECT id FROM notes", [],
+                (sql, rs) => {
+                    setAllCount(rs.rows.length)
+                }, error => {
+                })
+        })
     }
 
-    const RenameFolder = (id) => {
-        if (newFoldername.trim()) {
-            db.transaction((tx) => {
-                tx.executeSql(`UPDATE allfolders SET extraName = (?) where id = (?)`, [newFoldername.trim(), id],
-                    (sql, rs) => {
-                        GetData()
-                    }, error => {
-                    })
-            })
-        } else {
-            GetData()
-        }
-    }
 
     const CreateNewFolder = () => {
         if (folderName.trim() == '' || folderName.includes(' ')) {
@@ -159,6 +160,40 @@ const Folder = (props) => {
         }
     }
 
+    const MoveToAllNotes = () => {
+        if (page == 'Home') {
+            ToastAndroid.show("Note already exists in All Notes", ToastAndroid.SHORT)
+        } else {
+            db.transaction((tx) => {
+                tx.executeSql(`SELECT * FROM ${moveFolder} WHERE id = (?)`, [moveId],
+                    (sql, rs) => {
+                        if (rs.rows.length > 0) {
+                            let title = rs.rows._array[0].title
+                            let note = rs.rows._array[0].note
+                            let date = rs.rows._array[0].date
+                            let time = rs.rows._array[0].time
+                            let pageColor = rs.rows._array[0].pageColor
+                            let fontColor = rs.rows._array[0].fontColor
+                            let fontStyle = rs.rows._array[0].fontStyle
+                            let fontSize = rs.rows._array[0].fontSize
+
+                            sql.executeSql("INSERT INTO notes (title,note,date,time,pageColor,fontColor,fontStyle,fontSize) values (?,?,?,?,?,?,?,?)", [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
+                                (sql, rs) => {
+                                    sql.executeSql(`DELETE FROM ${moveFolder} WHERE id = (?)`, [moveId],
+                                        (sql, rs) => {
+                                            ToastAndroid.show("Moved", ToastAndroid.SHORT)
+                                            props.navigation.navigate('Folder')
+                                            setMoveFolder('')
+                                            setMoveId('')
+                                        }, error => { })
+                                }, error => {
+                                })
+                        }
+                    }, error => { })
+            })
+        }
+    }
+
     const MoveToThisFolder = (id) => {
         if (page == 'Home') {
             db.transaction((tx) => {
@@ -182,7 +217,7 @@ const Folder = (props) => {
                                             sql.executeSql("DELETE FROM notes WHERE id = (?)", [moveId],
                                                 (sql, rs) => {
                                                     ToastAndroid.show('Moved', ToastAndroid.SHORT)
-                                                    props.navigation.navigate('Home')
+                                                    props.navigation.goBack()
                                                 }, error => {
                                                 })
                                         }, error => {
@@ -281,6 +316,38 @@ const Folder = (props) => {
         setDialogMessage("Once deleted folder can't be recovered! Are you sure?")
     }
 
+    const GetRenameData = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM allfolders WHERE id = (?)", [id],
+                (sql, rs) => {
+                    let extraname = rs.rows._array[0].extraName
+                    let foldername = rs.rows._array[0].folderName
+
+                    setRenameId(id)
+                    setCurrentExtraName(extraname)
+                    sql.executeSql(`select * from ${foldername}`, [],
+                        (sql, rs) => {
+                            setCurrentNoteCount(rs.rows.length)
+                            setRenameModal(true)
+                            renameRef.current.focus()
+                        }, error => { })
+                }, error => { })
+        })
+    }
+
+    const RenameFolder = () => {
+        if (currentExtraName.trim()) {
+            db.transaction((tx) => {
+                tx.executeSql(`update allfolders set extraName = (?) WHERE id = (?)`, [currentExtraName, renameId],
+                    (sql, rs) => {
+                        GetData()
+                        setRenameModal(false)
+                        setRenameId('')
+                    }, error => { })
+            })
+        }
+    }
+
     const FinallyDelete = () => {
         db.transaction((tx) => {
             tx.executeSql("SELECT * FROM allfolders WHERE id = (?)", [deleteFolderId],
@@ -377,6 +444,25 @@ const Folder = (props) => {
                         </View>}
                 </TouchableOpacity>
             </View>
+            {moveFolder ?
+                <TouchableHighlight style={{ borderRadius: 10, marginTop: 50 }} activeOpacity={0.6} onPress={() => {
+                    MoveToAllNotes()
+                }} underlayColor={colorScheme === 'dark' ? '#303030' : 'lightgray'}>
+                    <View style={{ width: screenWidth - 30, backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10, alignItems: 'center' }}>
+                        <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', height: 55, justifyContent: 'space-between' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialIcons name="folder" size={28} color="#FFBC01" />
+                                <Text style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20 }}>All Notes</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={{ marginEnd: 20, fontSize: 18 }}>{allCount}</Text>
+                                <MaterialIcons name="arrow-forward-ios" size={20} color="#FFBC01" />
+                            </View>
+                        </View>
+                    </View>
+                </TouchableHighlight>
+                :
+                null}
             {data ?
                 <View style={{ width: screenWidth, alignItems: 'center', flex: 1 }}>
                     <Text style={{ fontFamily: 'mulish', fontSize: 18, alignSelf: 'flex-start', marginTop: 40, marginStart: 25 }}>All Folders</Text>
@@ -397,8 +483,12 @@ const Folder = (props) => {
                                                 index: item.index
                                             })
                                         }
-                                    }}
-                                    rightItems={[{ text: 'Delete', onPress: () => { DeleteFolder(item.item.id) }, background: 'red' }]} onFullSwipeRight={() => { DeleteFolder(item.item.id) }} fullSwipeLeft fullSwipeRight onFullSwipeLeft={() => {
+                                    }} fullLeftThreshold={0.7} fullRightThreshold={0.7}
+                                    rightItems={[{ text: 'Delete', onPress: () => { DeleteFolder(item.item.id) }, background: 'red' }, {
+                                        text: 'Rename', onPress: () => {
+                                            GetRenameData(item.item.id)
+                                        }
+                                    }]} onFullSwipeRight={() => { DeleteFolder(item.item.id) }} fullSwipeLeft fullSwipeRight onFullSwipeLeft={() => {
                                         props.navigation.navigate('OpenFolder', {
                                             id: item.item.id,
                                             foldername: item.item.folderName,
@@ -406,29 +496,25 @@ const Folder = (props) => {
                                             index: item.index
                                         })
                                     }} style={{ marginTop: 15, borderRadius: 10 }}>
-                                    <TouchableHighlight style={{ borderRadius: 10 }} activeOpacity={0.6} onPress={() => {
-                                        moveFolder ?
-                                            MoveToThisFolder(item.item.id)
-                                            :
-                                            props.navigation.navigate('OpenFolder', {
-                                                id: item.item.id,
-                                                foldername: item.item.folderName,
-                                                extraname: item.item.extraName,
-                                                index: item.index
-                                            })
-                                    }} underlayColor={colorScheme === 'dark' ? '#303030' : 'lightgray'}>
+                                    <TouchableHighlight style={{ borderRadius: 10 }} activeOpacity={0.6}
+                                        onLongPress={() => {
+                                            GetRenameData(item.item.id)
+                                        }} onPress={() => {
+                                            moveFolder ?
+                                                MoveToThisFolder(item.item.id)
+                                                :
+                                                props.navigation.navigate('OpenFolder', {
+                                                    id: item.item.id,
+                                                    foldername: item.item.folderName,
+                                                    extraname: item.item.extraName,
+                                                    index: item.index
+                                                })
+                                        }} underlayColor={colorScheme === 'dark' ? '#303030' : 'lightgray'}>
                                         <View style={{ width: screenWidth - 30, backgroundColor: colorScheme === 'dark' ? '#303030' : 'white', borderRadius: 10, alignItems: 'center' }}>
                                             <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', height: 55, justifyContent: 'space-between' }}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                     <MaterialIcons name="folder" size={28} color="#FFBC01" />
-                                                    <TouchableOpacity>
-                                                        <TextInput placeholder={item.item.extraName} numberOfLines={1} autoFocus={false} maxLength={20} blurOnSubmit onChangeText={(text) => {
-                                                            setNewFoldername(text)
-                                                        }} editable={moveFolder ? false : true}
-                                                            placeholderTextColor={colorScheme === 'dark' ? 'white' : '#303030'}
-                                                            cursorColor="#FFBC01" style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20, width: '100%' }} selectTextOnFocus
-                                                            selectionColor="#FFBC01" onFocus={() => { }} onBlur={() => { RenameFolder(item.item.id) }} />
-                                                    </TouchableOpacity>
+                                                    <Text style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20, }}>{item.item.extraName}</Text>
                                                 </View>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                     <Text style={{ marginEnd: 20, fontSize: 18 }}>{item.item.count}</Text>
@@ -441,31 +527,6 @@ const Folder = (props) => {
                                                     </Animated.View>
                                                 </View>
                                             </View>
-                                            {/* <ExpandableSection expanded={item.item.expanded? true : false}>
-                                            <View style={{ width: screenWidth - 30, marginTop: 20 }}>
-                                                <Text style={{ alignSelf: 'flex-start', marginStart: 20 }}>Created on:           {item.item.date}</Text>
-                                                <Text style={{ alignSelf: 'flex-start', marginStart: 20 }}>Creation time:      {item.item.time}</Text>
-                                                <Text style={{ alignSelf: 'flex-start', marginStart: 20 }}>Folder number:     {item.index + 1}</Text>
-                                                <Text style={{ alignSelf: 'flex-start', marginStart: 20 }}>Notes in folder:     {item.item.count}</Text>
-                                                <View style={{ width: '100%', marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <TouchableOpacity style={{ backgroundColor: 'red', width: '50%', alignItems: 'center', padding: 10, justifyContent: 'center', borderBottomStartRadius: 11 }}
-                                                        onPress={() => { DeleteFolder(item.item.id) }}>
-                                                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}>Delete Folder</Text>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity style={{ backgroundColor: '#FFBC01', width: '50%', alignItems: 'center', padding: 10, justifyContent: 'center', borderBottomEndRadius: 11 }}
-                                                        onPress={() => {
-                                                            props.navigation.navigate('OpenFolder', {
-                                                                id: item.item.id,
-                                                                foldername: item.item.folderName,
-                                                                extraname: item.item.extraName
-                                                            })
-                                                            AnimateExpansion()
-                                                        }}>
-                                                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}>Open Folder</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                        </ExpandableSection> */}
                                         </View>
                                     </TouchableHighlight>
                                 </Drawer>
@@ -548,6 +609,31 @@ const Folder = (props) => {
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
+            <Modal style={{ alignItems: 'center', justifyContent: 'center' }} visible={renameModal} dismissable dismissableBackButton onDismiss={() => { setRenameModal(false) }}>
+                <View style={{ padding: 10, width: screenWidth - 35, borderRadius: 20, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : 'white' }}>
+
+                    <Text style={{ marginStart: 30, marginTop: 20, marginBottom: 10, fontWeight: 'bold', fontSize: 20, color: '#FFBC01' }}>Rename Folder</Text>
+                    <TextInput style={{ color: colorScheme === 'dark' ? 'white' : '#303030', fontSize: 16, marginStart: 20, padding: 10, width: '90%' }} placeholder={currentExtraName}
+                        placeholderTextColor={colorScheme === 'dark' ? 'gray' : 'lightgray'} cursorColor="#FFBC01" selectTextOnFocus value={currentExtraName}
+                        selectionColor="#FFBC01" ref={renameRef} onChangeText={(txt) => { setCurrentExtraName(txt) }} underlineColorAndroid="#FFBC01"
+                    />
+                    <View style={{ width: '100%', alignItems: 'flex-end', marginTop: 30, marginBottom: 15 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Button onPress={() => {
+                                setRenameModal(false)
+                                setRenameId('')
+                            }}>Cancel</Button>
+                            <Button
+                                onPress={() => {
+                                    RenameFolder()
+                                    GetData()
+                                    setRenameModal(false)
+                                    setRenameId('')
+                                }}>Rename</Button>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     )
 }

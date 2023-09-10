@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Styles from "./Styles";
-import {  Appearance, BackHandler, Dimensions, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { Appearance, BackHandler, Dimensions, KeyboardAvoidingView, Platform, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 import { ActivityIndicator, Card, Chip, Menu, Modal, Portal, Snackbar, Text, Tooltip } from "react-native-paper";
 
 
@@ -19,6 +19,7 @@ import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice'
 import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { ColorPicker, Colors, ExpandableSection } from "react-native-ui-lib";
+import { useIsFocused } from "@react-navigation/native";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -61,43 +62,63 @@ const CreateNote = (props) => {
     const [fontStyle, setFontStyle] = useState('default')
     const [fontSize, setFontSize] = useState(18)
     const white = "#FFF"
-    const black = "#202020"
-    const pinkish = "#BB42AF"
-    const yellowish = "#FFBC01"
-    const blueish = "#3142D3"
-    const greenish = "#4FC73B"
 
     const StartStopRecording = async () => {
         if (recording === true) {
-            Voice.stop()
+            Voice.stop().then(() => {
+                Voice.destroy()
+            })
+            setRecording(false)
         } else {
             await Voice.start('en-US');
             setRecording(true)
+            
         }
+
+
     }
 
     const onSpeechResults = (res) => {
+        setRecording(false)
         setResults(res.value)
-        res.value.map((res, index) => {
-            setNoteText(noteText.trim() + '\n' + res.trim())
+        console.log(res);
+
+        Voice.stop().then(() => {
+            Voice.destroy()
         })
+        
+
     }
     const onSpeechEnd = (res) => {
         setRecording(false)
+        Voice.stop().then(() => {
+            Voice.destroy()
+        })
     }
 
     const onSpeechError = (error) => {
         setRecording(false)
-        Voice.stop().then(Voice.destroy())
+        Voice.stop().then(() => {
+            Voice.destroy()
+        })
     }
 
+    const onPartialResults = (res) => {
+        setRecording(false)
+        setResults(res.value)
+        console.log(res);
 
+        Voice.stop().then(() => {
+            Voice.destroy()
+        })
+    }
+
+    const isFocused = useIsFocused()
     useEffect(() => {
-
         Voice.onSpeechError = onSpeechError
         Voice.onSpeechResults = onSpeechResults
         Voice.onSpeechEnd = onSpeechEnd
-
+        Voice.onSpeechPartialResults = onPartialResults
         return () => {
             Voice.destroy().then(Voice.removeAllListeners);
         }
@@ -333,7 +354,7 @@ const CreateNote = (props) => {
 
 
     const SaveToFolder = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        
+
         if (titleText || noteText) {
             if (editing) {
                 db.transaction(tx => {
@@ -382,7 +403,7 @@ const CreateNote = (props) => {
 
 
     const UpdateArchive = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        
+
         if (titleText || noteText) {
             db.transaction((tx) => {
                 tx.executeSql(`UPDATE archived SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${props.route.params.id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],
@@ -395,7 +416,7 @@ const CreateNote = (props) => {
     }
 
     const UpdateStarred = (title, note, date, time, pageColor, fontColor, fontStyle, fontSize) => {
-        
+
         if (titleText || noteText) {
             db.transaction((tx) => {
                 tx.executeSql(`UPDATE starrednotes SET title = (?), note = (?), date = (?), time = (?), pageColor = (?), fontColor = (?), fontStyle = (?), fontSize = (?) WHERE id = ${props.route.params.id}`, [title, note, date, time, pageColor, fontColor, fontStyle, fontSize],

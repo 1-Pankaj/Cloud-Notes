@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Dimensions, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { BackHandler, Dimensions, View } from "react-native";
 import * as SQLite from 'expo-sqlite'
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
@@ -21,6 +21,17 @@ const DeleteSplash = (props) => {
     const [fontsLoaded] = useFonts({
         'mulish': require("../../assets/fonts/mulish.ttf")
     })
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
 
     const WriteToSplash = () => {
         db.transaction((tx) => {

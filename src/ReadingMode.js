@@ -86,19 +86,16 @@ const ReadingMode = (props) => {
 
 
     const GetWordCount = () => {
-        if (title == '') {
-            const words = note.split(' ').length;
-            setWordCount(words)
+        if (title && note) {
+            const word = title.trim().split(' ').length + note.trim().split(' ').length
+            setWordCount(word)
+        } else if (!title && note) {
+            const word = note.trim().split(' ').length
+            setWordCount(word)
+        } else if (title && !note) {
+            const word = title.trim().split(' ').length
+            setWordCount(word)
         }
-        else if (note == '') {
-            const words = title.split(' ').length;
-            setWordCount(words)
-        } else {
-            const words = note.split(' ').length + title.split(' ').length;
-            setWordCount(words)
-        }
-
-
     }
 
     const GetReadingTime = () => {
@@ -744,11 +741,23 @@ const ReadingMode = (props) => {
                                             <MaterialIcons name="format-italic" size={22} color={colorScheme == 'dark' ? 'white' : '#101010'} />
                                         </TouchableOpacity>
                                         <View style={{ height: '100%', width: 1, backgroundColor: colorScheme === 'dark' ? 'white' : '#101010' }} />
-                                        <TouchableOpacity onPress={() => { setUnderline(!underline) }} style={{ width: '25%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                        <TouchableOpacity onPress={() => {
+                                            setUnderline(!underline)
+                                            line ?
+                                                setLine(false)
+                                                :
+                                                null
+                                        }} style={{ width: '25%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
                                             <Text style={{ fontSize: 22, textDecorationLine: 'underline' }}>U</Text>
                                         </TouchableOpacity>
                                         <View style={{ height: '100%', width: 1, backgroundColor: colorScheme === 'dark' ? 'white' : '#101010' }} />
-                                        <TouchableOpacity onPress={() => { setLine(!line) }} style={{ width: '25%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                        <TouchableOpacity onPress={() => {
+                                            setLine(!line)
+                                            underline ?
+                                                setUnderline(false)
+                                                :
+                                                null
+                                        }} style={{ width: '25%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
                                             <Text style={{ fontSize: 22, textDecorationLine: 'line-through' }}>Aa</Text>
                                         </TouchableOpacity>
                                     </View>

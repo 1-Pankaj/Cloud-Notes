@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import * as SQLite from 'expo-sqlite'
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Dimensions, Image, View } from "react-native";
+import { BackHandler, Dimensions, Image, View } from "react-native";
 import Styles from "../Styles";
 import { Button, Text } from "react-native-paper";
 
@@ -21,6 +21,18 @@ const MoodifySplash = (props) => {
             })
         })
     }
+
+    function handleBackButtonClick() {
+        props.navigation.goBack()
+        return true
+    }
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", handleBackButtonClick);
+        };
+    }, [])
     return (
         <SafeAreaView style={Styles.container}>
             <View style={[Styles.container, { justifyContent: 'space-around' }]}>

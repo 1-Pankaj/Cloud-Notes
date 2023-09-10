@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import * as SQLite from 'expo-sqlite'
-import { Appearance, Dimensions, ToastAndroid, TouchableOpacity, View, TextInput as TextInputBasic, FlatList, ScrollView, BackHandler, Modal as BaseModal, Animated } from "react-native";
+import { Appearance, Dimensions, ToastAndroid, TouchableOpacity, View, TextInput as TextInputBasic, FlatList, ScrollView, BackHandler, Modal as BaseModal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Styles from "./Styles";
-import { Button, DataTable, Dialog, Menu, Modal, Portal, RadioButton, Snackbar, Text, TextInput } from "react-native-paper";
+import { Button, DataTable, Dialog, Divider, Menu, Modal, Portal, RadioButton, Snackbar, Surface, Text } from "react-native-paper";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import MaterialComIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import AnimatedLottieView from "lottie-react-native";
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useIsFocused } from "@react-navigation/native";
+import { Drawer, ProgressBar } from "react-native-ui-lib";
 
 const emojis = require('../emojis.json')
 
@@ -52,6 +53,8 @@ const ToDo = (props) => {
     const [inputFocused, setInputFocused] = useState(false)
     const [emojiRecord, setEmojiRecord] = useState('')
     const [taskRecord, setTaskRecord] = useState('')
+    const [progressCount, setProgressCount] = useState(0)
+    const [selectedCount, setSelectedCount] = useState(0)
 
     Appearance.addChangeListener(() => {
         setColorScheme(Appearance.getColorScheme())
@@ -74,8 +77,32 @@ const ToDo = (props) => {
         })
     }
 
+    const GetProgress = () => {
+        db.transaction((tx) => {
+            tx.executeSql("SELECT * FROM todo WHERE selected = 'true'", [],
+                (sql, rs) => {
+                    if (rs.rows.length > 0) {
+                        let selectedLength = rs.rows.length
+                        sql.executeSql("SELECT * FROM todo", [],
+                            (sql, rs) => {
+                                let allLength = rs.rows.length
+                                if (allLength > 0) {
+                                    let progress = selectedLength / allLength * 100
+                                    setProgressCount(progress)
+                                }
+                            }, error => { })
+                    } else {
+                        setProgressCount(0)
+                    }
+                }, error => {
+                })
+        })
+    }
 
 
+    useEffect(() => {
+        GetProgress()
+    }, [isFocused, data])
     const GetTaskData = () => {
         db.transaction((tx) => {
             tx.executeSql("SELECT * FROM recordTasks", [],
@@ -147,6 +174,7 @@ const ToDo = (props) => {
 
 
     const GetData = () => {
+        GetProgress()
         db.transaction((tx) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS todo (id INTEGER PRIMARY KEY AUTOINCREMENT, task VARCHAR(100) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, selected VARCHAR(20) NOT NULL, emoji VARCHAR(20) NOT NULL)", [],
                 (sql, rs) => {
@@ -173,6 +201,7 @@ const ToDo = (props) => {
 
                                 sql.executeSql("SELECT id FROM todo WHERE selected = 'true'", [],
                                     (sql, rs) => {
+                                        setSelectedCount(rs.rows.length)
                                         if (rs.rows.length === 0) {
                                             setSelected(null)
                                         } else {
@@ -182,8 +211,8 @@ const ToDo = (props) => {
                                                 let id = rs.rows._array[i].id
                                                 select.push({ id: id })
                                             }
-
                                             setSelected(select)
+                                            GetProgress()
                                         }
                                     }, error => {
                                     })
@@ -240,12 +269,14 @@ const ToDo = (props) => {
                         sql.executeSql("UPDATE todo set selected = 'true' WHERE id = (?)", [id],
                             (sql, rs) => {
                                 GetData()
+                                GetProgress()
                             }, error => {
                             })
                     } else {
                         sql.executeSql("UPDATE todo set selected = 'false' WHERE id = (?)", [id],
                             (sql, rs) => {
                                 GetData()
+                                GetProgress()
                             }, error => {
                             })
                     }
@@ -261,6 +292,7 @@ const ToDo = (props) => {
                                             if (selected == fullLength) {
                                                 setSnackbarVisible(true)
                                                 setSnackbarMessage("You have completed all of your tasks, do you want to record this progress in Directory?")
+                                                GetProgress()
                                             }
                                         }
                                     }, error => {
@@ -274,6 +306,17 @@ const ToDo = (props) => {
 
     }
 
+    const DeleteSingle = (id) => {
+        db.transaction((tx) => {
+            tx.executeSql("DELETE FROM todo WHERE id = (?)", [id],
+                (sql, rs) => {
+                    setData(null)
+                    GetData()
+                }, error => { })
+        })
+        GetProgress()
+    }
+
     const RecordTasks = () => {
         db.transaction((tx) => {
             tx.executeSql("CREATE TABLE IF NOT EXISTS recordTasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR(100) NOT NULL, date VARCHAR(20) NOT NULL, time VARCHAR(20) NOT NULL, tasknum VARCHAR(200) NOT NULL)", [],
@@ -281,8 +324,6 @@ const ToDo = (props) => {
                     let title = 'Task Record For ' + new Date()
                     sql.executeSql("INSERT INTO recordTasks (title, date, time, tasknum) values (?,?,?,?)", [title, new Date().toLocaleDateString(), new Date().toLocaleTimeString(), allCount],
                         (sql, rs) => {
-                            setSnackbarVisible(true)
-                            setSnackbarMessage('Record successful, can be found in History')
                             GetTaskData()
                         }, error => {
                         })
@@ -411,12 +452,19 @@ const ToDo = (props) => {
             </View>
             {data ?
                 <View style={{ marginTop: 20, width: screenWidth, flex: 1, alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', width: screenWidth, alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={{
+                            alignSelf: 'flex-start', marginTop: 20, marginBottom: 20, marginStart: 25, fontSize: 25,
+                            fontWeight: 'bold'
+                        }}>My Progress</Text>
+                        <Text style={{ marginTop: 20, marginBottom: 20, marginEnd: 25, color: '#FFBC01' }}>Tasks {selected ? selected.length : 0}/{allCount}</Text>
+                    </View>
+                    <ProgressBar progress={progressCount} progressColor="#FFBC01" style={{ width: '90%', height: 10 }} />
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: screenWidth }}>
                         <Text style={{
                             alignSelf: 'flex-start', marginTop: 20, marginBottom: 20, marginStart: 25, fontSize: 25,
                             fontWeight: 'bold'
                         }}>ToDo List</Text>
-                        <Text style={{ marginTop: 20, marginBottom: 20, marginEnd: 25, color: '#FFBC01' }}>Tasks {selected ? selected.length : 0}/{allCount}</Text>
                     </View>
                     <FlatList
                         data={data}
@@ -424,7 +472,10 @@ const ToDo = (props) => {
                         showsVerticalScrollIndicator={false}
                         renderItem={item => {
                             return (
-                                <View style={{ marginTop: 10 }}>
+                                <Drawer style={{ marginTop: 10, borderRadius: 10, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#404040' : '#dedede' }}
+                                    leftItem={{ text: "Select", background: '#FFBC01', onPress: () => { SelectItem(item.item.id) } }}
+                                    rightItems={[{ text: "Delete", background: 'red', onPress: () => { DeleteSingle(item.item.id) } }]}
+                                    fullRightThreshold={0.7} fullSwipeRight onFullSwipeRight={() => { DeleteSingle(item.item.id) }} disableHaptic>
                                     <View style={{
                                         width: screenWidth - 40, borderRadius: 10, borderWidth: 1, borderColor: colorScheme === 'dark' ? '#404040' : '#dedede', backgroundColor: colorScheme === 'dark' ? '#202020' : 'white', flexDirection: 'row',
                                         alignItems: 'center', justifyContent: 'space-between'
@@ -442,7 +493,7 @@ const ToDo = (props) => {
                                         </View>
                                         <RadioButton status={item.item.selected == 'true' ? "checked" : 'unchecked'} onPress={() => { SelectItem(item.item.id) }} />
                                     </View>
-                                </View>
+                                </Drawer>
                             )
                         }}
                         keyExtractor={item => item.id}
@@ -483,17 +534,23 @@ const ToDo = (props) => {
                 </View>
 
                 <Portal>
-                    <Snackbar visible={snackbarVisible} onDismiss={() => { setSnackbarVisible(false) }}
-                        action={{
-                            label: snackbarMessage == 'Record successful, can be found in History' ? 'Done' : 'Record',
-                            onPress: () => {
-                                snackbarMessage == 'Record successful, can be found in History' ?
-                                    setSnackbarVisible(false)
-                                    :
-                                    RecordTasks()
-                            },
-                        }}
-                        duration={5000}>{snackbarMessage}</Snackbar>
+                    <Modal visible={snackbarVisible} dismissable dismissableBackButton onDismiss={() => { setSnackbarVisible(false) }}
+                        style={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <Surface style={{borderRadius:20}} mode="elevated">
+                            <View style={{ width: screenWidth - 70, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : 'white', borderRadius: 20, alignItems: 'center', justifyContent: 'space-evenly' }}>
+                                <Image source={require('../assets/splashicon.png')} style={{ width: 200, height: 200 }} />
+                                <Text style={{
+                                    marginStart: 20, marginEnd: 20, marginBottom: 20, textAlign: 'center', fontWeight: 'bold',
+                                    fontSize: 23
+                                }}>Do you want to record this progress in task records?</Text>
+                                <Button labelStyle={{ paddingHorizontal: 80, paddingVertical:10 }} onPress={() => { RecordTasks()
+                                setSnackbarVisible(false)
+                                ToastAndroid.show("Recorded", ToastAndroid.SHORT) }}>Record</Button>
+                                <Divider style={{ width: '90%', height: 1 }} />
+                                <Button textColor="gray" labelStyle={{ paddingHorizontal: 80, paddingVertical:10 }} onPress={() => { setSnackbarVisible(false) }}>Cancel</Button>
+                            </View>
+                        </Surface>
+                    </Modal>
                 </Portal>
                 <Portal>
                     <Dialog visible={dialog} onDismiss={() => {
