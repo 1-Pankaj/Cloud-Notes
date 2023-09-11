@@ -109,82 +109,10 @@ const HomeScreen = (props) => {
     const [fabButton, setFabButton] = useState(null)
 
 
-    const StartStopRecording = async () => {
-        if (recording === true) {
-            await Voice.stop().then(() => {
-                Voice.destroy()
-            })
-            setRecording(false)
-        } else {
-            await Voice.start();
-            setRecording(true)
-        }
+    const StartStopRecording = () => {
+        props.navigation.navigate('VoiceSearch')
+        setFabVisible(false)
     }
-
-    const onSpeechResults = async (res) => {
-        setRecording(false)
-
-        if (res.value[0]) {
-            let result = res.value[0]
-            if (result.includes('new note' || 'note' || 'Note' || 'notes')) {
-                props.navigation.navigate('CreateNote')
-                setFabVisible(false)
-                setRecordingModal(false)
-                await Voice.stop().then(() => {
-                    Voice.destroy()
-                })
-            }
-        }
-        await Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-    const onSpeechEnd = async (res) => {
-        setRecording(false)
-        await Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-
-    const onSpeechError = async (error) => {
-        setRecording(false)
-        await Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-
-    const onPartialResults = async (res) => {
-        setRecording(false)
-        setResults(res.value)
-        if (res.value[0]) {
-            let result = res.value[0]
-            if (result.includes('new note' || 'note' || 'Note' || 'notes')) {
-                props.navigation.navigate('CreateNote')
-                setFabVisible(false)
-                setRecordingModal(false)
-                await Voice.stop().then(() => {
-                    Voice.destroy()
-                })
-            }
-        }
-        await Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-
-
-
-
-
-
-    useEffect(() => {
-
-        Voice.onSpeechError = onSpeechError
-        Voice.onSpeechResults = onSpeechResults
-        Voice.onSpeechEnd = onSpeechEnd
-        Voice.onSpeechPartialResults = onPartialResults
-
-    }, [])
 
     const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme())
 
@@ -2139,7 +2067,7 @@ const HomeScreen = (props) => {
 
                                 <ExpandableSection expanded={expandExtra}>
                                     <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => {
-                                        setRecordingModal(true)
+                                        StartStopRecording()
                                     }}>
                                         <MaterialComIcon name="keyboard-voice" size={25} color="#FFBC01" />
                                     </TouchableOpacity>
@@ -2287,21 +2215,6 @@ const HomeScreen = (props) => {
                                 <Button onPress={FinallyDelete} labelStyle={{ color: 'red' }} mode="text">Delete</Button>
                             </Dialog.Actions>
                         </Dialog>
-                    </Portal>
-                    <Portal>
-                        <Modal dismissable dismissableBackButton visible={recordingModal} onDismiss={() => { setRecordingModal(false) }}
-                            style={{ alignItems: 'center', justifyContent: 'center' }}>
-                            <TouchableHighlight style={{ width: 150, height: 150, backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : 'white', borderRadius: 100, alignItems: 'center', justifyContent: 'center' }}
-                                onPress={() => { StartStopRecording() }} underlayColor={colorScheme === 'dark' ? '#303030' : '#dedede'}>
-
-                                {recording ?
-                                    <Card style={{ width: 150, height: 150, borderRadius: 100, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'red' }}>
-                                        <MaterialComIcon name="keyboard-voice" size={50} color="red" />
-                                    </Card>
-                                    :
-                                    <MaterialComIcon name="keyboard-voice" size={50} color="#FFBC01" />}
-                            </TouchableHighlight>
-                        </Modal>
                     </Portal>
 
                     {selectionMode ?

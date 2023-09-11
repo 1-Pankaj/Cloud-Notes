@@ -39,6 +39,7 @@ import Folder from './src/Folder';
 import OpenFolder from './src/OpenFolder';
 import Moodify from './src/Moodify';
 import MoodifySplash from './src/splashscreens/MoodifySplash';
+import VoiceSearch from './src/VoiceSearch';
 
 const Stack = createStackNavigator()
 
@@ -293,6 +294,13 @@ function App() {
             :
             null}
           <Stack.Screen name='Marketplace' component={Marketplace} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='VoiceSearch' component={VoiceSearch} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",

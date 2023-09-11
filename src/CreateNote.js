@@ -16,7 +16,6 @@ import { useFonts } from "expo-font";
 import Slider from "@react-native-community/slider";
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import * as Speech from 'expo-speech'
-import Voice from '@react-native-voice/voice'
 import MaterialCommIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { ColorPicker, Colors, ExpandableSection } from "react-native-ui-lib";
 import { useIsFocused } from "@react-navigation/native";
@@ -65,64 +64,11 @@ const CreateNote = (props) => {
 
     const StartStopRecording = async () => {
         if (recording === true) {
-            Voice.stop().then(() => {
-                Voice.destroy()
-            })
             setRecording(false)
         } else {
-            await Voice.start('en-US');
             setRecording(true)
-            
         }
-
-
     }
-
-    const onSpeechResults = (res) => {
-        setRecording(false)
-        setResults(res.value)
-        console.log(res);
-
-        Voice.stop().then(() => {
-            Voice.destroy()
-        })
-        
-
-    }
-    const onSpeechEnd = (res) => {
-        setRecording(false)
-        Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-
-    const onSpeechError = (error) => {
-        setRecording(false)
-        Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-
-    const onPartialResults = (res) => {
-        setRecording(false)
-        setResults(res.value)
-        console.log(res);
-
-        Voice.stop().then(() => {
-            Voice.destroy()
-        })
-    }
-
-    const isFocused = useIsFocused()
-    useEffect(() => {
-        Voice.onSpeechError = onSpeechError
-        Voice.onSpeechResults = onSpeechResults
-        Voice.onSpeechEnd = onSpeechEnd
-        Voice.onSpeechPartialResults = onPartialResults
-        return () => {
-            Voice.destroy().then(Voice.removeAllListeners);
-        }
-    }, [])
 
 
     const [dateText, setDateText] = useState(new Date().toUTCString().slice(0, 16))
