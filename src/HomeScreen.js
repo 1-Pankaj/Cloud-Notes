@@ -1257,6 +1257,7 @@ const HomeScreen = (props) => {
                         :
                         <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => {
                             setFabVisible(false)
+                            setExpandExtra(false)
                             props.navigation.navigate("Directory")
                         }}>
                             <MaterialComIcon name="arrow-back-ios" size={22} color="#FFBC01" />
@@ -1302,6 +1303,7 @@ const HomeScreen = (props) => {
                                 :
                                 <TouchableOpacity onPress={() => {
                                     setExpandedSearch(!expandedSearch)
+                                    setExpandExtra(false)
                                     setSearchText('')
                                 }} style={{ marginEnd: 25 }}>
                                     <MaterialComIcon name={expandedSearch ? "close" : "search"} size={25} color="#FFBC01" />
@@ -1312,7 +1314,8 @@ const HomeScreen = (props) => {
                             visible={menuVisible}
                             onDismiss={closeMenu}
 
-                            anchor={<TouchableOpacity style={{ marginEnd: 5 }} onPress={() => { openMenu() }}>
+                            anchor={<TouchableOpacity style={{ marginEnd: 5 }} onPress={() => { openMenu() 
+                                setExpandExtra(false)}}>
                                 <MaterialIcons name="dots-horizontal-circle-outline" size={25} color="#FFBC01" />
                             </TouchableOpacity>}>
                             {data && gridlistEnabled ?
@@ -1469,6 +1472,7 @@ const HomeScreen = (props) => {
                                         }}
                                             activeOpacity={0.6} onPress={() => {
                                                 setFabVisible(false)
+                                                setExpandExtra(false)
                                                 props.navigation.navigate("CreateNote", {
                                                     id: item.item.noteid,
                                                     page: 'Home'
@@ -1621,6 +1625,7 @@ const HomeScreen = (props) => {
                                                                         onLongPress={() => { OpenLongPressModal(item.id) }}
                                                                         onPress={() => {
                                                                             setFabVisible(false)
+                                                                            setExpandExtra(false)
                                                                             props.navigation.navigate("CreateNote", {
                                                                                 id: item.id,
                                                                                 page: 'Home'
@@ -1732,6 +1737,7 @@ const HomeScreen = (props) => {
                                                                         onLongPress={() => { OpenLongPressModal(item.id) }}
                                                                         onPress={() => {
                                                                             setFabVisible(false)
+                                                                            setExpandExtra(false)
                                                                             props.navigation.navigate("CreateNote", {
                                                                                 id: item.id,
                                                                                 page: 'Home'
@@ -1843,6 +1849,7 @@ const HomeScreen = (props) => {
                                                                         onLongPress={() => { OpenLongPressModal(item.id) }}
                                                                         onPress={() => {
                                                                             setFabVisible(false)
+                                                                            setExpandExtra(false)
                                                                             props.navigation.navigate("CreateNote", {
                                                                                 id: item.id,
                                                                                 page: 'Home'
@@ -1960,6 +1967,7 @@ const HomeScreen = (props) => {
                                                                         onLongPress={() => { OpenLongPressModal(item.id) }}
                                                                         onPress={() => {
                                                                             setFabVisible(false)
+                                                                            setExpandExtra(false)
                                                                             props.navigation.navigate("CreateNote", {
                                                                                 id: item.id,
                                                                                 page: 'Home'
@@ -2068,6 +2076,7 @@ const HomeScreen = (props) => {
                                 <ExpandableSection expanded={expandExtra}>
                                     <TouchableOpacity style={{ marginStart: 35, marginBottom: 10 }} onPress={() => {
                                         StartStopRecording()
+                                        setExpandExtra(false)
                                     }}>
                                         <MaterialComIcon name="keyboard-voice" size={25} color="#FFBC01" />
                                     </TouchableOpacity>
@@ -2262,7 +2271,10 @@ const HomeScreen = (props) => {
                                 onPress={() => {
                                     if (open) {
                                         setFabVisible(false)
+                                        setExpandExtra(false)
                                         props.navigation.navigate('CreateNote')
+                                    }else{
+                                        setExpandExtra(false)
                                     }
                                 }}
                             />
