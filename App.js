@@ -40,6 +40,7 @@ import OpenFolder from './src/OpenFolder';
 import Moodify from './src/Moodify';
 import MoodifySplash from './src/splashscreens/MoodifySplash';
 import VoiceSearch from './src/VoiceSearch';
+import ExpoStatusBar from 'expo-status-bar/build/ExpoStatusBar';
 
 const Stack = createStackNavigator()
 
@@ -228,7 +229,6 @@ function App() {
 
   return (
     <PaperProvider theme={themeState}>
-      <StatusBar style='auto' backgroundColor='transparent' animated={true} hidden />
       <NavigationContainer theme={themeState}>
         <Stack.Navigator
           initialRouteName='Loading'

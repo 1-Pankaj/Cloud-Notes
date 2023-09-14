@@ -32,7 +32,7 @@ const VoiceSearch = (props) => {
     const [speed, setSpeed] = useState(1)
     const [volume, setVolume] = useState(0.7)
     const [pitch, setPitch] = useState(1.0)
-    const [voice, setVoice] = useState('en-us-x-tpc-local')
+    const [voice, setVoice] = useState('')
     const [menuVoice, setMenuVoice] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
 
@@ -145,9 +145,10 @@ const VoiceSearch = (props) => {
             rate: speed,
             volume: volume,
             pitch: pitch,
-            voice: voice
+            voice: voice ? voice : ''
         })
     }
+
 
     const InsertData = (title, sentBy) => {
         db.transaction((tx) => {
@@ -157,6 +158,7 @@ const VoiceSearch = (props) => {
                     if (sentBy == 'bot') {
                         SpeakText(title)
                     }
+
                 }, error => { console.log("error insert"); })
         })
     }
@@ -249,7 +251,7 @@ const VoiceSearch = (props) => {
     })
 
     return (
-        <SafeAreaView style={Styles.container}>
+        <View style={Styles.container}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <TouchableOpacity style={{ margin: 20 }} activeOpacity={0.6}
                     onPress={() => {
@@ -454,7 +456,7 @@ const VoiceSearch = (props) => {
 
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 

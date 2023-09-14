@@ -326,7 +326,7 @@ const ArchivePage = (props) => {
 
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={[Styles.container, { width: screenWidth }]}>
                 <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', width: screenWidth }}>
                     <TouchableOpacity onPress={() => {
@@ -520,7 +520,7 @@ const ArchivePage = (props) => {
                     </Dialog>
                 </Portal>
             </View>
-        </SafeAreaView>
+        </View>
     )
 }
 

@@ -37,7 +37,7 @@ const Moodify = (props) => {
     }, [])
 
     return (
-        <SafeAreaView style={Styles.container}>
+        <View style={Styles.container}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
                 <TouchableOpacity style={{ marginStart: 10, flexDirection: 'row', alignItems: 'center' }}
                     activeOpacity={0.6} onPress={() => { props.navigation.goBack() }}>
@@ -97,7 +97,7 @@ const Moodify = (props) => {
                 </View>
 
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 

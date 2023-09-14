@@ -333,7 +333,7 @@ const ReadingMode = (props) => {
 
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, height: screenHeight + 100, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute' }} />
             <TouchableOpacity style={{ flexDirection: "row", alignSelf: 'flex-start', marginTop: 20, marginStart: 5, alignItems: 'center' }}
                 onPress={() => { props.navigation.goBack() }}>
@@ -1033,7 +1033,7 @@ const ReadingMode = (props) => {
 
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 //en-us-x-iol-local

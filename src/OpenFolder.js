@@ -173,7 +173,7 @@ const OpenFolder = (props) => {
         }
     }, [isFocused, folderName, folderId])
     return (
-        <SafeAreaView style={Styles.container}>
+        <View style={Styles.container}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
                 <TouchableOpacity style={{ marginStart: 10, flexDirection: 'row', alignItems: 'center' }} onPress={() => { props.navigation.goBack() }}>
                     <MaterialIcons name="arrow-back-ios" size={27} color="#FFBC01" />
@@ -314,7 +314,7 @@ const OpenFolder = (props) => {
                 </View>
             </Modal>
 
-        </SafeAreaView>
+        </View>
     )
 }
 

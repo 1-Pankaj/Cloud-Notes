@@ -21,6 +21,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import { Drawer, ExpandableSection, Fader, GridList, StackAggregator } from "react-native-ui-lib";
+import ExpoStatusBar from "expo-status-bar/build/ExpoStatusBar";
 
 
 const screenWidth = Dimensions.get("screen").width
@@ -93,6 +94,7 @@ const HomeScreen = (props) => {
     const [snackbarArchive, setSnackbarArchive] = useState(false)
     const [lastTrashedid, setLastTrashedId] = useState('')
     const [lastArchiveId, setLastArchiveId] = useState('')
+    const [hideStatusbar, setHideStatusbar] = useState(false)
 
     const openMenu = () => setMenuVisible(true);
 
@@ -570,6 +572,7 @@ const HomeScreen = (props) => {
                                                                     if (rs.rows.length > 0) {
                                                                         setLastArchiveId(rs.rows._array[0].id)
                                                                         setSnackbarArchive(true)
+                                                                        setFabVisible(false)
                                                                         setSnackbarMessage('Archived note successfully')
                                                                     }
                                                                 }, error => { })
@@ -1175,6 +1178,13 @@ const HomeScreen = (props) => {
         })
     }
 
+    useEffect(() => {
+        if (isFocused) {
+            setHideStatusbar(false)
+        } else {
+            setHideStatusbar(true)
+        }
+    }, [isFocused, props])
 
     useEffect(() => {
         CreateTable()
@@ -1242,6 +1252,8 @@ const HomeScreen = (props) => {
 
     return (
         <SafeAreaView style={[Styles.container, { width: "100%", height: '100%' }]} onLayout={onLayoutRootView}>
+
+            <ExpoStatusBar style={hideStatusbar ? 'light' : 'auto'} />
 
             <View style={[Styles.container, { justifyContent: 'space-around' }]}>
                 <View style={{
@@ -1314,8 +1326,10 @@ const HomeScreen = (props) => {
                             visible={menuVisible}
                             onDismiss={closeMenu}
 
-                            anchor={<TouchableOpacity style={{ marginEnd: 5 }} onPress={() => { openMenu() 
-                                setExpandExtra(false)}}>
+                            anchor={<TouchableOpacity style={{ marginEnd: 5 }} onPress={() => {
+                                openMenu()
+                                setExpandExtra(false)
+                            }}>
                                 <MaterialIcons name="dots-horizontal-circle-outline" size={25} color="#FFBC01" />
                             </TouchableOpacity>}>
                             {data && gridlistEnabled ?
@@ -1614,7 +1628,7 @@ const HomeScreen = (props) => {
                                                                 <Drawer key={index}
                                                                     rightItems={[{ icon: require('../assets/delete.png'), text: 'Trash', width: 80, background: 'red', onPress: () => { DeleteFromTable(item.id) } }, archiveEnabled ? { icon: require('../assets/archive.png'), text: 'Archive', width: 80, background: '#3BBC1A', onPress: () => ArchiveFirstTimeCheck(item.id) } : { onPress: () => { }, width: 1, background: 'red' }]}
                                                                     leftItem={starredEnabled ? { icon: require('../assets/star.png'), text: 'Star', width: 80, background: '#FFBC01', onPress: () => StarNote(item.id) } : { background: 'red', onPress: () => { } }}
-                                                                    useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 10, alignItems: 'center' }}
+                                                                    useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 30, alignItems: 'center' }}
                                                                     fullRightThreshold={0.7} onFullSwipeRight={() => { DeleteFromTable(item.id) }} bounciness={100}
                                                                     fullSwipeRight disableHaptic>
 
@@ -1633,7 +1647,7 @@ const HomeScreen = (props) => {
                                                                         }} >
 
 
-                                                                        <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        <View style={{ width: screenWidth - 30, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                                                                             {notebackgroundEnabled ?
                                                                                 <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                                                 :
@@ -1726,7 +1740,7 @@ const HomeScreen = (props) => {
                                                                 <Drawer key={index}
                                                                     rightItems={[{ icon: require('../assets/delete.png'), text: 'Trash', width: 80, background: 'red', onPress: () => { DeleteFromTable(item.id) } }, archiveEnabled ? { icon: require('../assets/archive.png'), text: 'Archive', width: 80, background: '#3BBC1A', onPress: () => ArchiveFirstTimeCheck(item.id) } : { onPress: () => { }, width: 1, background: 'red' }]}
                                                                     leftItem={starredEnabled ? { icon: require('../assets/star.png'), text: 'Star', width: 80, background: '#FFBC01', onPress: () => StarNote(item.id) } : { background: 'red', onPress: () => { } }}
-                                                                    useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 10, alignItems: 'center', }}
+                                                                    useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 30, alignItems: 'center', }}
                                                                     fullRightThreshold={0.7} onFullSwipeRight={() => { DeleteFromTable(item.id) }} bounciness={100}
                                                                     fullSwipeRight disableHaptic>
 
@@ -1744,7 +1758,7 @@ const HomeScreen = (props) => {
                                                                             })
                                                                         }} >
 
-                                                                        <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        <View style={{ width: screenWidth - 30, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                                                                             {notebackgroundEnabled ?
                                                                                 <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                                                 :
@@ -1838,7 +1852,7 @@ const HomeScreen = (props) => {
                                                                 <Drawer key={index}
                                                                     rightItems={[{ icon: require('../assets/delete.png'), text: 'Trash', width: 80, background: 'red', onPress: () => { DeleteFromTable(item.id) } }, archiveEnabled ? { icon: require('../assets/archive.png'), text: 'Archive', width: 80, background: '#3BBC1A', onPress: () => ArchiveFirstTimeCheck(item.id) } : { onPress: () => { }, width: 1, background: 'red' }]}
                                                                     leftItem={starredEnabled ? { icon: require('../assets/star.png'), text: 'Star', width: 80, background: '#FFBC01', onPress: () => StarNote(item.id) } : { background: 'red', onPress: () => { } }}
-                                                                    useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 10, alignItems: 'center' }}
+                                                                    useNativeAnimations itemsIconSize={20} style={{ borderRadius: 10, width: screenWidth - 30, alignItems: 'center' }}
                                                                     fullRightThreshold={0.7} onFullSwipeRight={() => { DeleteFromTable(item.id) }} bounciness={100}
                                                                     fullSwipeRight disableHaptic>
 
@@ -1857,7 +1871,7 @@ const HomeScreen = (props) => {
                                                                         }} >
 
 
-                                                                        <View style={{ width: screenWidth - 10, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
+                                                                        <View style={{ width: screenWidth - 30, height: 75, borderRadius: 10, backgroundColor: colorScheme === 'dark' ? "#202020" : "white" }}>
                                                                             {notebackgroundEnabled ?
                                                                                 <View style={{ width: '100%', height: '100%', borderRadius: 7.3, backgroundColor: item.pageColor === "default" ? colorScheme === 'dark' ? '#202020' : 'white' : item.pageColor, opacity: 0.6, position: 'absolute' }} />
                                                                                 :
@@ -2273,7 +2287,7 @@ const HomeScreen = (props) => {
                                         setFabVisible(false)
                                         setExpandExtra(false)
                                         props.navigation.navigate('CreateNote')
-                                    }else{
+                                    } else {
                                         setExpandExtra(false)
                                     }
                                 }}
@@ -2289,7 +2303,10 @@ const HomeScreen = (props) => {
                                 RestoreLastDeleted()
                             }, textColor: "#FFBC01"
                         }}
-                        duration={2500} onDismiss={() => { setSnackbarTrash(false) }}>
+                        duration={2500} onDismiss={() => {
+                            setSnackbarTrash(false)
+                            setFabVisible(true)
+                        }}>
                         {snackbarMessage}
                     </Snackbar>
                 </Portal>

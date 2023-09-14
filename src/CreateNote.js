@@ -452,7 +452,7 @@ const CreateNote = (props) => {
 
 
     return (
-        <SafeAreaView style={[Styles.container, {}]} onLayout={onLayoutRootView}>
+        <View style={[Styles.container, {}]} onLayout={onLayoutRootView}>
             <View style={[Styles.container, { justifyContent: 'space-between', }]}>
                 <View style={{ width: screenWidth, alignItems: 'center', height: '90%', }} behavior={Platform.OS === 'ios' ? 'height' : 'padding'}>
                     <View style={{ width: screenWidth, height: 1500, backgroundColor: pageColor === 'default' ? 'transparent' : pageColor, position: 'absolute', opacity: 0.6, alignSelf: 'center', marginTop: -500 }} />
@@ -756,7 +756,7 @@ const CreateNote = (props) => {
                     </KeyboardAvoidingView>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
 
     )
 }

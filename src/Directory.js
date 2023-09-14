@@ -396,7 +396,7 @@ const Directory = (props) => {
 
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <ScrollView style={[{ padding: 8, width: screenWidth, flex: 1 }]} contentContainerStyle={{ alignItems: 'center', flex: 1, }} showsVerticalScrollIndicator={false}>
                 <View style={{ width: screenWidth - 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginVertical: 20 }} onPress={() => { props.navigation.goBack() }}>
@@ -784,7 +784,7 @@ const Directory = (props) => {
                         </TouchableOpacity>
                     </ScrollView>}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     )
 }
 

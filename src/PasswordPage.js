@@ -168,7 +168,7 @@ const PasswordPage = (props) => {
 
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={[Styles.container, { width: screenWidth, justifyContent: 'space-between' }]}>
                 <Text style={{
                     alignSelf: 'flex-start', margin: 20, fontSize: 20,
@@ -282,7 +282,7 @@ const PasswordPage = (props) => {
                     </View>
                 </View>
             </View>
-        </SafeAreaView>
+        </View>
     )
 }
 

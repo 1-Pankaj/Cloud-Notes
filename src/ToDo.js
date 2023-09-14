@@ -408,7 +408,7 @@ const ToDo = (props) => {
     }, [isFocused])
 
     return (
-        <SafeAreaView style={[Styles.container, { justifyContent: 'space-around' }]}>
+        <View style={[Styles.container, { justifyContent: 'space-around' }]}>
             <View style={{ width: screenWidth, justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
                 <TouchableOpacity style={{ marginTop: 20, marginStart: 10 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -736,7 +736,7 @@ const ToDo = (props) => {
                         null}
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 

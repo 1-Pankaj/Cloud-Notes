@@ -317,7 +317,7 @@ const Marketplace = (props) => {
     }
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10 }}
                     onPress={() => { props.navigation.goBack() }}>
@@ -462,7 +462,7 @@ const Marketplace = (props) => {
                 </View>
 
             </LoadModal>
-        </SafeAreaView>
+        </View>
     )
 }
 

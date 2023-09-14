@@ -132,7 +132,7 @@ const BookmarkAndHistory = (props) => {
     }
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', padding: 8, justifyContent: 'space-between' }}>
                 <TouchableOpacity style={{ marginStart: 10, marginTop: 20, marginBottom: 20 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -186,7 +186,7 @@ const BookmarkAndHistory = (props) => {
                 <View style={{flex:1, alignItems:'center', justifyContent:'center'}}>
                         <Text style={{color:colorScheme === 'dark'? 'white' : '#101010'}}>No data found!</Text>
                 </View>}
-        </SafeAreaView>
+        </View>
     )
 }
 

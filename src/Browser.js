@@ -239,7 +239,7 @@ const Browser = (props) => {
 
 
     return (
-        <SafeAreaView style={Styles.container}>
+        <View style={Styles.container}>
             <View style={Styles.container}>
                 {bottom ?
                     null
@@ -510,7 +510,7 @@ const Browser = (props) => {
                     :
                     null}
             </View>
-        </SafeAreaView>
+        </View>
     )
 
 }

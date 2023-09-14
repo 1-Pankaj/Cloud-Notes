@@ -423,7 +423,7 @@ const Folder = (props) => {
     }
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginStart: 10 }}
                     onPress={() => {
@@ -634,7 +634,7 @@ const Folder = (props) => {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 

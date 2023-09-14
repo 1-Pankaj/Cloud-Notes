@@ -257,7 +257,7 @@ const StarredNotes = (props) => {
     }
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ width: screenWidth, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <TouchableOpacity style={{ marginTop: 20, marginStart: 15 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -379,7 +379,7 @@ const StarredNotes = (props) => {
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
-        </SafeAreaView>
+        </View>
     )
 }
 

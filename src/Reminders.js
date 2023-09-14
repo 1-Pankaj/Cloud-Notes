@@ -285,7 +285,7 @@ const Reminders = (props) => {
     }
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <TimePickerModal
                 visible={visible}
                 onDismiss={onDismiss}
@@ -462,7 +462,7 @@ const Reminders = (props) => {
                         null}
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 

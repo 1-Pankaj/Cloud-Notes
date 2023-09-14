@@ -252,7 +252,7 @@ const TrashPage = (props) => {
 
 
     return (
-        <SafeAreaView style={Styles.container} onLayout={onLayoutRootView}>
+        <View style={Styles.container} onLayout={onLayoutRootView}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: screenWidth }}>
                 <TouchableOpacity style={{ alignSelf: 'flex-start', marginTop: 20, marginStart: 25 }} onPress={() => { props.navigation.goBack() }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -362,7 +362,7 @@ const TrashPage = (props) => {
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
-        </SafeAreaView>
+        </View>
     )
 }
 
