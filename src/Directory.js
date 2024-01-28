@@ -717,14 +717,27 @@ const Directory = (props) => {
                             :
                             null}
 
-                        <TouchableOpacity style={{ borderRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => { FolderFirstTimeCheck() }}>
-                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <TouchableOpacity style={{ borderTopStartRadius: 10, borderTopEndRadius: 10, marginTop: 20 }} activeOpacity={0.6} onPress={() => { FolderFirstTimeCheck() }}>
+                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderTopStartRadius: 10, borderTopEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommIcons name="folder-account-outline" size={28} style={{ alignSelf: 'center', marginStart: 22 }} color="#FFBC01" />
                                     <Text style={{ fontSize: 16.2, marginStart: 15 }}>My Folders</Text>
                                 </View>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={{ fontSize: 17, marginEnd: 10, fontFamily: 'mulish', marginBottom: 1.2 }}>{folderCount}</Text>
+                                    <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                        <Divider style={{ width: screenWidth - 40, }} />
+                        <TouchableOpacity style={{ borderBottomStartRadius: 10, borderBottomEndRadius: 10 }} activeOpacity={0.6} onPress={() => { props.navigation.navigate('PersonalFolder') }}>
+                            <View style={{ width: screenWidth - 40, height: 45, backgroundColor: colorScheme === 'dark' ? '#303030' : '#fff', borderBottomStartRadius: 10, borderBottomEndRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommIcons name="folder-account" size={26} style={{ alignSelf: 'center', marginStart: 22 }} color="#FFBC01" />
+                                    <Text style={{ fontSize: 16.2, marginStart: 15 }}>Personal Folder</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommIcons name="lock" size={18} color="#FFBC01" style={{marginEnd:5}}/>
                                     <Ionicons name="chevron-forward-outline" size={22} color="#FFBC01" style={{ marginEnd: 15 }} />
                                 </View>
                             </View>

@@ -211,7 +211,7 @@ const HomeScreen = (props) => {
 
 
     const SelectData = () => {
-        GetRemiders()
+        
         db.transaction((tx) => {
             tx.executeSql(`SELECT * FROM notes ORDER BY ${sortFun} ${ascDesc}`, [],
                 (sql, rs) => {
@@ -228,13 +228,12 @@ const HomeScreen = (props) => {
                     } else {
                         setData(null)
                     }
-                    //selectedNotes (id,title,note,noteid,date,time,checked)
                 },
                 error => {
                     setRefreshing(false)
                 })
         })
-
+        GetRemiders()
         db.transaction((tx) => {
             tx.executeSql("SELECT * FROM selectedNotes", [],
                 (sql, rs) => {
@@ -271,7 +270,7 @@ const HomeScreen = (props) => {
                 })
         })
 
-
+        GetRemiders()
         db.transaction((tx) => {
             tx.executeSql(`SELECT * FROM notes WHERE date = (?) order by id ${ascDesc}`, [new Date().toLocaleDateString()],
                 (sql, rs) => {
@@ -1170,6 +1169,7 @@ const HomeScreen = (props) => {
                                 results.push({ id: rs.rows._array[i].id, message: rs.rows._array[i].message, time: rs.rows._array[i].time, title: rs.rows._array[i].title })
                             }
                         }
+                        setReminderData(results)
                     } else {
                         setReminderData(null)
                     }
@@ -1272,10 +1272,10 @@ const HomeScreen = (props) => {
                             setExpandExtra(false)
                             props.navigation.navigate("Directory")
                         }}>
-                            <MaterialComIcon name="arrow-back-ios" size={22} color="#FFBC01" />
+                            <MaterialComIcon name="arrow-back-ios" size={27} color="#FFBC01" />
                             <Text style={{
-                                color: '#FFBC01', fontFamily: 'mulish',
-                                fontSize: 18
+                                color: '#FFBC01',
+                                fontSize: 23, fontWeight:'bold', marginBottom:2
                             }}>
                                 Cloud Notes
                             </Text>
@@ -1318,7 +1318,7 @@ const HomeScreen = (props) => {
                                     setExpandExtra(false)
                                     setSearchText('')
                                 }} style={{ marginEnd: 25 }}>
-                                    <MaterialComIcon name={expandedSearch ? "close" : "search"} size={25} color="#FFBC01" />
+                                    <MaterialComIcon name={expandedSearch ? "close" : "search"} size={27} color="#FFBC01" />
                                 </TouchableOpacity>
                         }
 
@@ -1330,7 +1330,7 @@ const HomeScreen = (props) => {
                                 openMenu()
                                 setExpandExtra(false)
                             }}>
-                                <MaterialIcons name="dots-horizontal-circle-outline" size={25} color="#FFBC01" />
+                                <MaterialIcons name="dots-horizontal-circle-outline" size={27} color="#FFBC01" />
                             </TouchableOpacity>}>
                             {data && gridlistEnabled ?
                                 <Menu.Item onPress={() => {
@@ -1405,11 +1405,11 @@ const HomeScreen = (props) => {
                     expanded={expandedSearch}
                 >
                     <View style={{ width: screenWidth, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
-                        <TextInput placeholder="Search here" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
+                        <TextInput placeholder="Search Notes" placeholderTextColor={colorScheme === "dark" ? "white" : "black"}
                             ref={searchRef}
                             style={{
-                                width: screenWidth - 60, paddingVertical: 6, backgroundColor: colorScheme === "dark" ? "#303030" : "lightgray", borderRadius: 10,
-                                opacity: 0.7, paddingHorizontal: 10, color: colorScheme === "dark" ? "white" : "black", alignSelf: 'center', fontSize: 13,
+                                width: screenWidth - 70, paddingVertical: 10, backgroundColor: colorScheme === "dark" ? "#303030" : "lightgray", borderRadius: 10,
+                                opacity: 0.7, paddingHorizontal: 15, color: colorScheme === "dark" ? "white" : "black", alignSelf: 'center', fontSize: 15,
                                 fontFamily: 'mulish', marginTop: 10, marginBottom: 10
                             }}
                             selectTextOnFocus
@@ -1427,7 +1427,7 @@ const HomeScreen = (props) => {
                             })
                             setFabVisible(false)
                         }}>
-                            <Ionicons name="globe-outline" size={25} color="#FFBC01" />
+                            <Ionicons name="globe-outline" size={28} color="#FFBC01" />
                         </TouchableOpacity> : null}
                     </View>
                 </ExpandableSection>

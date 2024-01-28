@@ -41,6 +41,8 @@ import Moodify from './src/Moodify';
 import MoodifySplash from './src/splashscreens/MoodifySplash';
 import VoiceSearch from './src/VoiceSearch';
 import ExpoStatusBar from 'expo-status-bar/build/ExpoStatusBar';
+import PersonalFolder from './src/PersonalFolder';
+import PersonalPassword from './src/PersonalPassword';
 
 const Stack = createStackNavigator()
 
@@ -349,6 +351,20 @@ function App() {
             :
             null}
           <Stack.Screen name='Folder' component={Folder} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='PersonalFolder' component={PersonalFolder} options={{
+            gestureEnabled: true,
+            presentation: 'modal',
+            animation: "slide_from_bottom",
+            ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+            headerShown: false
+          }} />
+          <Stack.Screen name='PersonalPassword' component={PersonalPassword} options={{
             gestureEnabled: true,
             presentation: 'modal',
             animation: "slide_from_bottom",
