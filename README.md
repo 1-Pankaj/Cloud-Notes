@@ -55,4 +55,3 @@ Cloud Notes Features List:-
 16.Extension marketplace for installing features on demand
 
 17.A unique moodify feature which changes UI according to the user mood or as specified by the user
-15.
