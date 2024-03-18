@@ -26,7 +26,7 @@ Cloud Notes Features List:-
 
 2.Reminding with notifications with custom message
 
-3.To-Do List for organising taks
+3.To-Do List for organising tasks
 
 4.Folder Structures for creating a folder and moving notes in there for better organising of notes
 
