@@ -35,7 +35,7 @@ const DeleteSplash = (props) => {
 
     const WriteToSplash = () => {
         db.transaction((tx) => {
-            tx.executeSql("UPDATE splash set deletebtn = 'true' where firstTime = true", [],
+            tx.executeSql("UPDATE splash set deletebtn = 'true' where firstTime = 'true'", [],
                 (sql, rs) => {
                     props.navigation.navigate("Home")
                 },

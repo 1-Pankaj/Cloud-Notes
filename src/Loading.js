@@ -23,6 +23,7 @@ const Loading = (prop) => {
                         (sql, rs) => {
                             if (rs.rows.length == 0) {
                                 setTimeout(() => {
+                                    console.log("First time");
                                     prop.navigation.replace("SplashScreen")
                                 }, 1500)
                             } else {

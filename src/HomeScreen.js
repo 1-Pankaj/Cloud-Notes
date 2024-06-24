@@ -755,7 +755,7 @@ const HomeScreen = (props) => {
 
     const DismissLongPress = () => {
         db.transaction((tx) => {
-            tx.executeSql("INSERT INTO longpress (firsttime) values (false)", [],
+            tx.executeSql("INSERT INTO longpress (firsttime) values ('false')", [],
                 (sql, rs) => {
                     setLongPress(false)
                 }, error => {

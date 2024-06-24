@@ -16,11 +16,9 @@ const SplashScreenPage = (props) => {
 
     const WriteToSplash = () => {
         db.transaction((tx) => {
-            tx.executeSql("INSERT INTO splash(firstTime, homepage, archivebtn, deletebtn) values (true,'false','false','false')", [],
+            tx.executeSql("INSERT INTO splash(firstTime, homepage, archivebtn, deletebtn) values ('true','false','false','false')", [],
                 (sql, rs) => {
-                    props.navigation.replace("Home")
-                },
-                error => {
+                        props.navigation.replace("Home")
                 })
         })
     }

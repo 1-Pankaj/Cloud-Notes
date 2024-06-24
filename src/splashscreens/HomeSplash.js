@@ -24,7 +24,7 @@ const HomeSplash = (props) => {
 
     const WriteToSplash = () => {
         db.transaction((tx) => {
-            tx.executeSql("UPDATE splash set homepage = 'true' where firstTime = true", [],
+            tx.executeSql("UPDATE splash set homepage = 'true' where firstTime = 'true'", [],
                 (sql, rs) => {
                     props.navigation.navigate("Home")
                 },
